@@ -169,51 +169,70 @@ Update your data in these callbacks and pass the new objects back in. The data i
 | `wavy`         | `false`    | A slight wave on the lines.                                                                                                                                                                                             |
 | `background`   | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale, image }`. `image` is `{ src, x, y, width, height }` in world units, behind the paths. |
 | `animate`      | `true`     | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                      |
+| `locale`       | browser    | Language of the dates under the points, such as `de`.                                                                                                                                                                   |
+| `formatDate`   | —          | Writes the date under a point yourself. Wins over `locale`.                                                                                                                                                             |
 | `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit).                                                                                                                                                                                        |
 
 ### Camera
 
-Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()`, `handle.center()` and `handle.zoomBy(factor)` do the same from code.
+Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about three quarters of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code.
+
+### Dates and language
+
+The date under a point is short, `2.11.` in German, and carries the year only when it is not the current one. Set `locale` (`de`, `en-GB`, `en-US`, ...) to choose the order and separators. Without it the browser's language is used. To write the date yourself, for example with your own date library, pass `formatDate: (iso) => string`.
+
+The labels of periods follow the same language: `periodLabel(period, 'de')` gives `KW 45, 2.11. – 8.11.2026`. `period.label` is the English one.
 
 ### Path strength
 
-Paths evolve: the more often a path is walked, the stronger the connections on it. The library draws the tier you pass in `strength` (0–4), and offers the rule that turns activity into a tier.
+Paths evolve: the more often a path is walked, the stronger it gets. The library draws the tier you pass in `strength` (0–4) and offers the rule that turns activity into a tier.
+
+**Activity is a check-in: a day on which the path was walked.** Check-ins are not points on the map, so a daily habit does not fill the map. Keep them in your app and pass the day numbers of a path, also those the current view hides:
 
 ```ts
 import { tierAt, toDay, TIERS } from 'world-of-evolving-paths';
 
-// reachedDays: the day numbers of all reached points of the path, also those the view hides
-const strength = tierAt(reachedDays, toDay(point.date));
-TIERS[strength]; // { name: 'Highway', width: 13, glow: 0.7, ... }
+// activityDays: day numbers of the check-ins on this path
+const strength = tierAt(activityDays, toDay(point.date));
+TIERS[strength]; // { name: 'Highway', width: 13, glow: 0.7 }
 ```
 
-| Tier | Name        | From (reached points per week, 4-week average) | Look                |
-| ---- | ----------- | ---------------------------------------------- | ------------------- |
-| 0    | Desire path | 0                                              | thin                |
-| 1    | Path        | 1                                              | wider               |
-| 2    | Road        | 2                                              | wider, soft glow    |
-| 3    | Expressway  | 3                                              | wide, glow          |
-| 4    | Highway     | 5                                              | widest, strong glow |
+The tier counts the **active days in the last 12 weeks** up to the date of the point. Several check-ins on one day count once.
 
-Open (future) connections stay thin and dotted.
+| Tier | Name        | Active days in 12 weeks | What it takes                         |
+| ---- | ----------- | ----------------------- | ------------------------------------- |
+| 0    | Desire path | 0                       | just started                          |
+| 1    | Path        | 6                       | about once a week                     |
+| 2    | Road        | 18                      | two or three times a week             |
+| 3    | Expressway  | 40                      | most days                             |
+| 4    | Highway     | 70                      | nearly every day, for about ten weeks |
+
+A highway is a real habit. It shrinks slowly when the habit stops. Pass your own rule as the third argument: `{ weeks, minActiveDays }`.
+
+The strength of a path arrives at its next point: the outline of a reached point is thicker the stronger the path that led to it. The importance of a point is separate. It is your own rating from 1 to 5 and decides the size of the symbol and in which views the point is shown. A strong path does not make a point more important.
+
+Open (future) connections stay thin and dotted. While a point is dragged, thin rings show how much room it keeps.
 
 ## Controls (React)
 
 Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
-| Control           | Folder              | What it does                                                                                                                                                    |
-| ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                    |
-| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                     |
-| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                       |
-| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                               |
-| `PointMenu`       | `point-menu/`       | Tile menu at a selected point: status, next point, kind, path color (with slots for your own colors), name, details, delete. Sits on the map and moves with it. |
+| Control           | Folder              | What it does                                                                                                                                                                         |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                         |
+| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                          |
+| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                            |
+| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                    |
+| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, delete. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. |
+| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                            |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
 
 The color slots of `PointMenu` are filled by you: it reports a confirmed color with `onCustomColor`, you remember it and pass the list back in `customColors`.
 
 They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
+
+`useTimePlayback` moves the day of a `TimeSlider` forward while it plays. Moving through time only changes `today`, so the points keep their places. Statuses and strengths as of that day are your app's to work out, the demo shows how.
 
 Import `world-of-evolving-paths/style.css` once for the map and the controls. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...).
 
@@ -226,7 +245,7 @@ Import `world-of-evolving-paths/style.css` once for the map and the controls. Co
 
 ## The demo
 
-`demo/` is a complete example app: a game skill tree with 18 paths, spread over pages. It has an editor mode (everything on) and a map mode (read only, few controls). It shows what your app does with the library: it holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions. It uses only the public API.
+`demo/` is a complete example app: six everyday topics (training, reading, cooking, a game character, a side project, guitar) over two pages, with check-ins that make the paths stronger. It has an editor mode (everything on) and a map mode (read only, few controls). It shows what your app does with the library: it holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions. It uses only the public API.
 
 ```bash
 npm install
