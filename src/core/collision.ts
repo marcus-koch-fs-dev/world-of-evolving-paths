@@ -1,4 +1,5 @@
-import { distanceToSegment, getEdges } from './geometry';
+﻿import { distanceToSegment, getEdges } from './geometry';
+import { symbolSize } from './symbol';
 import type { PlacedPoint, PointKind, Position } from './types';
 
 export type Body = { id: string; x: number; y: number; kind: PointKind; importance?: number };
@@ -7,10 +8,7 @@ export type Layout = { bodies: Body[]; links: Link[] };
 export type Mover = { id: string; kind: PointKind; importance?: number };
 export type XRange = { minX: number; maxX: number };
 
-const GOAL_SIZE = 72;
-const POINT_SIZE = 56;
 const MARGIN = 12; // air around the symbol
-const PER_IMPORTANCE = 6; // each importance step keeps a little more distance
 const EPSILON = 0.001;
 const RING_STEP = 4;
 const RING_LIMIT = 6000;
@@ -18,10 +16,9 @@ const RING_ANGLES = 32;
 const SETTLE_STEPS = 48;
 const SETTLE_REFINEMENTS = 14;
 
-/** Collision radius: half the symbol size (goal 72, otherwise 56) plus air plus importance. */
+/** Collision radius: half the symbol size plus some air, so bigger symbols keep more distance. */
 export function collisionRadius(point: { kind: PointKind; importance?: number }): number {
-  const size = point.kind === 'goal' ? GOAL_SIZE : POINT_SIZE;
-  return size / 2 + MARGIN + ((point.importance ?? 1) - 1) * PER_IMPORTANCE;
+  return symbolSize(point) / 2 + MARGIN;
 }
 
 /** Points and connections of a world as a collision layout. */

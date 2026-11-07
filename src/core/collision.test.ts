@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { collisionRadius, isFreeAt, type Layout, nearestFree, settle } from './collision';
 
 const mover = { id: 'self', kind: 'milestone' as const };
@@ -11,7 +11,9 @@ describe('Collision', () => {
     });
 
     it('grows with importance', () => {
-      expect(collisionRadius({ kind: 'milestone', importance: 3 })).toBe(collisionRadius({ kind: 'milestone' }) + 12);
+      expect(collisionRadius({ kind: 'milestone', importance: 3 })).toBeGreaterThan(
+        collisionRadius({ kind: 'milestone' }),
+      );
     });
   });
 

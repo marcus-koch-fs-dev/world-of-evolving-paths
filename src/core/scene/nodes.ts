@@ -1,11 +1,10 @@
-import { formatMonthYear } from '../dates';
+﻿import { formatMonthYear } from '../dates';
 import { shapeOf } from '../shapes';
+import { symbolSize } from '../symbol';
 import type { PlacedPoint, PlacedWorld } from '../types';
 import { pathColorOf } from './paths';
 import type { Dash, NodeDraw, SceneState } from './types';
 
-const GOAL_SIZE = 72;
-const POINT_SIZE = 56;
 const SHAPE_RADIUS = 26;
 const DONE_FILL = '#23270f';
 const OPEN_FILL = '#1b1d17';
@@ -23,7 +22,7 @@ function nodeOf(world: PlacedWorld, point: PlacedPoint, state: SceneState): Node
     x: point.x,
     y: point.y,
     shape: shapeOf(point),
-    size: point.kind === 'goal' ? GOAL_SIZE : POINT_SIZE,
+    size: symbolSize(point),
     radius: SHAPE_RADIUS,
     stroke: pathColorOf(world, point),
     fill: point.status === 'done' ? DONE_FILL : OPEN_FILL,
