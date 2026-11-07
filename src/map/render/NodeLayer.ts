@@ -1,4 +1,4 @@
-import { Container, Graphics, type Text } from 'pixi.js';
+﻿import { Container, Graphics, type Text } from 'pixi.js';
 import type { NodeDraw } from '../../core/scene/types';
 import { shapePoints } from '../../core/shapes';
 import { flat, strokeDashes } from './strokes';
@@ -54,10 +54,24 @@ export class NodeLayer {
   readonly container = new Container();
   private readonly slots = new Map<string, NodeSlot>();
 
+  /** Off: size and opacity change at once, rings and arrows stand still. */
+  animate = true;
+
   constructor(private readonly texts: TextPool) {}
 
   get animated(): boolean {
-    return [...this.slots.values()].some((slot) => slot.node.pulse);
+    return this.animate && [...this.slots.values()].some((slot) => slot.node.pulse);
+  }
+
+  /** True while a size or opacity is still on its way to its target. */
+  get moving(): boolean {
+    return (
+      this.animate &&
+      [...this.slots.values()].some(
+        (slot) =>
+          Math.abs(slot.node.scale - slot.scale) > SCALE_STEP || Math.abs(slot.node.alpha - slot.alpha) > ALPHA_STEP,
+      )
+    );
   }
 
   sync(nodes: NodeDraw[]): void {
@@ -66,6 +80,10 @@ export class NodeLayer {
       seen.add(node.id);
       const slot = this.slots.get(node.id) ?? this.create(node);
       slot.node = node;
+      if (!this.animate) {
+        slot.alpha = node.alpha;
+        slot.scale = node.scale;
+      }
       this.paint(slot);
       this.place(slot);
     }
@@ -170,6 +188,7 @@ export class NodeLayer {
     if (node.arrow && !slot.arrow) {
       slot.arrow = this.texts.make('▼', 14, node.stroke);
       slot.arrow.anchor.set(0, 0);
+      slot.arrow.position.set(-5, -node.size / 2 - ARROW_LIFT);
       slot.root.addChild(slot.arrow);
     }
     if (!node.arrow && slot.arrow) {

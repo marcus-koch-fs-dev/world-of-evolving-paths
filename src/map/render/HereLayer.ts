@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+﻿import { Container, Graphics } from 'pixi.js';
 import type { HereDraw } from '../../core/scene/types';
 import type { TextPool } from './TextPool';
 
@@ -11,10 +11,13 @@ export class HereLayer {
   readonly container = new Container();
   private readonly slots = new Map<string, HereSlot>();
 
+  /** Off: the ring does not pulse. */
+  animate = true;
+
   constructor(private readonly texts: TextPool) {}
 
   get animated(): boolean {
-    return this.slots.size > 0;
+    return this.animate && this.slots.size > 0;
   }
 
   sync(heres: HereDraw[]): void {

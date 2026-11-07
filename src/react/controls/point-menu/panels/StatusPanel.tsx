@@ -1,4 +1,4 @@
-import type { PointStatus } from '../../../../core';
+﻿import type { PointStatus } from '../../../../core';
 import type { PointPatch } from '../types';
 
 const STATUS_LABELS: Record<PointStatus, string> = {
@@ -26,7 +26,7 @@ export function StatusPanel({ status, canComplete, onUpdate }: Props) {
           Mark as done
         </button>
       )}
-      {status === 'done' && (
+      {(status === 'done' || status === 'abandoned') && (
         <button type="button" onClick={() => onUpdate({ status: 'open' })}>
           Reopen
         </button>

@@ -1,3 +1,4 @@
+﻿import { useState } from 'react';
 import type { PathPoint } from '../../../../core';
 import type { PointPatch } from '../types';
 
@@ -9,6 +10,8 @@ type Props = {
 
 export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
   const [min, max] = importanceRange;
+  // The note is sent when the field loses focus, not on every key, so the app is not asked to relayout while typing
+  const [note, setNote] = useState(point.note ?? '');
   const values = Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i);
 
   return (
@@ -38,8 +41,9 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
         Note
         <textarea
           rows={3}
-          value={point.note ?? ''}
-          onChange={(event) => onUpdate({ note: event.target.value || undefined })}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          onBlur={() => note !== (point.note ?? '') && onUpdate({ note: note || undefined })}
         />
       </label>
     </>

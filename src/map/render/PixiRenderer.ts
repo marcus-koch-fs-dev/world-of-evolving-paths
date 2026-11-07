@@ -1,4 +1,4 @@
-import { Application, Container } from 'pixi.js';
+﻿import { Application, Container } from 'pixi.js';
 import type { Camera } from '../../core/camera';
 import type { Scene } from '../../core/scene/types';
 import { EdgeLayer } from './EdgeLayer';
@@ -20,6 +20,7 @@ export class PixiRenderer {
   private size = { width: 1, height: 1 };
   private lastTick = now();
   private keepTicking = false;
+  private animate = true;
 
   private readonly world = new Container();
   private readonly texts = new TextPool(() => this.app?.render());
@@ -70,6 +71,16 @@ export class PixiRenderer {
     this.app.render();
   }
 
+  /** Turns the moving parts on or off: flowing dashes, pulses, the glow's breathing and smooth size changes. */
+  setAnimate(animate: boolean): void {
+    if (animate === this.animate) return;
+    this.animate = animate;
+    this.edges.animate = animate;
+    this.nodes.animate = animate;
+    this.heres.animate = animate;
+    if (this.scene) this.setScene(this.scene);
+  }
+
   setScene(scene: Scene): void {
     this.scene = scene;
     if (!this.app) return;
@@ -77,8 +88,9 @@ export class PixiRenderer {
     this.nodes.sync(scene.nodes);
     this.heres.sync(scene.heres);
     this.keepTicking = this.edges.animated || this.nodes.animated || this.heres.animated;
-    this.app.ticker.start();
     this.app.render();
+    if (this.keepTicking || this.nodes.moving) this.app.ticker.start();
+    else this.app.ticker.stop();
   }
 
   destroy(): void {
@@ -110,7 +122,7 @@ export class PixiRenderer {
     const moving = this.nodes.tick(deltaMs, ringPhase, bob);
     this.heres.tick(ringPhase);
 
-    app.render();
+    // Pixi renders after this on the same tick, so there is no render call here
     if (!this.keepTicking && !drawing && !moving) app.ticker.stop();
   }
 }

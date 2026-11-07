@@ -22,6 +22,10 @@ const ERROR_PREFIX = 'World of Evolving Paths:';
 
 type Framing = 'fit' | 'center' | null;
 
+function prefersReducedMotion(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 const rounded = (position: Position): Position => ({ x: Math.round(position.x), y: Math.round(position.y) });
 
 function sameBackground(a: BackgroundOptions | undefined, b: BackgroundOptions | undefined): boolean {
@@ -109,6 +113,7 @@ export class PathWorldEngine implements PathWorldHandle {
       seed: options.seed ?? DEFAULT_SEED,
       today: this.todayOf(options),
     });
+    this.renderer.setAnimate(options.animate ?? !prefersReducedMotion());
     if (viewChanged) {
       this.framing = this.framedOnce ? 'center' : 'fit';
       this.hovered = null;

@@ -1,4 +1,4 @@
-import { BlurFilter, Container, Graphics } from 'pixi.js';
+﻿import { BlurFilter, Container, Graphics } from 'pixi.js';
 import { cutAt } from '../../core/scene/curves';
 import type { EdgeDraw } from '../../core/scene/types';
 import { strokeDashes, strokeLine } from './strokes';
@@ -40,6 +40,9 @@ export class EdgeLayer {
   private readonly lineSlots = new Map<string, LineSlot>();
   private readonly litSlots = new Map<string, LitSlot>();
 
+  /** Off: dashes stand still, lit lines appear at once and the glow does not breathe. */
+  animate = true;
+
   constructor() {
     this.glow.filters = [this.blur];
   }
@@ -51,7 +54,7 @@ export class EdgeLayer {
 
   /** True while something moves on its own: flowing dashes or a line drawing itself. */
   get animated(): boolean {
-    return this.litSlots.size > 0 || [...this.lineSlots.values()].some((slot) => slot.edge.flow);
+    return this.animate && (this.litSlots.size > 0 || [...this.lineSlots.values()].some((slot) => slot.edge.flow));
   }
 
   sync(edges: EdgeDraw[]): void {
@@ -65,6 +68,7 @@ export class EdgeLayer {
       this.syncLit(edge);
     }
     this.dropMissing(seen, walked);
+    if (!this.animate) this.glow.alpha = GLOW_BASE_ALPHA + GLOW_BREATH / 2;
   }
 
   /** Advances the animations. Returns true while a line is still drawing itself in. */
@@ -90,15 +94,23 @@ export class EdgeLayer {
     }
     slot.edge = edge;
     const signature = lineSignature(edge);
-    if (!edge.flow && signature === slot.signature) return;
-    drawLine(slot.g, edge, flowShift(now()));
-    slot.signature = edge.flow ? '' : signature;
+    const moving = edge.flow && this.animate;
+    if (!moving && signature === slot.signature) return;
+    drawLine(slot.g, edge, this.animate ? flowShift(now()) : 0);
+    slot.signature = moving ? '' : signature;
   }
 
   private syncLit(edge: EdgeDraw): void {
     let slot = this.litSlots.get(edge.id);
     if (!slot) {
-      slot = { g: new Graphics(), glow: new Graphics(), born: now(), signature: '', edge, drawing: true };
+      slot = {
+        g: new Graphics(),
+        glow: new Graphics(),
+        born: this.animate ? now() : now() - DRAW_MS,
+        signature: '',
+        edge,
+        drawing: this.animate,
+      };
       this.lit.addChild(slot.g);
       this.glow.addChild(slot.glow);
       this.litSlots.set(edge.id, slot);

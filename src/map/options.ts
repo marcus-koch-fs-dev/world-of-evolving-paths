@@ -1,4 +1,4 @@
-import type { Camera } from '../core/camera';
+﻿import type { Camera } from '../core/camera';
 import type { PeriodMap, Position } from '../core/types';
 
 export type BackgroundPattern = 'none' | 'hex' | 'dots' | 'stars';
@@ -58,6 +58,8 @@ export type PathWorldOptions = PathWorldEvents & {
   dotsLocked?: boolean;
   /** Slight wave on the lines. Default false. */
   wavy?: boolean;
+  /** Moving parts: flowing dashes, pulses, glow. Default on, but off when the user prefers reduced motion. */
+  animate?: boolean;
   background?: BackgroundOptions;
   /** Keys M (center) and E (fit). Default true. */
   shortcuts?: boolean;

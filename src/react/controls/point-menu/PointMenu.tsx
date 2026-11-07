@@ -40,6 +40,11 @@ export type PointMenuProps = {
  * and keeps its size when zooming. Place it inside `<PathWorld>` while a point is selected.
  */
 export function PointMenu(props: PointMenuProps) {
+  // A new point gets a fresh menu, so an open panel or a half-typed name never carries over to another point
+  return <PointMenuBody key={props.point.id} {...props} />;
+}
+
+function PointMenuBody(props: PointMenuProps) {
   const handle = usePathWorldHandle();
   useWorldVersion(handle);
   const [open, setOpen] = useState<TileId | null>(null);
