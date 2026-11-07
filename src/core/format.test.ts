@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatNumericDate, formatPointDate, weekPrefix } from './format';
+import { formatNumericDate, formatPointDate, weekPrefix } from './format.js';
 
 describe('Date formats by language', () => {
   describe('when writing a numeric date', () => {

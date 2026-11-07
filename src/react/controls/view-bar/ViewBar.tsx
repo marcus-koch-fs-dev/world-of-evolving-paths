@@ -1,5 +1,5 @@
-import { VIEW_LEVELS, type ViewLevel } from '../../../core';
-import { LevelSwitch } from './LevelSwitch';
+import { VIEW_LEVELS, type ViewLevel } from '../../../core/index.js';
+import { LevelSwitch } from './LevelSwitch.js';
 import './viewBar.css';
 
 export type ViewBarProps = {

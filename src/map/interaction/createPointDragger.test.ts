@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { makePeriodData } from '../../../tests/fixtures';
-import { periodOf } from '../../core/calendar';
-import { layoutOf, nearestFree } from '../../core/collision';
-import { createWorldModel, type WorldModel } from '../state/createWorldModel';
-import { createPointDragger } from './createPointDragger';
+import { makePeriodData } from '../../../tests/fixtures.js';
+import { periodOf } from '../../core/calendar.js';
+import { layoutOf, nearestFree } from '../../core/collision.js';
+import { createWorldModel, type WorldModel } from '../state/createWorldModel.js';
+import { createPointDragger } from './createPointDragger.js';
 
 const view = periodOf('week', '2026-11-04').key;
 const FRAME_MS = 16;

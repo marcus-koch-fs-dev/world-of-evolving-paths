@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { makePath, makePoint } from '../../../tests/fixtures';
-import { TIERS } from '../strength';
-import type { PlacedPoint, PlacedWorld } from '../types';
-import { buildScene } from './buildScene';
-import { cutAt, dashSegments, polylineLength, sampleEdge } from './curves';
-import { hitNode } from './hit';
-import type { SceneState } from './types';
+import { makePath, makePoint } from '../../../tests/fixtures.js';
+import { TIERS } from '../strength.js';
+import type { PlacedPoint, PlacedWorld } from '../types.js';
+import { buildScene } from './buildScene.js';
+import { cutAt, dashSegments, polylineLength, sampleEdge } from './curves.js';
+import { hitNode } from './hit.js';
+import type { SceneState } from './types.js';
 
 const calm: SceneState = { wave: false, hovered: null, dragging: null };
 

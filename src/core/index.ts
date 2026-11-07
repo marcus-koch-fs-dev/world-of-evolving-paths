@@ -1,7 +1,7 @@
-export type { CalendarOptions, Period, ViewLevel } from './calendar';
-export { periodFromKey, periodLabel, periodOf, shiftPeriod, VIEW_LEVELS } from './calendar';
-export type { Bounds, Camera } from './camera';
-export { MAX_ZOOM, MIN_ZOOM } from './camera';
+export type { CalendarOptions, Period, ViewLevel } from './calendar.js';
+export { periodFromKey, periodLabel, periodOf, shiftPeriod, VIEW_LEVELS } from './calendar.js';
+export type { Bounds, Camera } from './camera.js';
+export { MAX_ZOOM, MIN_ZOOM } from './camera.js';
 export {
   formatDate,
   formatDayMonth,
@@ -10,11 +10,11 @@ export {
   isIsoDate,
   toDay,
   todayLocal,
-} from './dates';
-export { formatMonthYearLong, formatNumericDate, isValidLocale, weekPrefix } from './format';
-export { PATH_PALETTE } from './scene/paths';
-export type { StrengthRule, Tier } from './strength';
-export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength';
+} from './dates.js';
+export { formatMonthYearLong, formatNumericDate, isValidLocale, weekPrefix } from './format.js';
+export { PATH_PALETTE } from './scene/paths.js';
+export type { StrengthRule, Tier } from './strength.js';
+export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength.js';
 export type {
   Path,
   PathInfo,
@@ -26,6 +26,6 @@ export type {
   PointKind,
   PointStatus,
   Position,
-} from './types';
-export type { Validation } from './validate';
-export { validatePeriodData } from './validate';
+} from './types.js';
+export type { Validation } from './validate.js';
+export { validatePeriodData } from './validate.js';

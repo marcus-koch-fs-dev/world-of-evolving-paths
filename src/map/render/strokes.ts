@@ -1,7 +1,7 @@
 import type { Graphics } from 'pixi.js';
-import { dashSegments } from '../../core/scene/curves';
-import type { Dash } from '../../core/scene/types';
-import type { Position } from '../../core/types';
+import { dashSegments } from '../../core/scene/curves.js';
+import type { Dash } from '../../core/scene/types.js';
+import type { Position } from '../../core/types.js';
 
 /** Flat list of coordinates, as Pixi polygons want them. */
 export const flat = (points: Position[]) => points.flatMap((point) => [point.x, point.y]);

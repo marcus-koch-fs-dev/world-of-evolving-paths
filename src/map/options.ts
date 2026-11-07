@@ -1,5 +1,5 @@
-import type { Camera } from '../core/camera';
-import type { PeriodMap, Position } from '../core/types';
+import type { Camera } from '../core/camera.js';
+import type { PeriodMap, Position } from '../core/types.js';
 
 export type BackgroundPattern = 'none' | 'hex' | 'dots' | 'stars';
 

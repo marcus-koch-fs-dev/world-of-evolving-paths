@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampZoom, fitBounds, MAX_ZOOM, MIN_ZOOM, pinchStep, screenToWorld, zoomAt } from './camera';
+import { clampZoom, fitBounds, MAX_ZOOM, MIN_ZOOM, pinchStep, screenToWorld, zoomAt } from './camera.js';
 
 describe('Camera', () => {
   describe('when zooming around a screen point', () => {

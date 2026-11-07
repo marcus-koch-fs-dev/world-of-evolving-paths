@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PATH_PALETTE, type PathInfo, type PathPoint } from '../../../core';
-import { useWorldVersion } from '../../hooks/useWorldVersion';
-import { usePathWorldHandle } from '../../PathWorldContext';
-import { MenuTiles } from './MenuTiles';
-import { ColorPanel } from './panels/ColorPanel';
-import { DeletePanel } from './panels/DeletePanel';
-import { DetailsPanel } from './panels/DetailsPanel';
-import { KindPanel } from './panels/KindPanel';
-import { NextPointPanel } from './panels/NextPointPanel';
-import { RenamePanel } from './panels/RenamePanel';
-import { STATUS_LABELS, StatusPanel } from './panels/StatusPanel';
-import { anchorFor, type MenuPlacement, resolvePlacement } from './placement';
+import { PATH_PALETTE, type PathInfo, type PathPoint } from '../../../core/index.js';
+import { useWorldVersion } from '../../hooks/useWorldVersion.js';
+import { usePathWorldHandle } from '../../PathWorldContext.js';
+import { MenuTiles } from './MenuTiles.js';
+import { ColorPanel } from './panels/ColorPanel.js';
+import { DeletePanel } from './panels/DeletePanel.js';
+import { DetailsPanel } from './panels/DetailsPanel.js';
+import { KindPanel } from './panels/KindPanel.js';
+import { NextPointPanel } from './panels/NextPointPanel.js';
+import { RenamePanel } from './panels/RenamePanel.js';
+import { STATUS_LABELS, StatusPanel } from './panels/StatusPanel.js';
+import { anchorFor, type MenuPlacement, resolvePlacement } from './placement.js';
 import './pointMenu.css';
-import { TILES } from './tiles';
-import type { NextPointInput, PointPatch, TileId } from './types';
+import { TILES } from './tiles.js';
+import type { NextPointInput, PointPatch, TileId } from './types.js';
 
 const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
 

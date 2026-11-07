@@ -1,10 +1,10 @@
-import type { Period } from './calendar';
-import { periodFromKey } from './calendar';
-import { type Layout, nearestFree } from './collision';
-import { fromDay, toDay } from './dates';
-import { flattenPeriod } from './flatten';
-import { pick } from './random';
-import type { FlatPoint, PathInfo, PeriodData, PlacedPoint, PlacedWorld, Position } from './types';
+import type { Period } from './calendar.js';
+import { periodFromKey } from './calendar.js';
+import { type Layout, nearestFree } from './collision.js';
+import { fromDay, toDay } from './dates.js';
+import { flattenPeriod } from './flatten.js';
+import { pick } from './random.js';
+import type { FlatPoint, PathInfo, PeriodData, PlacedPoint, PlacedWorld, Position } from './types.js';
 
 export type LayoutInput = {
   paths: PathInfo[];

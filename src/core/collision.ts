@@ -1,6 +1,6 @@
-import { distanceToSegment, getEdges } from './geometry';
-import { symbolSize } from './symbol';
-import type { PlacedPoint, PointKind, Position } from './types';
+import { distanceToSegment, getEdges } from './geometry.js';
+import { symbolSize } from './symbol.js';
+import type { PlacedPoint, PointKind, Position } from './types.js';
 
 export type Body = { id: string; x: number; y: number; kind: PointKind; importance?: number };
 export type Link = { from: string; to: string };

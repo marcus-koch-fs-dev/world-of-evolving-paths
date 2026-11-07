@@ -1,9 +1,9 @@
-import type { PlacedWorld } from '../types';
-import { buildEdges } from './edges';
-import { buildHeres } from './heres';
-import { buildNodes } from './nodes';
-import { buildRings } from './rings';
-import type { Scene, SceneState } from './types';
+import type { PlacedWorld } from '../types.js';
+import { buildEdges } from './edges.js';
+import { buildHeres } from './heres.js';
+import { buildNodes } from './nodes.js';
+import { buildRings } from './rings.js';
+import type { Scene, SceneState } from './types.js';
 
 /** Everything the renderer draws, as plain data without any drawing library. */
 export function buildScene(world: PlacedWorld, state: SceneState): Scene {

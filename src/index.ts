@@ -1,2 +1,2 @@
-export * from './core';
-export * from './map';
+export * from './core/index.js';
+export * from './map/index.js';

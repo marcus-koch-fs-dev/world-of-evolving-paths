@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { editPoint, makePath, makePeriodData, makePoint } from '../../tests/fixtures';
-import { periodOf } from './calendar';
-import { collisionRadius } from './collision';
-import { toDay } from './dates';
-import { flattenPeriod } from './flatten';
-import { dateAtX, dayAtX, generateLayout, placePeriod, tileWidth } from './layout';
+import { editPoint, makePath, makePeriodData, makePoint } from '../../tests/fixtures.js';
+import { periodOf } from './calendar.js';
+import { collisionRadius } from './collision.js';
+import { toDay } from './dates.js';
+import { flattenPeriod } from './flatten.js';
+import { dateAtX, dayAtX, generateLayout, placePeriod, tileWidth } from './layout.js';
 
 const week = periodOf('week', '2026-11-04');
 const WEEK_KEY = week.key;

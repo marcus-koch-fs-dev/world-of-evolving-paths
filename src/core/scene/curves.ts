@@ -1,7 +1,7 @@
-import { edgeCurve } from '../geometry';
-import { pick } from '../random';
-import type { Position } from '../types';
-import type { Dash } from './types';
+import { edgeCurve } from '../geometry.js';
+import { pick } from '../random.js';
+import type { Position } from '../types.js';
+import type { Dash } from './types.js';
 
 const CURVE_STEPS = 40;
 const WAVE_MAX = 12; // largest sideways swing of the wave in world units

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anchorFor, resolvePlacement } from './placement';
+import { anchorFor, resolvePlacement } from './placement.js';
 
 describe('Menu placement', () => {
   describe('when the placement is automatic', () => {

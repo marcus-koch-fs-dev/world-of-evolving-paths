@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatMonthYear, fromDay, isIsoDate, isoWeekNumber, monthSpan, toDay, weekdayOf } from './dates';
+import {
+  formatDate,
+  formatMonthYear,
+  fromDay,
+  isIsoDate,
+  isoWeekNumber,
+  monthSpan,
+  toDay,
+  weekdayOf,
+} from './dates.js';
 
 describe('Dates', () => {
   describe('when converting between ISO dates and day numbers', () => {

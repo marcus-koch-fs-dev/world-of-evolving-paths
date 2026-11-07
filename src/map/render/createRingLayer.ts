@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
-import type { RingDraw } from '../../core/scene/types';
+import type { RingDraw } from '../../core/scene/types.js';
 
 const RING_COLOR = '#edefe6';
 const RING_WIDTH = 1;

@@ -1,7 +1,7 @@
-import { toDay } from '../dates';
-import type { PlacedPoint, PlacedWorld } from '../types';
-import { pointAt } from './curves';
-import type { EdgeDraw, HereDraw } from './types';
+import { toDay } from '../dates.js';
+import type { PlacedPoint, PlacedWorld } from '../types.js';
+import { pointAt } from './curves.js';
+import type { EdgeDraw, HereDraw } from './types.js';
 
 /** Groups items by a key in one pass, so a lookup per group does not search the whole list again. */
 function groupBy<T>(items: T[], keyOf: (item: T) => string | undefined): Map<string, T[]> {

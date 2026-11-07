@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { makePoint } from '../../../tests/fixtures';
-import type { PlacedPoint } from '../../core/types';
-import { buildMoveEvent, rounded } from './events';
+import { makePoint } from '../../../tests/fixtures.js';
+import type { PlacedPoint } from '../../core/types.js';
+import { buildMoveEvent, rounded } from './events.js';
 
 const placed = (id: string, x: number, y: number): PlacedPoint => ({ ...makePoint({ id }), x, y });
 

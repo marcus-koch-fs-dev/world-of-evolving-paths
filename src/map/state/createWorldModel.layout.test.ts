@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { editPoint, makePeriodData } from '../../../tests/fixtures';
-import { periodOf } from '../../core/calendar';
-import { createWorldModel, type WorldModel } from './createWorldModel';
+import { editPoint, makePeriodData } from '../../../tests/fixtures.js';
+import { periodOf } from '../../core/calendar.js';
+import { createWorldModel, type WorldModel } from './createWorldModel.js';
 
 const view = periodOf('week', '2026-11-04').key;
 const configure = (model: WorldModel, data: ReturnType<typeof makePeriodData>) =>

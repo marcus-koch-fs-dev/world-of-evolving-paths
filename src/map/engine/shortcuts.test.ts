@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { shortcutFor } from './shortcuts';
+import { shortcutFor } from './shortcuts.js';
 
 class FakeElement {
   constructor(private readonly insideTextField: boolean) {}

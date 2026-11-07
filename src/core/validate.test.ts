@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { editPoint, makePeriodData } from '../../tests/fixtures';
-import { validatePeriodData } from './validate';
+import { editPoint, makePeriodData } from '../../tests/fixtures.js';
+import { validatePeriodData } from './validate.js';
 
 function errorsFor(input: unknown): string[] {
   const result = validatePeriodData(input);

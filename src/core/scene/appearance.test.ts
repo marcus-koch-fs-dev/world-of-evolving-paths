@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { placedPoint, worldOf } from '../../../tests/fixtures';
-import { buildScene } from './buildScene';
-import type { SceneState } from './types';
+import { placedPoint, worldOf } from '../../../tests/fixtures.js';
+import { buildScene } from './buildScene.js';
+import type { SceneState } from './types.js';
 
 const calm: SceneState = { wave: false, hovered: null, dragging: null, locale: 'de' };
 

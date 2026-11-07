@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useState } from 'react';
-import type { NextPointInput } from '../types';
-import { ColorSwatches } from './ColorSwatches';
+import type { NextPointInput } from '../types.js';
+import { ColorSwatches } from './ColorSwatches.js';
 
 type Props = {
   colors: readonly string[];

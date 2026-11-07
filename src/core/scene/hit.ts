@@ -1,5 +1,5 @@
-import type { Position } from '../types';
-import type { NodeDraw } from './types';
+import type { Position } from '../types.js';
+import type { NodeDraw } from './types.js';
 
 /** The node under a world position. Later drawn nodes lie on top and are hit first. */
 export function hitNode(nodes: NodeDraw[], at: Position): NodeDraw | null {

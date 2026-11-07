@@ -1,9 +1,9 @@
-import { formatPointDate } from '../format';
-import { shapeOf } from '../shapes';
-import { symbolSize } from '../symbol';
-import type { PlacedPoint, PlacedWorld } from '../types';
-import { pathColorOf } from './paths';
-import type { Dash, NodeDraw, SceneState } from './types';
+import { formatPointDate } from '../format.js';
+import { shapeOf } from '../shapes.js';
+import { symbolSize } from '../symbol.js';
+import type { PlacedPoint, PlacedWorld } from '../types.js';
+import { pathColorOf } from './paths.js';
+import type { Dash, NodeDraw, SceneState } from './types.js';
 
 const SHAPE_RADIUS = 26;
 const DONE_FILL = '#23270f';

@@ -1,5 +1,5 @@
-import type { PointStatus } from '../../../../core';
-import type { PointPatch } from '../types';
+import type { PointStatus } from '../../../../core/index.js';
+import type { PointPatch } from '../types.js';
 
 const STATUS_LABELS: Record<PointStatus, string> = {
   done: 'Done',

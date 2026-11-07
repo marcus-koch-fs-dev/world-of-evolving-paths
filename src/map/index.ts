@@ -1,5 +1,5 @@
-export { createPathWorld } from './createPathWorld';
-export { BACKGROUND_DEFAULTS } from './dom/backgroundCss';
+export { createPathWorld } from './createPathWorld.js';
+export { BACKGROUND_DEFAULTS } from './dom/backgroundCss.js';
 export type {
   BackgroundImage,
   BackgroundOptions,
@@ -10,4 +10,4 @@ export type {
   PathWorldOptions,
   PointAddEvent,
   PointMoveEvent,
-} from './options';
+} from './options.js';

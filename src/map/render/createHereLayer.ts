@@ -1,6 +1,6 @@
 import { Container, Graphics, type Text } from 'pixi.js';
-import type { HereDraw } from '../../core/scene/types';
-import type { TextPool } from './createTextPool';
+import type { HereDraw } from '../../core/scene/types.js';
+import type { TextPool } from './createTextPool.js';
 
 const INK = '#edefe6';
 const GLIDE_TAU_MS = 140; // time constant of the glide towards the target, in milliseconds

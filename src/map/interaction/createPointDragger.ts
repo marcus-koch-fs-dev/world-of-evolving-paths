@@ -1,7 +1,7 @@
-import { layoutOf, settle } from '../../core/collision';
-import type { PlacedPoint, PointKind, Position } from '../../core/types';
-import type { WorldModel } from '../state/createWorldModel';
-import { springBack } from './springBack';
+import { layoutOf, settle } from '../../core/collision.js';
+import type { PlacedPoint, PointKind, Position } from '../../core/types.js';
+import type { WorldModel } from '../state/createWorldModel.js';
+import { springBack } from './springBack.js';
 
 const MOVED_THRESHOLD = 4; // a drag shorter than this counts as a click
 const IGNORED_AFTER_MS = 80; // the app has this long to answer a move with new data

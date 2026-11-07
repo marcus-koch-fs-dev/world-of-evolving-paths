@@ -1,6 +1,6 @@
-import { isIsoDate, todayLocal } from '../../core/dates';
-import { isValidLocale } from '../../core/format';
-import type { BackgroundOptions, PathWorldOptions } from '../options';
+import { isIsoDate, todayLocal } from '../../core/dates.js';
+import { isValidLocale } from '../../core/format.js';
+import type { BackgroundOptions, PathWorldOptions } from '../options.js';
 
 export type BoundaryChecks = {
   /** The date to use as today. An invalid one is reported once and the local date is used instead. */

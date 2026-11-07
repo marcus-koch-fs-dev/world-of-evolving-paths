@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { playbackPlan, stepPlayback } from './useTimePlayback';
+import { playbackPlan, stepPlayback } from './useTimePlayback.js';
 
 describe('Time playback', () => {
   describe('when stepping forward', () => {

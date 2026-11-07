@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fitBounds } from './camera';
+import { fitBounds } from './camera.js';
 
 describe('Fitting the camera', () => {
   describe('when the content is wider than tall', () => {

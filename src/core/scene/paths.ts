@@ -1,4 +1,4 @@
-import type { PlacedPoint, PlacedWorld } from '../types';
+import type { PlacedPoint, PlacedWorld } from '../types.js';
 
 export const DEFAULT_PATH_COLOR = '#d4f25a';
 

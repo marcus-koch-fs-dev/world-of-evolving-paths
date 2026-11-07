@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { periodFromKey, periodOf, shiftPeriod } from './calendar';
-import { fromDay } from './dates';
+import { periodFromKey, periodOf, shiftPeriod } from './calendar.js';
+import { fromDay } from './dates.js';
 
 describe('Calendar', () => {
   describe('when building a week', () => {

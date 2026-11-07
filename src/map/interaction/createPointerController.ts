@@ -1,6 +1,6 @@
-import { pinchStep, screenToWorld } from '../../core/camera';
-import type { Position } from '../../core/types';
-import type { CameraController } from '../camera/createCameraController';
+import { pinchStep, screenToWorld } from '../../core/camera.js';
+import type { Position } from '../../core/types.js';
+import type { CameraController } from '../camera/createCameraController.js';
 
 const CLICK_TOLERANCE = 4; // pixels a press may move and still count as a click
 const WHEEL_SENSITIVITY = 0.0015;

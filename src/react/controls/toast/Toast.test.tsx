@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Toast } from './Toast';
+import { Toast } from './Toast.js';
 
 describe('Toast', () => {
   it('shows nothing without a message', () => {

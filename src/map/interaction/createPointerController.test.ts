@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createCameraController } from '../camera/createCameraController';
-import { createPointerController, type PointerHooks } from './createPointerController';
+import { createCameraController } from '../camera/createCameraController.js';
+import { createPointerController, type PointerHooks } from './createPointerController.js';
 
 type Listener = (event: unknown) => void;
 

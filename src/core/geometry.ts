@@ -1,6 +1,6 @@
-import type { Bounds } from './camera';
-import { toDay } from './dates';
-import type { PlacedPoint, Position } from './types';
+import type { Bounds } from './camera.js';
+import { toDay } from './dates.js';
+import type { PlacedPoint, Position } from './types.js';
 
 export type Edge = { id: string; from: PlacedPoint; to: PlacedPoint };
 

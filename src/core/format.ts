@@ -1,4 +1,4 @@
-import { toDay } from './dates';
+import { toDay } from './dates.js';
 
 const DAY_MS = 86400000;
 const DEFAULT_WEEK_PREFIX = 'CW';

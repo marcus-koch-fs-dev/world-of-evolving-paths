@@ -1,5 +1,5 @@
-import type { PlacedPoint, Position } from '../../core/types';
-import type { PointMoveEvent } from '../options';
+import type { PlacedPoint, Position } from '../../core/types.js';
+import type { PointMoveEvent } from '../options.js';
 
 /** A position with whole numbers, so the data the app stores stays tidy. */
 export const rounded = (position: Position): Position => ({ x: Math.round(position.x), y: Math.round(position.y) });

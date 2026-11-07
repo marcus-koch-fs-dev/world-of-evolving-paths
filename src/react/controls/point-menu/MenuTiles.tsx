@@ -1,5 +1,5 @@
-import type { Tile } from './tiles';
-import type { TileId } from './types';
+import type { Tile } from './tiles.js';
+import type { TileId } from './types.js';
 
 type Props = {
   tiles: readonly Tile[];

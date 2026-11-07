@@ -1,5 +1,5 @@
-import type { Camera } from '../../core/camera';
-import type { BackgroundOptions, BackgroundPattern } from '../options';
+import type { Camera } from '../../core/camera.js';
+import type { BackgroundOptions, BackgroundPattern } from '../options.js';
 
 export const DEFAULT_BASE = '#0e0f0c';
 export const DEFAULT_PATTERN_COLOR = '#edefe6';

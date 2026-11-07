@@ -1,6 +1,6 @@
-import { layoutPeriod, layoutSignature, type PeriodLayout, placeWorld, reuseLayout } from '../../core/layout';
-import type { PeriodData, PeriodMap, PlacedWorld, Position } from '../../core/types';
-import { validatePeriodData } from '../../core/validate';
+import { layoutPeriod, layoutSignature, type PeriodLayout, placeWorld, reuseLayout } from '../../core/layout.js';
+import type { PeriodData, PeriodMap, PlacedWorld, Position } from '../../core/types.js';
+import { validatePeriodData } from '../../core/validate.js';
 
 type Config = { periods: PeriodMap; view: string; seed: number; today: string };
 

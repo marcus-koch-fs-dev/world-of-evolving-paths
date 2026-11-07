@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { backgroundCss, DEFAULT_BASE } from './backgroundCss';
+import { backgroundCss, DEFAULT_BASE } from './backgroundCss.js';
 
 const camera = { x: 10, y: 20, zoom: 2 };
 

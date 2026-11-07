@@ -1,4 +1,4 @@
-import type { TileId } from './types';
+import type { TileId } from './types.js';
 
 export type Tile = { id: TileId; label: string; glyph: string; group: 'action' | 'property' };
 

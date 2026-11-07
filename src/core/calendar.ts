@@ -1,5 +1,5 @@
-import { formatDate, formatDayMonth, fromDay, isoWeekNumber, monthName, monthSpan, toDay, weekdayOf } from './dates';
-import { formatMonthYearLong, formatNumericDate, weekPrefix } from './format';
+import { formatDate, formatDayMonth, fromDay, isoWeekNumber, monthName, monthSpan, toDay, weekdayOf } from './dates.js';
+import { formatMonthYearLong, formatNumericDate, weekPrefix } from './format.js';
 
 export type ViewLevel = 'day' | 'week' | 'month' | 'halfYear' | 'year';
 

@@ -1,4 +1,4 @@
-import type { PathPoint } from '../../../core';
+import type { PathPoint } from '../../../core/index.js';
 
 export type PointPatch = Partial<Pick<PathPoint, 'title' | 'status' | 'kind' | 'date' | 'importance' | 'note'>>;
 

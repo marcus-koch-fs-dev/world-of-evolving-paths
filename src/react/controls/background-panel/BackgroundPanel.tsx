@@ -1,8 +1,8 @@
-import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map';
-import { FillFields } from './FillFields';
-import { RangeField } from './fields';
-import { ImageFields } from './ImageFields';
-import { PatternPicker } from './PatternPicker';
+import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map/index.js';
+import { FillFields } from './FillFields.js';
+import { RangeField } from './fields.js';
+import { ImageFields } from './ImageFields.js';
+import { PatternPicker } from './PatternPicker.js';
 import './backgroundPanel.css';
 
 export type BackgroundPanelProps = {

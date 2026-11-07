@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { PathWorldOptions } from '../options';
-import { createBoundaryChecks } from './boundary';
+import type { PathWorldOptions } from '../options.js';
+import { createBoundaryChecks } from './boundary.js';
 
 const options = (extra: Partial<PathWorldOptions>): PathWorldOptions => ({ periods: {}, view: 'v', ...extra });
 

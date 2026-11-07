@@ -1,5 +1,5 @@
-import { type Bounds, type Camera, centerOn, fitBounds, zoomAt } from '../../core/camera';
-import type { CameraListener } from '../options';
+import { type Bounds, type Camera, centerOn, fitBounds, zoomAt } from '../../core/camera.js';
+import type { CameraListener } from '../options.js';
 
 type ViewportSize = { width: number; height: number };
 

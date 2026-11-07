@@ -1,9 +1,9 @@
 import { BlurFilter, Container, Graphics } from 'pixi.js';
-import { cutAt } from '../../core/scene/curves';
-import type { EdgeDraw } from '../../core/scene/types';
-import type { Position } from '../../core/types';
-import { strokeDashes, strokeLine } from './strokes';
-import { DRAW_MS, easeOut, flowShift, GLOW_MS, now } from './timing';
+import { cutAt } from '../../core/scene/curves.js';
+import type { EdgeDraw } from '../../core/scene/types.js';
+import type { Position } from '../../core/types.js';
+import { strokeDashes, strokeLine } from './strokes.js';
+import { DRAW_MS, easeOut, flowShift, GLOW_MS, now } from './timing.js';
 
 const GLOW_BLUR = 5;
 const GLOW_EXTRA_WIDTH = 6;

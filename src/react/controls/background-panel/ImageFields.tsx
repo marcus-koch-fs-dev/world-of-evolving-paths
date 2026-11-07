@@ -1,6 +1,6 @@
 import { type ChangeEvent, useState } from 'react';
-import type { BackgroundImage } from '../../../map';
-import { readImageFile } from './readImageFile';
+import type { BackgroundImage } from '../../../map/index.js';
+import { readImageFile } from './readImageFile.js';
 
 type Props = { image: BackgroundImage | undefined; onChange: (image: BackgroundImage | undefined) => void };
 

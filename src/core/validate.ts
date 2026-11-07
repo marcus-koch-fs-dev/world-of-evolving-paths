@@ -1,6 +1,6 @@
-import { isIsoDate } from './dates';
-import { EDGE_SEPARATOR } from './geometry';
-import type { PeriodData, PointKind, PointStatus } from './types';
+import { isIsoDate } from './dates.js';
+import { EDGE_SEPARATOR } from './geometry.js';
+import type { PeriodData, PointKind, PointStatus } from './types.js';
 
 export type Validation = { ok: true; data: PeriodData } | { ok: false; errors: string[] };
 

@@ -1,8 +1,8 @@
 import { Container, Graphics, type Text } from 'pixi.js';
-import type { NodeDraw } from '../../core/scene/types';
-import { shapePoints } from '../../core/shapes';
-import type { TextPool } from './createTextPool';
-import { flat, strokeDashes } from './strokes';
+import type { NodeDraw } from '../../core/scene/types.js';
+import { shapePoints } from '../../core/shapes.js';
+import type { TextPool } from './createTextPool.js';
+import { flat, strokeDashes } from './strokes.js';
 
 const INK = '#edefe6';
 const MUTED = '#8a8f80';

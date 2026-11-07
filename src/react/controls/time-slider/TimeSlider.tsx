@@ -1,4 +1,4 @@
-import { formatNumericDate, fromDay } from '../../../core';
+import { formatNumericDate, fromDay } from '../../../core/index.js';
 import './timeSlider.css';
 
 export type TimeSliderProps = {

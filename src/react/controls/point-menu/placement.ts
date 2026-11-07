@@ -1,4 +1,4 @@
-import type { Position } from '../../../core';
+import type { Position } from '../../../core/index.js';
 
 export type MenuPlacement = 'auto' | 'below' | 'above' | 'right' | 'left';
 type ResolvedPlacement = Exclude<MenuPlacement, 'auto'>;

@@ -1,6 +1,6 @@
-import { collisionRadius } from '../collision';
-import type { PlacedWorld } from '../types';
-import type { RingDraw } from './types';
+import { collisionRadius } from '../collision.js';
+import type { PlacedWorld } from '../types.js';
+import type { RingDraw } from './types.js';
 
 const NEIGHBOUR_REACH = 3; // other points show their ring when the dragged point comes within this many radii
 

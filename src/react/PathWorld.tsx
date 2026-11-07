@@ -1,7 +1,7 @@
 import { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useRef } from 'react';
-import type { PathWorldHandle, PathWorldOptions } from '../map';
-import { usePathWorldMount } from './hooks/usePathWorldMount';
-import { PathWorldContext } from './PathWorldContext';
+import type { PathWorldHandle, PathWorldOptions } from '../map/index.js';
+import { usePathWorldMount } from './hooks/usePathWorldMount.js';
+import { PathWorldContext } from './PathWorldContext.js';
 import './pathWorld.css';
 
 export type PathWorldProps = PathWorldOptions & {

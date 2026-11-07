@@ -1,4 +1,4 @@
-import type { BackgroundOptions } from '../options';
+import type { BackgroundOptions } from '../options.js';
 
 /** Does the user ask the system for less motion? */
 export function prefersReducedMotion(): boolean {

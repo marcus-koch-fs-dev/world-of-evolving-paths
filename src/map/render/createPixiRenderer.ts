@@ -1,12 +1,12 @@
 import { Application, Container } from 'pixi.js';
-import type { Camera } from '../../core/camera';
-import type { Scene } from '../../core/scene/types';
-import { createEdgeLayer } from './createEdgeLayer';
-import { createHereLayer } from './createHereLayer';
-import { createNodeLayer } from './createNodeLayer';
-import { createRingLayer } from './createRingLayer';
-import { createTextPool } from './createTextPool';
-import { BOB_MS, easeOut, now, RING_MS } from './timing';
+import type { Camera } from '../../core/camera.js';
+import type { Scene } from '../../core/scene/types.js';
+import { createEdgeLayer } from './createEdgeLayer.js';
+import { createHereLayer } from './createHereLayer.js';
+import { createNodeLayer } from './createNodeLayer.js';
+import { createRingLayer } from './createRingLayer.js';
+import { createTextPool } from './createTextPool.js';
+import { BOB_MS, easeOut, now, RING_MS } from './timing.js';
 
 const MAX_FPS = 40;
 const MAX_RESOLUTION = 2;

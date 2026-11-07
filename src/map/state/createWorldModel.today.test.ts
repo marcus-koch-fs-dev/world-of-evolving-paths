@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { makePeriodData } from '../../../tests/fixtures';
-import { periodOf } from '../../core/calendar';
-import { createWorldModel } from './createWorldModel';
+import { makePeriodData } from '../../../tests/fixtures.js';
+import { periodOf } from '../../core/calendar.js';
+import { createWorldModel } from './createWorldModel.js';
 
 const view = periodOf('week', '2026-11-04').key;
 
