@@ -74,6 +74,32 @@ describe('Demo app state', () => {
     });
   });
 
+  describe('when checking in on a path', () => {
+    it('remembers the day', () => {
+      const state = reduce(base(), { type: 'checkIn', pathId: 'combat', date: '2026-11-07' });
+
+      expect(state.checkIns).toEqual([{ pathId: 'combat', date: '2026-11-07' }]);
+    });
+
+    it('counts a second check-in on the same day only once', () => {
+      const once = reduce(base(), { type: 'checkIn', pathId: 'combat', date: '2026-11-07' });
+
+      const twice = reduce(once, { type: 'checkIn', pathId: 'combat', date: '2026-11-07' });
+
+      expect(twice.checkIns).toHaveLength(1);
+    });
+  });
+
+  describe('when a next point is added to an important point', () => {
+    it('is as important, so it shows in the same views', () => {
+      const important = initialState([makePath('combat')], [makePoint({ id: 'a', importance: 4 })]);
+      const input = { title: 'Next', date: '2026-11-10', newPath: false, color: '#ffffff' };
+
+      const state = reduce(important, { type: 'addNext', fromId: 'a', input });
+
+      expect(state.points.find((point) => point.id === 'custom-1')?.importance).toBe(4);
+    });
+  });
   describe('when asking whether a point can be completed', () => {
     it('allows it once all earlier points are done', () => {
       expect(canComplete(base().points, 'b')).toBe(true);

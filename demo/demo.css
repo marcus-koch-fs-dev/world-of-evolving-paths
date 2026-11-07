@@ -67,3 +67,33 @@ body,
   border-radius: 0;
   background: none;
 }
+
+.demo-settings fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #3a3e33;
+  border-radius: 8px;
+}
+
+.demo-settings legend {
+  padding: 0 4px;
+  color: #8a8f80;
+}
+
+.demo-settings select {
+  padding: 6px 8px;
+  border: 1px solid #3a3e33;
+  border-radius: 8px;
+  background: #1b1d17;
+  color: inherit;
+  font: inherit;
+}
+
+.demo-notice {
+  max-width: 260px;
+  color: #edefe6;
+  font-size: 13px;
+}

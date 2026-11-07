@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { periodOf } from 'world-of-evolving-paths';
+import { fromDay, periodOf, toDay } from 'world-of-evolving-paths';
 import { makePath, makePoint } from '../../tests/fixtures';
-import { buildPeriodData, importanceOf, pagesOf, visiblePoints, withStrength } from './periodData';
-import type { DemoPoint } from './types';
+import { buildPeriodData, importanceOf, pagesOf, visiblePoints, withStatusAsOf, withStrength } from './periodData';
+import type { CheckIn, DemoPoint } from './types';
 
 const week = periodOf('week', '2026-11-04');
 
@@ -56,25 +56,59 @@ describe('Period data for the demo', () => {
   });
 
   describe('when computing the strength of a path', () => {
-    it('counts reached points that the view hides', () => {
-      const daily = Array.from({ length: 20 }, (_, i) =>
-        makePoint({ id: `p${i}`, date: `2026-10-${String(10 + i).padStart(2, '0')}`, status: 'done', importance: 1 }),
-      );
-      const last = makePoint({ id: 'last', date: '2026-10-30', status: 'done', importance: 3 });
-      const all = [...daily, last];
+    const daily = (pathId: string, from: number, count: number): CheckIn[] =>
+      Array.from({ length: count }, (_, i) => ({ pathId, date: fromDay(from + i) }));
 
-      const [shown] = withStrength([last], all);
+    it('grows with the check-ins on the path up to the date of the point', () => {
+      const point = makePoint({ id: 'p', date: fromDay(toDay('2026-11-04')), status: 'done' });
+      const checkIns = daily('combat', toDay('2026-11-04') - 59, 60);
 
-      expect(shown.strength).toBeGreaterThanOrEqual(3);
+      const [shown] = withStrength([point], checkIns);
+
+      expect(shown.strength).toBe(3);
+    });
+
+    it('does not count check-ins on other paths or after the date', () => {
+      const point = makePoint({ id: 'p', date: '2026-11-04', status: 'done' });
+      const checkIns = [...daily('other', toDay('2026-09-01'), 60), ...daily('combat', toDay('2026-11-05'), 60)];
+
+      const [shown] = withStrength([point], checkIns);
+
+      expect(shown.strength).toBe(0);
     });
 
     it('leaves open points without a strength', () => {
       const open = makePoint({ id: 'open', status: 'open' });
 
-      expect(withStrength([open], [open])[0].strength).toBeUndefined();
+      expect(withStrength([open], [])[0].strength).toBeUndefined();
     });
   });
 
+  describe('when moving through time', () => {
+    const chain = [
+      makePoint({ id: 'a', date: '2026-11-02', status: 'open' }),
+      makePoint({ id: 'b', date: '2026-11-05', status: 'open' }),
+      makePoint({ id: 'c', date: '2026-11-09', status: 'open' }),
+      makePoint({ id: 'x', date: '2026-11-01', status: 'abandoned' }),
+    ];
+
+    it('makes earlier points done and the next one on the path current', () => {
+      const result = withStatusAsOf(chain, '2026-11-04');
+
+      expect(result.map((point) => [point.id, point.status])).toEqual([
+        ['a', 'done'],
+        ['b', 'current'],
+        ['c', 'open'],
+        ['x', 'abandoned'],
+      ]);
+    });
+
+    it('turns everything done after the last point', () => {
+      const result = withStatusAsOf(chain, '2026-12-01');
+
+      expect(result.filter((point) => point.status === 'done')).toHaveLength(3);
+    });
+  });
   describe('when building the data for a view', () => {
     const paths = [makePath('a', '#ff0000', 0), makePath('b', '#00ff00', 1), makePath('c', '#0000ff', 2)];
     const points = [
@@ -84,7 +118,14 @@ describe('Period data for the demo', () => {
     ];
 
     it('uses only the paths that have points in the view', () => {
-      const result = buildPeriodData({ paths, points: points.slice(0, 1), period: week, page: 0, pins: {} });
+      const result = buildPeriodData({
+        paths,
+        points: points.slice(0, 1),
+        period: week,
+        page: 0,
+        checkIns: [],
+        pins: {},
+      });
 
       expect(result.data.paths.map((path) => path.id)).toEqual(['a']);
     });
@@ -95,6 +136,7 @@ describe('Period data for the demo', () => {
         points: [...points, makePoint({ id: 'd1', pathId: 'd', date: '2026-11-06' })],
         period: week,
         page: 0,
+        checkIns: [],
         pins: {},
       });
       const second = buildPeriodData({
@@ -102,6 +144,7 @@ describe('Period data for the demo', () => {
         points: [...points, makePoint({ id: 'd1', pathId: 'd', date: '2026-11-06' })],
         period: week,
         page: 1,
+        checkIns: [],
         pins: {},
       });
 
@@ -111,13 +154,20 @@ describe('Period data for the demo', () => {
     });
 
     it('keeps the page inside the range', () => {
-      const result = buildPeriodData({ paths, points, period: week, page: 99, pins: {} });
+      const result = buildPeriodData({ paths, points, period: week, page: 99, checkIns: [], pins: {} });
 
       expect(result.page).toBe(result.pages - 1);
     });
 
     it('pins points at the positions the user chose', () => {
-      const result = buildPeriodData({ paths, points, period: week, page: 0, pins: { a1: { x: 5, y: 6 } } });
+      const result = buildPeriodData({
+        paths,
+        points,
+        period: week,
+        page: 0,
+        checkIns: [],
+        pins: { a1: { x: 5, y: 6 } },
+      });
 
       expect(result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1')).toMatchObject({
         x: 5,

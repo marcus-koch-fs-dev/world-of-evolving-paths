@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { PATH_PALETTE, type PathInfo, type PathPoint } from '../../../core';
 import { useWorldVersion } from '../../hooks/useWorldVersion';
 import { usePathWorldHandle } from '../../PathWorldContext';
+import { MenuTiles } from './MenuTiles';
 import { ColorPanel } from './panels/ColorPanel';
 import { DeletePanel } from './panels/DeletePanel';
 import { DetailsPanel } from './panels/DetailsPanel';
@@ -62,7 +63,7 @@ function PointMenuBody(props: PointMenuProps) {
 
   const panels: Record<TileId, React.ReactNode> = {
     status: <StatusPanel status={point.status} canComplete={props.canComplete ?? true} onUpdate={props.onUpdate} />,
-    next: <NextPointPanel colors={colors} onAddNext={props.onAddNext} onDone={close} />,
+    next: <NextPointPanel colors={colors} defaultDate={point.date} onAddNext={props.onAddNext} onDone={close} />,
     kind: <KindPanel kind={point.kind} branches={point.next.length >= 2} onUpdate={props.onUpdate} />,
     color: (
       <ColorPanel
@@ -91,21 +92,12 @@ function PointMenuBody(props: PointMenuProps) {
           <strong>{point.title}</strong>
           <span>{STATUS_LABELS[point.status]}</span>
         </div>
-        <div className="pw-menu-tiles">
-          {tiles.map((tile) => (
-            <button
-              key={tile.id}
-              type="button"
-              className={`pw-tile${open === tile.id ? ' is-open' : ''}${tile.id === 'remove' ? ' is-danger' : ''}`}
-              onClick={() => setOpen((current) => (current === tile.id ? null : tile.id))}
-            >
-              <span className="pw-glyph" style={tile.id === 'color' ? { color: path.color } : undefined}>
-                {tile.glyph}
-              </span>
-              <span className="pw-tile-label">{tile.label}</span>
-            </button>
-          ))}
-        </div>
+        <MenuTiles
+          tiles={tiles}
+          open={open}
+          pathColor={path.color}
+          onToggle={(id) => setOpen((current) => (current === id ? null : id))}
+        />
       </div>
       {open && <div className="pw-menu-sub">{panels[open]}</div>}
     </div>,

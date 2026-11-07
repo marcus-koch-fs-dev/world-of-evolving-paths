@@ -8,7 +8,7 @@ import {
   toDay,
 } from 'world-of-evolving-paths';
 import { FREE_VIEW_MIN_IMPORTANCE, LEVEL_SETTINGS } from './levels';
-import type { DemoPoint } from './types';
+import type { CheckIn, DemoPoint } from './types';
 
 const MIN_IMPORTANCE_OF_ENDS = 3;
 
@@ -60,23 +60,44 @@ export function visiblePoints(all: DemoPoint[], period: Period | null, minImport
     });
 }
 
-/** Strength tier of every reached point, counted over all points of its path, also the hidden ones. */
-export function withStrength(visible: DemoPoint[], all: DemoPoint[]): DemoPoint[] {
-  const reachedDays = new Map<string, number[]>();
-  for (const point of all) {
-    if (point.status !== 'done' && point.status !== 'current') continue;
-    reachedDays.set(point.pathId, [...(reachedDays.get(point.pathId) ?? []), toDay(point.date)]);
+/** Strength tier of every reached point, counted over all check-ins of its path, also those the view hides. */
+export function withStrength(visible: DemoPoint[], checkIns: CheckIn[]): DemoPoint[] {
+  const daysByPath = new Map<string, number[]>();
+  for (const checkIn of checkIns) {
+    daysByPath.set(checkIn.pathId, [...(daysByPath.get(checkIn.pathId) ?? []), toDay(checkIn.date)]);
   }
   return visible.map((point) =>
     point.status === 'done' || point.status === 'current'
-      ? { ...point, strength: tierAt(reachedDays.get(point.pathId) ?? [], toDay(point.date)) }
+      ? { ...point, strength: tierAt(daysByPath.get(point.pathId) ?? [], toDay(point.date)) }
       : point,
   );
 }
 
+/**
+ * The status of every point as of a day, for moving through time: earlier points are done, the first one still
+ * ahead on its path is current, the rest is open. Abandoned points stay abandoned.
+ */
+export function withStatusAsOf(points: DemoPoint[], asOf: string): DemoPoint[] {
+  const day = toDay(asOf);
+  const currentIds = new Set<string>();
+  for (const path of new Set(points.map((point) => point.pathId))) {
+    const ahead = points
+      .filter((point) => point.pathId === path && point.status !== 'abandoned' && toDay(point.date) >= day)
+      .sort((a, b) => toDay(a.date) - toDay(b.date));
+    if (ahead[0]) currentIds.add(ahead[0].id);
+  }
+  return points.map((point) => {
+    if (point.status === 'abandoned') return point;
+    if (toDay(point.date) < day) return { ...point, status: 'done' as const };
+    return { ...point, status: currentIds.has(point.id) ? ('current' as const) : ('open' as const) };
+  });
+}
 export type ViewRequest = {
   paths: PathInfo[];
   points: DemoPoint[];
+  checkIns: CheckIn[];
+  /** Moves the statuses to this day. Without it the statuses are used as they are stored. */
+  asOf?: string;
   /** The period to show, or null for the free view with everything. */
   period: Period | null;
   page: number;
@@ -87,10 +108,11 @@ export type ViewRequest = {
 export type ViewResult = { data: PeriodData; pages: number; page: number };
 
 /** Everything the library needs for one view, plus how many pages there are. */
-export function buildPeriodData({ paths, points, period, page, pins }: ViewRequest): ViewResult {
+export function buildPeriodData({ paths, points, checkIns, asOf, period, page, pins }: ViewRequest): ViewResult {
   const minImportance = period ? LEVEL_SETTINGS[period.level].minImportance : FREE_VIEW_MIN_IMPORTANCE;
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
-  const shown = withStrength(visiblePoints(points, period, minImportance), points);
+  const dated = asOf ? withStatusAsOf(points, asOf) : points;
+  const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns);
   const usedPaths = paths.filter((path) => shown.some((point) => point.pathId === path.id));
   const pages = pagesOf(
     usedPaths.map((path) => path.id),

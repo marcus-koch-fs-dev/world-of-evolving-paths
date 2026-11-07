@@ -1,11 +1,12 @@
 import { isIsoDate, type PathInfo, type Position } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
-import type { DemoPoint } from './types';
+import type { CheckIn, DemoPoint } from './types';
 
 /** What the demo app keeps. The library keeps none of it. */
 export type DemoState = {
   paths: PathInfo[];
   points: DemoPoint[];
+  checkIns: CheckIn[];
   /** Pinned positions per view key, then per point id. */
   pins: Record<string, Record<string, Position>>;
   /** Layout seed per view key. */
@@ -20,12 +21,13 @@ export type DemoAction =
   | { type: 'update'; id: string; patch: PointPatch }
   | { type: 'pathColor'; pathId: string; color: string }
   | { type: 'delete'; id: string }
-  | { type: 'reroll'; viewKey: string };
+  | { type: 'reroll'; viewKey: string }
+  | { type: 'checkIn'; pathId: string; date: string };
 
 export const DEFAULT_SEED = 1;
 
-export function initialState(paths: PathInfo[], points: DemoPoint[]): DemoState {
-  return { paths, points, pins: {}, seeds: {}, nextId: 1 };
+export function initialState(paths: PathInfo[], points: DemoPoint[], checkIns: CheckIn[] = []): DemoState {
+  return { paths, points, checkIns, pins: {}, seeds: {}, nextId: 1 };
 }
 
 /** The message to show when a new point cannot be created, or null when the input is fine. */
@@ -70,6 +72,8 @@ function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, {
     kind: 'milestone',
     status: 'open',
     next: [],
+    // The new point is as important as the one it follows, so it shows in the same views
+    importance: from.importance,
   };
   return {
     ...state,
@@ -82,6 +86,12 @@ function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, {
     ],
     nextId: state.nextId + 1,
   };
+}
+
+/** A path is walked on a day. Checking in twice on one day does not count twice. */
+function addCheckIn(state: DemoState, pathId: string, date: string): DemoState {
+  const known = state.checkIns.some((checkIn) => checkIn.pathId === pathId && checkIn.date === date);
+  return known ? state : { ...state, checkIns: [...state.checkIns, { pathId, date }] };
 }
 
 function deletePoint(state: DemoState, id: string): DemoState {
@@ -121,6 +131,8 @@ export function reduce(state: DemoState, action: DemoAction): DemoState {
       };
     case 'delete':
       return deletePoint(state, action.id);
+    case 'checkIn':
+      return addCheckIn(state, action.pathId, action.date);
     case 'reroll':
       return {
         ...state,

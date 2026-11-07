@@ -4,13 +4,15 @@ import { ColorSwatches } from './ColorSwatches';
 
 type Props = {
   colors: readonly string[];
+  /** The date the field starts with, usually the date of the point the new one follows. */
+  defaultDate: string;
   onAddNext: (input: NextPointInput) => string | null;
   onDone: () => void;
 };
 
-export function NextPointPanel({ colors, onAddNext, onDone }: Props) {
+export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props) {
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(defaultDate);
   const [newPath, setNewPath] = useState(false);
   const [color, setColor] = useState(colors[0] ?? '#ffffff');
   const [error, setError] = useState<string | null>(null);

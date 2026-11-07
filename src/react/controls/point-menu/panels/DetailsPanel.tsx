@@ -24,6 +24,11 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
           onChange={(event) => event.target.value && onUpdate({ date: event.target.value })}
         />
       </label>
+      <p className="pw-help">
+        Importance is your own rating, 1 to 5. A more important point is drawn bigger, keeps more distance to others and
+        stays visible in wider views such as month and year. The thickness of its outline shows how strong the path is
+        that leads to it, and that comes from how often you walk it.
+      </p>
       <label>
         Importance
         <select

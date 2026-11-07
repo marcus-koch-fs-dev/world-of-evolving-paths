@@ -193,6 +193,24 @@
 
 .pw-menu-sub .pw-swatch.is-empty {
   display: inline-block;
-  border: 1px dashed var(--pw-line);
+  border: 1px dashed var(--pw-muted);
   background: none;
+}
+
+.pw-menu-group + .pw-menu-group {
+  margin-top: 8px;
+}
+
+.pw-menu-group h4 {
+  margin: 0 0 4px;
+  color: var(--pw-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pw-menu-sub .pw-help {
+  font-size: 11px;
+  line-height: 1.4;
 }

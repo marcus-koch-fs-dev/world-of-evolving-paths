@@ -1,0 +1,15 @@
+.pw-time-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pw-time-slider input[type="range"] {
+  width: 260px;
+}
+
+.pw-time-label {
+  min-width: 84px;
+  text-align: center;
+  color: var(--pw-muted);
+}

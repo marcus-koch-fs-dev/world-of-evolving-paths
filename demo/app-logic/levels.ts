@@ -10,7 +10,10 @@ export const FREE_VIEW_MIN_IMPORTANCE = 2;
 export const LEVEL_SETTINGS: Record<ViewLevel, { minImportance: number; graphsPerPage: number }> = {
   day: { minImportance: 1, graphsPerPage: 3 },
   week: { minImportance: 1, graphsPerPage: 3 },
-  month: { minImportance: 2, graphsPerPage: 4 },
-  halfYear: { minImportance: 3, graphsPerPage: 6 },
-  year: { minImportance: 4, graphsPerPage: 6 },
+  month: { minImportance: 2, graphsPerPage: 3 },
+  halfYear: { minImportance: 3, graphsPerPage: 3 },
+  year: { minImportance: 3, graphsPerPage: 3 },
 };
+
+/** The levels the demo offers at first. The user can switch the others on in the settings. */
+export const DEFAULT_LEVELS: ViewLevel[] = ['week', 'month', 'halfYear', 'year'];
