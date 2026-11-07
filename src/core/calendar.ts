@@ -1,4 +1,5 @@
 import { formatDate, formatDayMonth, fromDay, isoWeekNumber, monthName, monthSpan, toDay, weekdayOf } from './dates';
+import { formatMonthYearLong, formatNumericDate, weekPrefix } from './format';
 
 export type ViewLevel = 'day' | 'week' | 'month' | 'halfYear' | 'year';
 
@@ -23,7 +24,8 @@ type Span = { start: number; end: number };
 /** What a level knows about itself: which days it covers, how it is called, and where the next one starts. */
 type LevelRule = {
   span(iso: string, options: CalendarOptions): Span;
-  label(span: Span): string;
+  /** The name of a period. Without a locale it is written in English words, with one in the numeric form of that language. */
+  label(span: Span, locale?: string): string;
   /** The date inside the period `count` steps away, and the options to build that period with. */
   shifted(period: Period, count: number): { iso: string; options: CalendarOptions };
 };
@@ -47,7 +49,7 @@ function firstOfMonth(day: number, months: number): string {
 const RULES: Record<ViewLevel, LevelRule> = {
   day: {
     span: (iso) => ({ start: toDay(iso), end: toDay(iso) }),
-    label: ({ start }) => formatDate(fromDay(start)),
+    label: ({ start }, locale) => (locale ? formatNumericDate(fromDay(start), locale) : formatDate(fromDay(start))),
     shifted: (period, count) => ({ iso: fromDay(period.start + count), options: {} }),
   },
   week: {
@@ -56,9 +58,11 @@ const RULES: Record<ViewLevel, LevelRule> = {
       const start = day - mod(weekdayOf(day) - (options.weekStart ?? 0), DAYS_PER_WEEK);
       return { start, end: start + DAYS_PER_WEEK - 1 };
     },
-    label: ({ start, end }) => {
-      const calendarWeek = weekdayOf(start) === 0 ? `CW ${isoWeekNumber(start + 3)}, ` : '';
-      return `${calendarWeek}${formatDayMonth(start)} – ${formatDate(fromDay(end))}`;
+    label: ({ start, end }, locale) => {
+      const calendarWeek = weekdayOf(start) === 0 ? `${weekPrefix(locale)} ${isoWeekNumber(start + 3)}, ` : '';
+      const from = locale ? formatNumericDate(fromDay(start), locale, false) : formatDayMonth(start);
+      const to = locale ? formatNumericDate(fromDay(end), locale) : formatDate(fromDay(end));
+      return `${calendarWeek}${from} – ${to}`;
     },
     // A week keeps the weekday it started on
     shifted: (period, count) => ({
@@ -71,9 +75,9 @@ const RULES: Record<ViewLevel, LevelRule> = {
       const [year, month] = iso.split('-').map(Number);
       return monthSpan(`${year}-${pad(month)}`);
     },
-    label: ({ start }) => {
+    label: ({ start }, locale) => {
       const [year, month] = yearAndMonth(start);
-      return `${monthName(month)} ${year}`;
+      return locale ? formatMonthYearLong(fromDay(start), locale) : `${monthName(month)} ${year}`;
     },
     shifted: (period, count) => ({ iso: firstOfMonth(period.start, count), options: {} }),
   },
@@ -104,6 +108,11 @@ const RULES: Record<ViewLevel, LevelRule> = {
 
 function periodFromSpan(level: ViewLevel, span: Span): Period {
   return { level, ...span, key: `${level}:${fromDay(span.start)}`, label: RULES[level].label(span) };
+}
+
+/** The name of a period in the numeric form of a language, such as KW 45, 2.11. – 8.11.2026. period.label is the English one. */
+export function periodLabel(period: Period, locale?: string): string {
+  return RULES[period.level].label(period, locale);
 }
 
 /** The period of a level that contains the given date. */

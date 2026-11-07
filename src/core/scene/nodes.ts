@@ -1,4 +1,4 @@
-import { formatMonthYear } from '../dates';
+import { formatPointDate } from '../format';
 import { shapeOf } from '../shapes';
 import { symbolSize } from '../symbol';
 import type { PlacedPoint, PlacedWorld } from '../types';
@@ -12,11 +12,14 @@ const OPEN_DASH: Dash = [4, 3];
 const ABANDONED_DASH: Dash = [1.5, 3];
 const ABANDONED_SHAPE_ALPHA = 0.5;
 const ABANDONED_ALPHA = 0.4;
+/** Outline thickness by the strength tier of the path that arrives at a point. Points not reached yet use the first. */
+const OUTLINE_BY_TIER = [2.5, 3.5, 4.5, 6, 8];
 const DRAG_SCALE = 1.15;
 const HOVER_SCALE = 1.12;
 
 function nodeOf(world: PlacedWorld, point: PlacedPoint, state: SceneState): NodeDraw {
   const abandoned = point.status === 'abandoned';
+  const reached = point.status === 'done' || point.status === 'current';
   return {
     id: point.id,
     x: point.x,
@@ -25,6 +28,9 @@ function nodeOf(world: PlacedWorld, point: PlacedPoint, state: SceneState): Node
     size: symbolSize(point),
     radius: SHAPE_RADIUS,
     stroke: pathColorOf(world, point),
+    outlineWidth: reached
+      ? OUTLINE_BY_TIER[Math.min(OUTLINE_BY_TIER.length - 1, Math.max(0, point.strength ?? 0))]
+      : OUTLINE_BY_TIER[0],
     fill: point.status === 'done' ? DONE_FILL : OPEN_FILL,
     dash: point.status === 'open' ? OPEN_DASH : abandoned ? ABANDONED_DASH : null,
     shapeAlpha: abandoned ? ABANDONED_SHAPE_ALPHA : 1,
@@ -34,7 +40,7 @@ function nodeOf(world: PlacedWorld, point: PlacedPoint, state: SceneState): Node
     arrow: point.status === 'current',
     glyph: point.kind === 'goal' && point.status === 'done' ? '✓' : null,
     title: point.title,
-    date: formatMonthYear(point.date),
+    date: state.formatDate ? state.formatDate(point.date) : formatPointDate(point.date, world.today, state.locale),
   };
 }
 

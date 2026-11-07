@@ -4,6 +4,7 @@ import type { Scene } from '../../core/scene/types';
 import { EdgeLayer } from './EdgeLayer';
 import { HereLayer } from './HereLayer';
 import { NodeLayer } from './NodeLayer';
+import { RingLayer } from './RingLayer';
 import { TextPool } from './TextPool';
 import { BOB_MS, easeOut, now, RING_MS } from './timing';
 
@@ -27,6 +28,7 @@ export class PixiRenderer {
   private readonly edges = new EdgeLayer();
   private readonly nodes = new NodeLayer(this.texts);
   private readonly heres = new HereLayer(this.texts);
+  private readonly rings = new RingLayer();
 
   async mount(host: HTMLElement): Promise<void> {
     const app = new Application();
@@ -46,7 +48,14 @@ export class PixiRenderer {
     }
     this.app = app;
     host.appendChild(app.canvas);
-    this.world.addChild(this.edges.lines, this.edges.glow, this.edges.lit, this.nodes.container, this.heres.container);
+    this.world.addChild(
+      this.edges.lines,
+      this.edges.glow,
+      this.edges.lit,
+      this.rings.container,
+      this.nodes.container,
+      this.heres.container,
+    );
     app.stage.addChild(this.world);
     app.ticker.maxFPS = MAX_FPS;
     app.ticker.add(() => this.tick());
@@ -87,6 +96,7 @@ export class PixiRenderer {
     this.edges.sync(scene.edges);
     this.nodes.sync(scene.nodes);
     this.heres.sync(scene.heres);
+    this.rings.sync(scene.rings);
     this.keepTicking = this.edges.animated || this.nodes.animated || this.heres.animated;
     this.app.render();
     if (this.keepTicking || this.nodes.moving) this.app.ticker.start();

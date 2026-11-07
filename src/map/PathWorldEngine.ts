@@ -16,7 +16,7 @@ import { PixiRenderer } from './render/PixiRenderer';
 import { WorldModel } from './state/WorldModel';
 
 const DEFAULT_SEED = 1;
-const EMPTY_SCENE: Scene = { edges: [], nodes: [], heres: [] };
+const EMPTY_SCENE: Scene = { edges: [], nodes: [], heres: [], rings: [] };
 const TEXT_INPUT = 'input, textarea, select';
 const ERROR_PREFIX = 'World of Evolving Paths:';
 
@@ -107,7 +107,7 @@ export class PathWorldEngine implements PathWorldHandle {
   update(options: PathWorldOptions): void {
     const previous = this.options;
     this.options = options;
-    const { changed, viewChanged } = this.model.configure({
+    const { changed, viewChanged, layoutChanged } = this.model.configure({
       periods: options.periods,
       view: options.view,
       seed: options.seed ?? DEFAULT_SEED,
@@ -119,10 +119,14 @@ export class PathWorldEngine implements PathWorldHandle {
       this.hovered = null;
       this.dragging = null;
       this.dragger.cancel();
-    } else if (changed) {
+    } else if (layoutChanged) {
       this.dragger.acknowledge();
     }
-    if (changed || (previous.wavy === true) !== (options.wavy === true)) this.rebuildScene();
+    const lookChanged =
+      (previous.wavy === true) !== (options.wavy === true) ||
+      previous.locale !== options.locale ||
+      previous.formatDate !== options.formatDate;
+    if (changed || lookChanged) this.rebuildScene();
     if (changed) this.notifyWorld();
     if (!sameBackground(previous.background, options.background)) {
       this.viewport.render(this.camera.get(), options.background ?? {});
@@ -212,7 +216,13 @@ export class PathWorldEngine implements PathWorldHandle {
   private rebuildScene(): void {
     const world = this.model.world();
     this.scene = world
-      ? buildScene(world, { wave: this.options.wavy === true, hovered: this.hovered, dragging: this.dragging })
+      ? buildScene(world, {
+          wave: this.options.wavy === true,
+          hovered: this.hovered,
+          dragging: this.dragging,
+          locale: this.options.locale,
+          formatDate: this.options.formatDate,
+        })
       : EMPTY_SCENE;
     this.renderer.setScene(this.scene);
   }

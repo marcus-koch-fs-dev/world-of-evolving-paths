@@ -30,6 +30,8 @@ export type NodeDraw = {
   /** Radius of the shape in symbol units (viewBox 72). */
   radius: number;
   stroke: string;
+  /** Thickness of the outline in symbol units. Grows with the strength of the path that arrives at the point. */
+  outlineWidth: number;
   fill: string | null;
   dash: Dash | null;
   shapeAlpha: number;
@@ -44,11 +46,18 @@ export type NodeDraw = {
 
 export type HereDraw = { id: string; x: number; y: number };
 
+/** A thin circle that shows how much room a point keeps around it. */
+export type RingDraw = { id: string; x: number; y: number; radius: number; dragged: boolean };
+
 export type SceneState = {
   /** Slight wave on the lines. */
   wave: boolean;
   hovered: string | null;
   dragging: string | null;
+  /** Language of the dates under the points, such as de. Default: the browser's. */
+  locale?: string;
+  /** Writes the date under a point instead of the built-in short form. */
+  formatDate?: (iso: string) => string;
 };
 
-export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[] };
+export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[] };

@@ -1,4 +1,4 @@
-import type { FlatPoint, PathInfo, PeriodData } from '../src/core/types';
+import type { FlatPoint, PathInfo, PeriodData, PlacedPoint, PlacedWorld } from '../src/core/types';
 
 /** A path style with sensible defaults. */
 export function makePath(id: string, color = '#3a86ff', lane?: number): PathInfo {
@@ -50,4 +50,15 @@ export function editPoint(data: PeriodData, id: string, patch: Record<string, un
       points: path.points.map((point) => (point.id === id ? { ...point, ...patch } : point)),
     })),
   };
+}
+
+/** A point that already has a position, as the scene works with it. */
+export function placedPoint(overrides: Partial<PlacedPoint> & { id: string }, x: number, y = 0): PlacedPoint {
+  const { x: _x, y: _y, ...rest } = makePoint(overrides);
+  return { ...rest, x, y };
+}
+
+/** A world with one red path around the given points. */
+export function worldOf(points: PlacedPoint[], today = '2026-11-10'): PlacedWorld {
+  return { today, paths: [makePath('combat', '#ff3b3b')], points };
 }

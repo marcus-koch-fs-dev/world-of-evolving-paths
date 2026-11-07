@@ -62,6 +62,10 @@ export type PathWorldOptions = PathWorldEvents & {
   pointsLocked?: boolean;
   /** Slight wave on the lines. Default false. */
   wavy?: boolean;
+  /** Language of the dates under the points, such as `de` or `en-GB`. Default: the browser's language. */
+  locale?: string;
+  /** Writes the date under a point yourself, for example with your own date library. Wins over `locale`. */
+  formatDate?: (iso: string) => string;
   /** Moving parts: flowing dashes, pulses, glow. Default on, but off when the user prefers reduced motion. */
   animate?: boolean;
   background?: BackgroundOptions;

@@ -7,7 +7,6 @@ import type { TextPool } from './TextPool';
 const INK = '#edefe6';
 const MUTED = '#8a8f80';
 const SYMBOL_UNITS = 72; // the shape radius is given in a symbol 72 units wide
-const OUTLINE_WIDTH = 2.5;
 const SCALE_TAU = 60; // ms, how fast the size follows
 const ALPHA_TAU = 250; // ms, how fast the opacity follows
 const SCALE_STEP = 0.002;
@@ -37,6 +36,7 @@ function signatureOf(node: NodeDraw): string {
     node.shape,
     node.radius,
     node.stroke,
+    node.outlineWidth,
     node.fill,
     node.dash?.join(','),
     node.shapeAlpha,
@@ -161,11 +161,11 @@ export class NodeLayer {
     shape.clear();
     if (node.fill) shape.poly(flat(points)).fill({ color: node.fill });
     if (node.dash)
-      strokeDashes(shape, [...points, points[0]], node.dash, 0, OUTLINE_WIDTH, node.stroke, node.shapeAlpha);
+      strokeDashes(shape, [...points, points[0]], node.dash, 0, node.outlineWidth, node.stroke, node.shapeAlpha);
     else
       shape
         .poly(flat(points))
-        .stroke({ width: OUTLINE_WIDTH, color: node.stroke, alpha: node.shapeAlpha, join: 'round' });
+        .stroke({ width: node.outlineWidth, color: node.stroke, alpha: node.shapeAlpha, join: 'round' });
   }
 
   private paintRing(slot: NodeSlot): void {

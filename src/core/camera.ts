@@ -7,7 +7,10 @@ export type Bounds = { minX: number; minY: number; maxX: number; maxY: number };
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 3;
 
-const FIT_PADDING = 80;
+/** Fitting fills this share of the viewport, so the content keeps a frame around it. */
+const FIT_FILL = 0.75;
+/** A lone point or a tiny group is not blown up beyond this zoom when fitting. */
+const MAX_FIT_ZOOM = 1.25;
 
 /** Keeps a zoom factor inside the allowed range. */
 export function clampZoom(zoom: number): number {
@@ -55,15 +58,13 @@ export function centerOn(bounds: Bounds, viewportWidth: number, viewportHeight: 
   };
 }
 
-/** Camera that fits the bounds, with padding, into the viewport. */
-export function fitBounds(
-  bounds: Bounds,
-  viewportWidth: number,
-  viewportHeight: number,
-  padding = FIT_PADDING,
-): Camera {
+/** Camera that fits the bounds into the viewport, leaving a frame of empty space around them. */
+export function fitBounds(bounds: Bounds, viewportWidth: number, viewportHeight: number, fill = FIT_FILL): Camera {
   const width = Math.max(1, bounds.maxX - bounds.minX);
   const height = Math.max(1, bounds.maxY - bounds.minY);
-  const zoom = clampZoom(Math.min((viewportWidth - 2 * padding) / width, (viewportHeight - 2 * padding) / height));
+  const zoom = Math.min(
+    MAX_FIT_ZOOM,
+    clampZoom(Math.min((viewportWidth * fill) / width, (viewportHeight * fill) / height)),
+  );
   return centerOn(bounds, viewportWidth, viewportHeight, zoom);
 }

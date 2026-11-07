@@ -141,19 +141,35 @@ export function generateLayout(input: LayoutInput): LayoutResult {
   return { positions, width };
 }
 
+/** The paths and points of a view together with where each point is. It does not depend on today. */
+export type PeriodLayout = { paths: PathInfo[]; points: FlatPoint[]; positions: Record<string, Position> };
+
+/**
+ * Lays out the points of a view. The view key decides the calendar span;
+ * a key that is not a period (a free view) uses the span of the points.
+ */
+export function layoutPeriod(data: PeriodData, view: string, seed: number): PeriodLayout {
+  const flat = flattenPeriod(data);
+  const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period: periodFromKey(view), seed });
+  return { ...flat, positions };
+}
+
 /**
  * The world to draw: every point with its position. Points that reference unknown points lose those links.
- * The view key decides the calendar span; a key that is not a period (a free view) uses the span of the points.
+ * Changing `today` only needs this step again, not a new layout.
  */
-export function placePeriod(data: PeriodData, view: string, today: string, seed: number): PlacedWorld {
-  const period = periodFromKey(view);
-  const flat = flattenPeriod(data);
-  const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period, seed });
-  const points: PlacedPoint[] = flat.points.map((point) => {
+export function placeWorld(layout: PeriodLayout, today: string): PlacedWorld {
+  const { positions } = layout;
+  const points: PlacedPoint[] = layout.points.map((point) => {
     const { x: _x, y: _y, ...rest } = point;
     return { ...rest, ...positions[point.id], next: point.next.filter((id) => positions[id]) };
   });
-  return { today, paths: flat.paths, points };
+  return { today, paths: layout.paths, points };
+}
+
+/** Lays a view out and places it in one go. */
+export function placePeriod(data: PeriodData, view: string, today: string, seed: number): PlacedWorld {
+  return placeWorld(layoutPeriod(data, view, seed), today);
 }
 
 /**
