@@ -1,10 +1,11 @@
 import type { Camera } from '../core/camera.js';
+import type { Direction } from '../core/orientation.js';
 import type { PeriodMap, Position } from '../core/types.js';
 
 export type BackgroundPattern = 'none' | 'hex' | 'dots' | 'stars';
 
-/** An image behind the paths, placed in world units so it moves and scales with the map. */
-export type BackgroundImage = { src: string; x: number; y: number; width: number; height: number };
+// Which way time runs on the screen. `auto` is vertical while the map is taller than wide, otherwise horizontal.
+export type Orientation = Direction | 'auto';
 
 export type BackgroundOptions = {
   /** Plain color (default) or a gradient from `base` to `color2`. */
@@ -24,7 +25,6 @@ export type BackgroundOptions = {
   intensity?: number;
   /** Size of the pattern, 0.5 to 2. */
   scale?: number;
-  image?: BackgroundImage;
 };
 
 export type PointMoveEvent = {
@@ -69,6 +69,12 @@ export type PathWorldOptions = PathWorldEvents & {
   /** Moving parts: flowing dashes, pulses, glow. Default on, but off when the user prefers reduced motion. */
   animate?: boolean;
   background?: BackgroundOptions;
+  /**
+   * Which way time runs: `horizontal` (default, left to right), `horizontal-inverted` (right to left), `vertical`
+   * (top to bottom), `vertical-inverted` (bottom to top) or `auto` (vertical on a tall screen, otherwise horizontal).
+   * Only the picture turns: the data, the stored positions and the events stay the same.
+   */
+  orientation?: Orientation;
   /** Keys M (center) and E (fit). Default true. */
   shortcuts?: boolean;
 };

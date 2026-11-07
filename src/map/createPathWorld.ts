@@ -2,8 +2,10 @@ import type { Bounds } from '../core/camera.js';
 import { layoutOf, nearestFree } from '../core/collision.js';
 import { contentBounds } from '../core/geometry.js';
 import { dateAtX } from '../core/layout.js';
+import { type Direction, TURNS, type Turn } from '../core/orientation.js';
 import { buildScene } from '../core/scene/buildScene.js';
 import { hitNode } from '../core/scene/hit.js';
+import { turnScene } from '../core/scene/turn.js';
 import type { Scene } from '../core/scene/types.js';
 import type { Position } from '../core/types.js';
 import { createCameraController } from './camera/createCameraController.js';
@@ -11,6 +13,7 @@ import { createViewport } from './dom/createViewport.js';
 import { createBoundaryChecks } from './engine/boundary.js';
 import { prefersReducedMotion, sameBackground } from './engine/environment.js';
 import { buildMoveEvent, rounded } from './engine/events.js';
+import { resolveOrientation } from './engine/orientation.js';
 import { shortcutFor } from './engine/shortcuts.js';
 import { createPointDragger } from './interaction/createPointDragger.js';
 import { createPointerController } from './interaction/createPointerController.js';
@@ -54,7 +57,20 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
   const model = createWorldModel(reportError);
   let background = boundary.backgroundOf(initialOptions);
 
-  const bounds = (): Bounds | null => contentBounds(model.world()?.points ?? []);
+  // The layout always has time along x, from left to right. The direction turns what is drawn and shown, so what comes
+  // in from the screen (pointer positions) is turned back to the layout's frame, and what goes out (events) is not turned.
+  let direction: Direction = 'horizontal';
+  const toScreen: Turn = (position) => TURNS[direction].toScreen(position);
+  const toLayout: Turn = (position) => TURNS[direction].toLayout(position);
+  /** Applies the orientation option to the current size of the map. True when the direction changed. */
+  const syncOrientation = (): boolean => {
+    const next = resolveOrientation(options.orientation, viewport.size());
+    const changed = next !== direction;
+    direction = next;
+    return changed;
+  };
+
+  const bounds = (): Bounds | null => contentBounds((model.world()?.points ?? []).map(toScreen));
 
   const notifyWorld = () => {
     worldVersion += 1;
@@ -65,7 +81,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
 
   const rebuildScene = () => {
     const world = model.world();
-    scene = world
+    const built = world
       ? buildScene(world, {
           wave: options.wavy === true,
           hovered,
@@ -74,6 +90,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
           formatDate: options.formatDate,
         })
       : EMPTY_SCENE;
+    scene = direction === 'horizontal' ? built : turnScene(built, toScreen);
     renderer.setScene(scene);
   };
 
@@ -120,22 +137,22 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
         rebuildScene();
         return true;
       },
-      onDragMove: (id, position) => dragger.move(id, position),
+      onDragMove: (id, position) => dragger.move(id, toLayout(position)),
       onDragEnd(id) {
         dragging = null;
         dragger.end(id);
         rebuildScene();
       },
       onBackgroundClick: () => options.onSelect?.(null),
-      onBackgroundDoubleClick(at: Position) {
+      onBackgroundDoubleClick(onScreen: Position) {
         if (options.editable === false) return;
         const points = model.world()?.points ?? [];
-        const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, at));
+        const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, toLayout(onScreen)));
         const date = dateAtX(free.x, model.periodData(), options.view, boundary.todayOf(options));
         options.onPointAdd?.({ ...free, date });
       },
     },
-    (id) => model.positionOf(id),
+    (id) => toScreen(model.positionOf(id)),
   );
 
   const unsubscribeCamera = camera.subscribe((next) => {
@@ -146,6 +163,11 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
   const resizeObserver = new ResizeObserver(() => {
     const { width, height } = viewport.size();
     renderer.resize(width, height);
+    if (syncOrientation()) {
+      framing = 'fit';
+      rebuildScene();
+      notifyWorld();
+    }
     applyFraming();
   });
   resizeObserver.observe(viewport.root);
@@ -180,6 +202,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       today: boundary.todayOf(next),
     });
     renderer.setAnimate(next.animate ?? !prefersReducedMotion());
+    const orientationChanged = syncOrientation();
     if (viewChanged) {
       framing = framedOnce ? 'center' : 'fit';
       hovered = null;
@@ -189,12 +212,14 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
     } else if (dataChanged) {
       dragger.acknowledge();
     }
+    // A new direction needs the whole content in view again, also when the view changed at the same time
+    if (orientationChanged) framing = 'fit';
     const lookChanged =
       (previous.wavy === true) !== (next.wavy === true) ||
       previous.locale !== next.locale ||
       previous.formatDate !== next.formatDate;
-    if (changed || lookChanged) rebuildScene();
-    if (changed) notifyWorld();
+    if (changed || lookChanged || orientationChanged) rebuildScene();
+    if (changed || orientationChanged) notifyWorld();
     if (!sameBackground(previous.background, next.background)) {
       background = boundary.backgroundOf(next);
       viewport.render(camera.get(), background ?? {});
@@ -214,7 +239,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
     update,
     positionOf(id) {
       const point = model.world()?.points.find((candidate) => candidate.id === id);
-      return point ? { x: point.x, y: point.y } : null;
+      return point ? toScreen({ x: point.x, y: point.y }) : null;
     },
     zoomBy: (factor) => camera.zoomBy(factor),
     fit() {
