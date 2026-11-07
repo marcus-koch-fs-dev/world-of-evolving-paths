@@ -1,7 +1,6 @@
 import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map/index.js';
 import { FillFields } from './FillFields.js';
 import { RangeField } from './fields.js';
-import { ImageFields } from './ImageFields.js';
 import { PatternPicker } from './PatternPicker.js';
 import './backgroundPanel.css';
 
@@ -11,7 +10,7 @@ export type BackgroundPanelProps = {
 };
 
 /**
- * Settings for the background: fill (plain or gradient), pattern and an image behind the paths.
+ * Settings for the background: fill (plain or gradient) and pattern.
  * It holds no state. Pass the options to `PathWorld` and store what `onChange` gives you.
  */
 export function BackgroundPanel({ value, onChange }: BackgroundPanelProps) {
@@ -43,7 +42,6 @@ export function BackgroundPanel({ value, onChange }: BackgroundPanelProps) {
           />
         </>
       )}
-      <ImageFields image={value.image} onChange={(image) => onChange({ ...value, image })} />
     </section>
   );
 }
