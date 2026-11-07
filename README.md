@@ -100,7 +100,7 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are stacked by `lane` (lowest first), otherwise in list order.
 
-**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge.
+**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` must point to an existing point and connections never form a circle: the data is rejected with a message otherwise.
 
 **`PeriodMap`** is a hashmap from period key to `PeriodData`. Typically it holds only the view you show, and you load the next one when the user changes the view.
 
@@ -171,7 +171,7 @@ Update your data in these callbacks and pass the new objects back in. The data i
 | `animate`      | `true`     | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                      |
 | `locale`       | browser    | Language of the dates under the points, such as `de`.                                                                                                                                                                   |
 | `formatDate`   | —          | Writes the date under a point yourself. Wins over `locale`.                                                                                                                                                             |
-| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit).                                                                                                                                                                                        |
+| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit), only while the pointer is over the map or the focus is inside it.                                                                                                                                                                                      |
 
 ### Camera
 
@@ -223,7 +223,7 @@ Ready-made controls live in `src/react/controls/`, one folder per control with i
 | `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                   |
 | `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                                                                                                                                                     |
 | `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                                                                                                                                             |
-| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, delete. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. Placed below the point by default, above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
+| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, connect (when you pass `onConnect`), delete. `checkInCount` shows the check-ins of the path under the name. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. Placed below the point by default, above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
 | `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                     |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
