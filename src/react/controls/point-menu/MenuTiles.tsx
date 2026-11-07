@@ -6,6 +6,8 @@ type Props = {
   open: TileId | null;
   /** Color of the path, shown on the color tile. */
   pathColor: string;
+  /** The connect tile shows as active while the app waits for the point to connect to. */
+  connecting: boolean;
   onToggle: (id: TileId) => void;
 };
 
@@ -15,7 +17,7 @@ const GROUPS: { group: Tile['group']; label: string }[] = [
 ];
 
 /** The tiles of the menu in two groups: what you do with the point, and what the point is. */
-export function MenuTiles({ tiles, open, pathColor, onToggle }: Props) {
+export function MenuTiles({ tiles, open, pathColor, connecting, onToggle }: Props) {
   return (
     <>
       {GROUPS.map(({ group, label }) => {
@@ -29,7 +31,7 @@ export function MenuTiles({ tiles, open, pathColor, onToggle }: Props) {
                 <button
                   key={tile.id}
                   type="button"
-                  className={`pw-tile${open === tile.id ? ' is-open' : ''}${tile.id === 'remove' ? ' is-danger' : ''}`}
+                  className={`pw-tile${open === tile.id || (tile.id === 'connect' && connecting) ? ' is-open' : ''}${tile.id === 'remove' ? ' is-danger' : ''}`}
                   onClick={() => onToggle(tile.id)}
                 >
                   <span className="pw-glyph" style={tile.id === 'color' ? { color: pathColor } : undefined}>

@@ -40,7 +40,17 @@ export type PointMenuProps = {
   hide?: readonly TileId[];
   /** Where the menu sits next to the point. Default uto: below, or above when there is no room below. */
   placement?: MenuPlacement;
+  /** The connect tile shows when this is given. Clicking it calls it; the app then waits for the user to pick the point to connect to. */
+  onConnect?: () => void;
+  /** True while the app waits for that point. The connect tile shows as active. */
+  connecting?: boolean;
+  /** How many check-ins the path has. Shown under the name when given. */
+  checkInCount?: number;
 };
+
+const NO_PANEL = null;
+
+const checkInLabel = (count: number) => `${count} check-in${count === 1 ? '' : 's'}`;
 
 /**
  * Tile menu next to a selected point. It sits on the map's overlay, so it moves with the camera
@@ -60,7 +70,9 @@ function PointMenuBody(props: PointMenuProps) {
 
   const { point, path } = props;
   const colors = props.colors ?? PATH_PALETTE;
-  const tiles = TILES.filter((tile) => !props.hide?.includes(tile.id));
+  const tiles = TILES.filter(
+    (tile) => !props.hide?.includes(tile.id) && (tile.id !== 'connect' || props.onConnect !== undefined),
+  );
   const close = () => setOpen(null);
   const camera = handle.getCamera();
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
@@ -69,6 +81,7 @@ function PointMenuBody(props: PointMenuProps) {
   const panels: Record<TileId, React.ReactNode> = {
     status: <StatusPanel status={point.status} canComplete={props.canComplete ?? true} onUpdate={props.onUpdate} />,
     next: <NextPointPanel colors={colors} defaultDate={point.date} onAddNext={props.onAddNext} onDone={close} />,
+    connect: NO_PANEL,
     kind: <KindPanel kind={point.kind} branches={point.next.length >= 2} onUpdate={props.onUpdate} />,
     color: (
       <ColorPanel
@@ -95,16 +108,28 @@ function PointMenuBody(props: PointMenuProps) {
       <div className="pw-menu-grid">
         <div className="pw-menu-title">
           <strong>{point.title}</strong>
-          <span>{STATUS_LABELS[point.status]}</span>
+          <span>
+            {props.checkInCount === undefined
+              ? STATUS_LABELS[point.status]
+              : `${STATUS_LABELS[point.status]} · ${checkInLabel(props.checkInCount)}`}
+          </span>
         </div>
         <MenuTiles
           tiles={tiles}
           open={open}
           pathColor={path.color}
-          onToggle={(id) => setOpen((current) => (current === id ? null : id))}
+          connecting={props.connecting === true}
+          onToggle={(id) => {
+            if (id === 'connect') {
+              close();
+              props.onConnect?.();
+              return;
+            }
+            setOpen((current) => (current === id ? null : id));
+          }}
         />
       </div>
-      {open && <div className="pw-menu-sub">{panels[open]}</div>}
+      {open && panels[open] !== NO_PANEL && <div className="pw-menu-sub">{panels[open]}</div>}
     </div>,
     handle.overlay,
   );

@@ -60,17 +60,21 @@ export function visiblePoints(all: DemoPoint[], period: Period | null, minImport
     });
 }
 
-/** Strength tier of every reached point, counted over all check-ins of its path, also those the view hides. */
-export function withStrength(visible: DemoPoint[], checkIns: CheckIn[]): DemoPoint[] {
+/**
+ * Strength tier of every reached point, counted over all check-ins of its path, also those the view hides.
+ * With `asOf` the point still being walked to counts on that day, so its line grows stronger while time plays.
+ */
+export function withStrength(visible: DemoPoint[], checkIns: CheckIn[], asOf?: string): DemoPoint[] {
   const daysByPath = checkIns.reduce((groups, checkIn) => {
     const days = groups.get(checkIn.pathId);
     if (days) days.push(toDay(checkIn.date));
     else groups.set(checkIn.pathId, [toDay(checkIn.date)]);
     return groups;
   }, new Map<string, number[]>());
+  const countedDay = (point: DemoPoint) => (asOf && point.status === 'current' ? toDay(asOf) : toDay(point.date));
   return visible.map((point) =>
     point.status === 'done' || point.status === 'current'
-      ? { ...point, strength: tierAt(daysByPath.get(point.pathId) ?? [], toDay(point.date)) }
+      ? { ...point, strength: tierAt(daysByPath.get(point.pathId) ?? [], countedDay(point)) }
       : point,
   );
 }
@@ -116,7 +120,7 @@ export function buildPeriodData({ paths, points, checkIns, asOf, period, page, p
   const minImportance = period ? LEVEL_SETTINGS[period.level].minImportance : FREE_VIEW_MIN_IMPORTANCE;
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
   const dated = asOf ? withStatusAsOf(points, asOf) : points;
-  const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns);
+  const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns, asOf);
   const usedPaths = paths.filter((path) => shown.some((point) => point.pathId === path.id));
   const pages = pagesOf(
     usedPaths.map((path) => path.id),

@@ -77,6 +77,14 @@ describe('Period data for the demo', () => {
       expect(shown.strength).toBe(0);
     });
 
+    it('counts the point being walked to on the day of the time travel, not on its own date', () => {
+      const ahead = makePoint({ id: 'p', date: '2027-06-01', status: 'current' });
+      const checkIns = daily('combat', toDay('2026-11-02') - 19, 20);
+
+      expect(withStrength([ahead], checkIns, '2026-11-02')[0].strength).toBe(2);
+      expect(withStrength([ahead], checkIns)[0].strength).toBe(0);
+    });
+
     it('leaves open points without a strength', () => {
       const open = makePoint({ id: 'open', status: 'open' });
 

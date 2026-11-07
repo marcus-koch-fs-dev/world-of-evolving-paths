@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makePath, makePoint } from '../../tests/fixtures';
 import { canComplete } from './rules';
-import { DEFAULT_SEED, type DemoState, initialState, nextPointProblem, reduce } from './state';
+import { connectProblem, DEFAULT_SEED, type DemoState, initialState, nextPointProblem, reduce } from './state';
 
 const base = (): DemoState =>
   initialState(
@@ -27,6 +27,40 @@ describe('Demo app state', () => {
       const added = state.points.find((point) => point.id === 'custom-1');
       expect(added).toMatchObject({ kind: 'milestone', status: 'open', date: '2026-11-09' });
       expect(state.pins.v['custom-1']).toEqual({ x: 10, y: 20 });
+    });
+  });
+
+  describe('when two points are connected', () => {
+    const chain = (): DemoState =>
+      initialState(
+        [makePath('combat')],
+        [
+          makePoint({ id: 'a', next: ['b'] }),
+          makePoint({ id: 'b', next: ['c'] }),
+          makePoint({ id: 'c' }),
+          makePoint({ id: 'd' }),
+        ],
+      );
+
+    it('adds the target to the connections of the first point', () => {
+      const state = reduce(chain(), { type: 'connect', fromId: 'a', toId: 'd' });
+
+      expect(state.points.find((point) => point.id === 'a')?.next).toEqual(['b', 'd']);
+    });
+
+    it('refuses a point to itself, a known connection and a circle', () => {
+      const { points } = chain();
+
+      expect(connectProblem(points, 'a', 'a')).not.toBeNull();
+      expect(connectProblem(points, 'a', 'b')).not.toBeNull();
+      expect(connectProblem(points, 'c', 'a')).not.toBeNull();
+      expect(connectProblem(points, 'a', 'd')).toBeNull();
+    });
+
+    it('leaves the state alone when the connection is refused', () => {
+      const before = chain();
+
+      expect(reduce(before, { type: 'connect', fromId: 'c', toId: 'a' })).toBe(before);
     });
   });
 

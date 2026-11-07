@@ -26,7 +26,7 @@ import { rememberColor } from './app-logic/customColors';
 import { DEFAULT_LEVELS } from './app-logic/levels';
 import { buildPeriodData } from './app-logic/periodData';
 import { canComplete } from './app-logic/rules';
-import { DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
+import { connectProblem, DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
 import { playbackStartDay } from './app-logic/timeTravel';
 import { type DemoMode, ModeToggle } from './components/ModeToggle';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -56,6 +56,7 @@ export function App() {
   const navigation = useViewNavigation(today);
   const [mode, setMode] = useState<DemoMode>('edit');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [wavy, setWavy] = useState(false);
   const [pointsLocked, setPointsLocked] = useState(false);
   const [animate, setAnimate] = useState(true);
@@ -131,6 +132,27 @@ export function App() {
     return null;
   };
 
+  const stopConnecting = () => {
+    setConnectingFrom(null);
+    setNotice(null);
+  };
+
+  const toggleConnecting = (fromId: string) => {
+    if (connectingFrom === fromId) return stopConnecting();
+    setConnectingFrom(fromId);
+    setNotice('Click the point to connect to. Click the background to cancel.');
+  };
+
+  /** While connecting, the next point that is clicked is the target. Anything else selects as usual. */
+  const handleSelect = (id: string | null) => {
+    if (connectingFrom === null) return setSelectedId(id);
+    const problem = id === null ? null : connectProblem(state.points, connectingFrom, id);
+    if (id !== null && !problem) dispatch({ type: 'connect', fromId: connectingFrom, toId: id });
+    setConnectingFrom(null);
+    setNotice(problem);
+    if (id === null) setSelectedId(null);
+  };
+
   return (
     <div className="demo-stage">
       <PathWorld
@@ -144,7 +166,7 @@ export function App() {
         animate={animate}
         locale={locale}
         background={background}
-        onSelect={setSelectedId}
+        onSelect={handleSelect}
         onPointMove={({ positions }) => dispatch({ type: 'move', viewKey: tileKey, positions })}
         onPointAdd={({ x, y, date }) => {
           dispatch({ type: 'add', viewKey: tileKey, pathId: selected?.pathId ?? state.paths[0].id, x, y, date });
@@ -238,6 +260,9 @@ export function App() {
             point={selected}
             path={selectedPath}
             canComplete={canComplete(state.points, selected.id)}
+            connecting={connectingFrom === selected.id}
+            onConnect={() => toggleConnecting(selected.id)}
+            checkInCount={state.checkIns.filter((checkIn) => checkIn.pathId === selectedPath.id).length}
             customColors={customColors}
             onCustomColor={(color) => setCustomColors((colors) => rememberColor(colors, color))}
             onUpdate={(patch) => dispatch({ type: 'update', id: selected.id, patch })}

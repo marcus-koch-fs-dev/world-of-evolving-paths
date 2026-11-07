@@ -11,4 +11,4 @@ export type NextPointInput = {
   color: string;
 };
 
-export type TileId = 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove';
+export type TileId = 'status' | 'next' | 'connect' | 'kind' | 'color' | 'rename' | 'details' | 'remove';
