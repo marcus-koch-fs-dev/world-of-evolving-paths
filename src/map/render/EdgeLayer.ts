@@ -1,4 +1,4 @@
-﻿import { BlurFilter, Container, Graphics } from 'pixi.js';
+import { BlurFilter, Container, Graphics } from 'pixi.js';
 import { cutAt } from '../../core/scene/curves';
 import type { EdgeDraw } from '../../core/scene/types';
 import { strokeDashes, strokeLine } from './strokes';

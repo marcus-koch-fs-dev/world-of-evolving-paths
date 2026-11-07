@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { editPoint, makePath, makePeriodData, makePoint } from '../../tests/fixtures';
 import { periodOf } from './calendar';
 import { collisionRadius } from './collision';

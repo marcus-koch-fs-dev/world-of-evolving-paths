@@ -1,4 +1,4 @@
-﻿import { useMemo, useReducer, useState } from 'react';
+import { useMemo, useReducer, useState } from 'react';
 import { type BackgroundOptions, type PeriodMap, todayLocal } from 'world-of-evolving-paths';
 import {
   BackgroundPanel,

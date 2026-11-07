@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * State that survives a reload, kept in localStorage. The demo app does the storing, never the library.

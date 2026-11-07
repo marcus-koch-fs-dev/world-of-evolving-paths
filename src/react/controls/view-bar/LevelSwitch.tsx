@@ -1,4 +1,4 @@
-﻿import type { ViewLevel } from '../../../core';
+import type { ViewLevel } from '../../../core';
 
 const FREE = 'free';
 

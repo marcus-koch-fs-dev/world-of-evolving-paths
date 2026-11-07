@@ -1,4 +1,4 @@
-﻿import { fromDay, type PathInfo, toDay } from 'world-of-evolving-paths';
+import { fromDay, type PathInfo, toDay } from 'world-of-evolving-paths';
 import type { DemoPoint } from '../app-logic/types';
 
 const PATH_NAMES = [

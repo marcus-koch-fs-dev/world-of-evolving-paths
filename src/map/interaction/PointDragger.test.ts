@@ -1,4 +1,4 @@
-﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makePeriodData } from '../../../tests/fixtures';
 import { periodOf } from '../../core/calendar';
 import { layoutOf, nearestFree } from '../../core/collision';

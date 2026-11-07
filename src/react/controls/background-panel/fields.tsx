@@ -1,4 +1,4 @@
-﻿type ColorFieldProps = { label: string; value: string; onChange: (color: string) => void };
+type ColorFieldProps = { label: string; value: string; onChange: (color: string) => void };
 
 export function ColorField({ label, value, onChange }: ColorFieldProps) {
   return (

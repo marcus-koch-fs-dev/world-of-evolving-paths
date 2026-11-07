@@ -1,4 +1,4 @@
-﻿export type DemoMode = 'edit' | 'map';
+export type DemoMode = 'edit' | 'map';
 
 type Props = { mode: DemoMode; onChange: (mode: DemoMode) => void };
 

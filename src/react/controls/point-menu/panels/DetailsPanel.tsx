@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import type { PathPoint } from '../../../../core';
 import type { PointPatch } from '../types';
 

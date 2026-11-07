@@ -1,4 +1,4 @@
-﻿import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import type { HereDraw } from '../../core/scene/types';
 import type { TextPool } from './TextPool';
 

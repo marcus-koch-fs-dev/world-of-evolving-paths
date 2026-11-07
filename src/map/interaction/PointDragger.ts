@@ -1,4 +1,4 @@
-﻿import { layoutOf, settle } from '../../core/collision';
+import { layoutOf, settle } from '../../core/collision';
 import type { PointKind, Position } from '../../core/types';
 import type { WorldModel } from '../state/WorldModel';
 import { springBack } from './springBack';

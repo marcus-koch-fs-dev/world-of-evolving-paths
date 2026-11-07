@@ -1,4 +1,4 @@
-﻿import type { Bounds, Camera } from '../core/camera';
+import type { Bounds, Camera } from '../core/camera';
 import { layoutOf, nearestFree } from '../core/collision';
 import { isIsoDate, todayLocal } from '../core/dates';
 import { contentBounds } from '../core/geometry';

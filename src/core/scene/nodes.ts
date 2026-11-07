@@ -1,4 +1,4 @@
-﻿import { formatMonthYear } from '../dates';
+import { formatMonthYear } from '../dates';
 import { shapeOf } from '../shapes';
 import { symbolSize } from '../symbol';
 import type { PlacedPoint, PlacedWorld } from '../types';

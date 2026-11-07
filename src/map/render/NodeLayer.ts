@@ -1,4 +1,4 @@
-﻿import { Container, Graphics, type Text } from 'pixi.js';
+import { Container, Graphics, type Text } from 'pixi.js';
 import type { NodeDraw } from '../../core/scene/types';
 import { shapePoints } from '../../core/shapes';
 import { flat, strokeDashes } from './strokes';

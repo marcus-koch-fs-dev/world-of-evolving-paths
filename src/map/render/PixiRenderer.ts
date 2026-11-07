@@ -1,4 +1,4 @@
-﻿import { Application, Container } from 'pixi.js';
+import { Application, Container } from 'pixi.js';
 import type { Camera } from '../../core/camera';
 import type { Scene } from '../../core/scene/types';
 import { EdgeLayer } from './EdgeLayer';

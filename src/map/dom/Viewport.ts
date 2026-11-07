@@ -1,4 +1,4 @@
-﻿import type { Camera } from '../../core/camera';
+import type { Camera } from '../../core/camera';
 import type { BackgroundImage, BackgroundOptions } from '../options';
 import { backgroundCss } from './backgroundCss';
 

@@ -1,4 +1,4 @@
-﻿import type { Camera } from '../core/camera';
+import type { Camera } from '../core/camera';
 import type { PeriodMap, Position } from '../core/types';
 
 export type BackgroundPattern = 'none' | 'hex' | 'dots' | 'stars';

@@ -1,4 +1,4 @@
-﻿import type { PointStatus } from '../../../../core';
+import type { PointStatus } from '../../../../core';
 import type { PointPatch } from '../types';
 
 const STATUS_LABELS: Record<PointStatus, string> = {

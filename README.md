@@ -1,4 +1,4 @@
-﻿# World of Evolving Paths
+# World of Evolving Paths
 
 Paths with dates that grow stronger the more you walk them. A pannable, zoomable canvas for milestones, branches and goals, drawn with PixiJS. Think skill tree meets milestone calendar: the paths are not fixed, they evolve.
 

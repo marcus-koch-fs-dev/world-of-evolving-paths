@@ -1,4 +1,4 @@
-﻿import { distanceToSegment, getEdges } from './geometry';
+import { distanceToSegment, getEdges } from './geometry';
 import { symbolSize } from './symbol';
 import type { PlacedPoint, PointKind, Position } from './types';
 

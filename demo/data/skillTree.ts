@@ -1,4 +1,4 @@
-﻿import { fromDay, type PathInfo, type PathPoint, toDay } from 'world-of-evolving-paths';
+import { fromDay, type PathInfo, type PathPoint, toDay } from 'world-of-evolving-paths';
 import type { DemoPoint } from '../app-logic/types';
 import { createExtraPaths } from './generatedPaths';
 

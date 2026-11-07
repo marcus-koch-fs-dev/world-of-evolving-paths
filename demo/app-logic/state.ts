@@ -1,4 +1,4 @@
-﻿import { isIsoDate, type PathInfo, type Position } from 'world-of-evolving-paths';
+import { isIsoDate, type PathInfo, type Position } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
 import type { DemoPoint } from './types';
 

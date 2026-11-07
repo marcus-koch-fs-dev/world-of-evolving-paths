@@ -1,4 +1,4 @@
-﻿export type { BackgroundPanelProps } from './controls/background-panel/BackgroundPanel';
+export type { BackgroundPanelProps } from './controls/background-panel/BackgroundPanel';
 export { BackgroundPanel } from './controls/background-panel/BackgroundPanel';
 export type { ControlBarPlacement, ControlBarProps } from './controls/control-bar/ControlBar';
 export { ControlBar } from './controls/control-bar/ControlBar';

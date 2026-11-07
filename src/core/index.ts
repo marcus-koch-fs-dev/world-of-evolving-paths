@@ -1,4 +1,4 @@
-﻿export type { CalendarOptions, Period, ViewLevel } from './calendar';
+export type { CalendarOptions, Period, ViewLevel } from './calendar';
 export { periodFromKey, periodOf, shiftPeriod, VIEW_LEVELS } from './calendar';
 export type { Bounds, Camera } from './camera';
 export { MAX_ZOOM, MIN_ZOOM } from './camera';

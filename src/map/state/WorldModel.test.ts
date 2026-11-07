@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { editPoint, makePeriodData } from '../../../tests/fixtures';
 import { periodOf } from '../../core/calendar';
 import { WorldModel } from './WorldModel';

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { periodOf } from 'world-of-evolving-paths';
 import { makePath, makePoint } from '../../tests/fixtures';
 import { buildPeriodData, importanceOf, pagesOf, visiblePoints, withStrength } from './periodData';

@@ -1,4 +1,4 @@
-﻿import { ColorSwatches } from './ColorSwatches';
+import { ColorSwatches } from './ColorSwatches';
 
 const DEFAULT_SLOT_COUNT = 6;
 

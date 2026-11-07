@@ -1,4 +1,4 @@
-﻿import {
+import {
   type PathInfo,
   type PathPoint,
   type Period,

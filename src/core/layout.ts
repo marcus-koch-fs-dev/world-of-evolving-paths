@@ -1,4 +1,4 @@
-﻿import type { Period } from './calendar';
+import type { Period } from './calendar';
 import { periodFromKey } from './calendar';
 import { type Layout, nearestFree } from './collision';
 import { fromDay, toDay } from './dates';

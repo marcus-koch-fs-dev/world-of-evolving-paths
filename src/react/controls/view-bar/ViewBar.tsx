@@ -1,4 +1,4 @@
-﻿import { VIEW_LEVELS, type ViewLevel } from '../../../core';
+import { VIEW_LEVELS, type ViewLevel } from '../../../core';
 import { LevelSwitch } from './LevelSwitch';
 import './viewBar.css';
 

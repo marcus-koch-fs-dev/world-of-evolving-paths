@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { editPoint, makePeriodData } from '../../tests/fixtures';
 import { validatePeriodData } from './validate';
 

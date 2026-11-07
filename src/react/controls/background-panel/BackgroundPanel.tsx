@@ -1,4 +1,4 @@
-﻿import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map';
+import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map';
 import { FillFields } from './FillFields';
 import { RangeField } from './fields';
 import { ImageFields } from './ImageFields';

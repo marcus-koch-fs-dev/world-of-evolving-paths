@@ -1,4 +1,4 @@
-﻿import type { PointKind } from './types';
+import type { PointKind } from './types';
 
 const GOAL_SIZE = 72;
 const POINT_SIZE = 56;

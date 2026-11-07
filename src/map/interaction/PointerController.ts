@@ -1,4 +1,4 @@
-﻿import { pinchStep, screenToWorld } from '../../core/camera';
+import { pinchStep, screenToWorld } from '../../core/camera';
 import type { Position } from '../../core/types';
 import type { CameraController } from '../camera/CameraController';
 

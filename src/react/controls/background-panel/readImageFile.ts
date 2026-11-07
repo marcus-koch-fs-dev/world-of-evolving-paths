@@ -1,4 +1,4 @@
-﻿import type { BackgroundImage } from '../../../map';
+import type { BackgroundImage } from '../../../map';
 
 const DEFAULT_WIDTH = 1200;
 

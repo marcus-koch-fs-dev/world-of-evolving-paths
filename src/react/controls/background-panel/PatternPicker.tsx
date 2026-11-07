@@ -1,4 +1,4 @@
-﻿import type { BackgroundPattern } from '../../../map';
+import type { BackgroundPattern } from '../../../map';
 
 const PATTERNS: { pattern: BackgroundPattern; label: string }[] = [
   { pattern: 'none', label: 'Blank' },

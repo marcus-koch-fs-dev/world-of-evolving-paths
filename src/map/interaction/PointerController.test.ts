@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CameraController } from '../camera/CameraController';
 import { PointerController, type PointerHooks } from './PointerController';
 

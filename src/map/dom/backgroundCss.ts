@@ -1,4 +1,4 @@
-﻿import type { Camera } from '../../core/camera';
+import type { Camera } from '../../core/camera';
 import type { BackgroundOptions, BackgroundPattern } from '../options';
 
 export const DEFAULT_BASE = '#0e0f0c';

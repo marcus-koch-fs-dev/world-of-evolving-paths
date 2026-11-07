@@ -1,4 +1,4 @@
-﻿import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map';
+import { BACKGROUND_DEFAULTS, type BackgroundOptions } from '../../../map';
 import { ColorField, RangeField } from './fields';
 
 type Props = { value: BackgroundOptions; onChange: (patch: BackgroundOptions) => void };
