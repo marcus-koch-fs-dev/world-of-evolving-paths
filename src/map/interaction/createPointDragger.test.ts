@@ -2,18 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makePeriodData } from '../../../tests/fixtures';
 import { periodOf } from '../../core/calendar';
 import { layoutOf, nearestFree } from '../../core/collision';
-import { WorldModel } from '../state/WorldModel';
-import { PointDragger } from './PointDragger';
+import { createWorldModel, type WorldModel } from '../state/createWorldModel';
+import { createPointDragger } from './createPointDragger';
 
 const view = periodOf('week', '2026-11-04').key;
 const FRAME_MS = 16;
 
 function setup() {
-  const model = new WorldModel(vi.fn());
+  const model = createWorldModel(vi.fn());
   model.configure({ periods: { [view]: makePeriodData() }, view, seed: 1, today: '2026-11-07' });
   const onChange = vi.fn();
   const onMoved = vi.fn();
-  const dragger = new PointDragger({ model, onChange, onMoved });
+  const dragger = createPointDragger({ model, onChange, onMoved });
   return { model, dragger, onChange, onMoved };
 }
 

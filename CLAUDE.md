@@ -40,6 +40,7 @@ The library never touches `localStorage` or stores data. A test enforces the lay
 
 ## Code style
 
+- **Functional approach: no classes of our own.** State lives in factory functions with closures (`createX`). Put the logic into small, separate, exported functions that take the state they need as parameters, so only what is used gets loaded. Classes from other libraries, such as Pixi's, are fine.
 - No `any`. Type data and state explicitly.
 - Guard clauses over nesting. Descriptive names, no abbreviations. Magic values become named constants.
 - Fixed mappings from a union type are `Record` hashmaps, not `switch`.

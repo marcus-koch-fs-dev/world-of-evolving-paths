@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { editPoint, makePeriodData } from '../../../tests/fixtures';
 import { periodOf } from '../../core/calendar';
-import { WorldModel } from './WorldModel';
+import { createWorldModel, type WorldModel } from './createWorldModel';
 
 const view = periodOf('week', '2026-11-04').key;
 const configure = (model: WorldModel, data: ReturnType<typeof makePeriodData>) =>
@@ -10,7 +10,7 @@ const configure = (model: WorldModel, data: ReturnType<typeof makePeriodData>) =
 describe('World model and the layout', () => {
   describe('when the app passes new data that looks the same to the layout', () => {
     it('reuses the layout but shows the new details', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       configure(model, makePeriodData());
       const before = model.positionOf('c2');
 
@@ -32,7 +32,7 @@ describe('World model and the layout', () => {
       ['links', { next: [] }],
       ['pin', { x: 100, y: 100 }],
     ])('lays the points out again for a new %s', (_name, patch) => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       configure(model, makePeriodData());
 
       const result = configure(model, editPoint(makePeriodData(), 'c2', patch));
@@ -43,7 +43,7 @@ describe('World model and the layout', () => {
 
   describe('when the app answers a drag with new data', () => {
     it('forgets the dragged position', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       configure(model, makePeriodData());
       const original = model.positionOf('c1');
       model.setOverride('c1', { x: 5, y: 5 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CameraController } from '../camera/CameraController';
-import { PointerController, type PointerHooks } from './PointerController';
+import { createCameraController } from '../camera/createCameraController';
+import { createPointerController, type PointerHooks } from './createPointerController';
 
 type Listener = (event: unknown) => void;
 
@@ -37,7 +37,7 @@ function fakeElement(offset = { left: 0, top: 0 }) {
 
 function setup(options: { pointAt?: PointerHooks['pointAt']; offset?: { left: number; top: number } } = {}) {
   const { element, fire } = fakeElement(options.offset);
-  const camera = new CameraController(() => ({ width: 1000, height: 800 }));
+  const camera = createCameraController(() => ({ width: 1000, height: 800 }));
   const hooks = {
     pointAt: vi.fn(options.pointAt ?? (() => null)),
     onHover: vi.fn(),
@@ -47,7 +47,7 @@ function setup(options: { pointAt?: PointerHooks['pointAt']; offset?: { left: nu
     onBackgroundClick: vi.fn(),
     onBackgroundDoubleClick: vi.fn(),
   };
-  const controller = new PointerController(element, camera, hooks, () => ({ x: 100, y: 100 }));
+  const controller = createPointerController(element, camera, hooks, () => ({ x: 100, y: 100 }));
   return { fire, camera, hooks, controller };
 }
 

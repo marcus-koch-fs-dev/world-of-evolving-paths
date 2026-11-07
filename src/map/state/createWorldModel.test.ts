@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { editPoint, makePeriodData } from '../../../tests/fixtures';
 import { periodOf } from '../../core/calendar';
-import { WorldModel } from './WorldModel';
+import { createWorldModel, type WorldModel } from './createWorldModel';
 
 const view = periodOf('week', '2026-11-04').key;
 const config = (periods: Record<string, unknown>, overrides: { seed?: number } = {}) => ({
@@ -14,7 +14,7 @@ const config = (periods: Record<string, unknown>, overrides: { seed?: number } =
 describe('World model', () => {
   describe('when configured with valid data', () => {
     it('places every point', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
 
       model.configure(config({ [view]: makePeriodData() }));
 
@@ -22,7 +22,7 @@ describe('World model', () => {
     });
 
     it('reports a change only the first time', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       const periods = { [view]: makePeriodData() };
 
       const first = model.configure(config(periods));
@@ -33,7 +33,7 @@ describe('World model', () => {
     });
 
     it('recomputes when the seed changes', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       const periods = { [view]: makePeriodData() };
       model.configure(config(periods, { seed: 1 }));
       const before = model.world();
@@ -47,7 +47,7 @@ describe('World model', () => {
   describe('when the data is invalid', () => {
     it('reports the errors and shows nothing', () => {
       const onError = vi.fn();
-      const model = new WorldModel(onError);
+      const model = createWorldModel(onError);
       const broken = editPoint(makePeriodData(), 'c1', { date: 'yesterday' });
 
       model.configure(config({ [view]: broken }));
@@ -60,7 +60,7 @@ describe('World model', () => {
   describe('when there is no data for the view', () => {
     it('shows an empty map without an error', () => {
       const onError = vi.fn();
-      const model = new WorldModel(onError);
+      const model = createWorldModel(onError);
 
       model.configure(config({}));
 
@@ -71,7 +71,7 @@ describe('World model', () => {
 
   describe('when a point is moved', () => {
     it('shows it at the new position while the data stays', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       model.configure(config({ [view]: makePeriodData() }));
 
       model.setOverride('c1', { x: 10, y: 20 });
@@ -80,7 +80,7 @@ describe('World model', () => {
     });
 
     it('forgets the move once the app passes new data', () => {
-      const model = new WorldModel(vi.fn());
+      const model = createWorldModel(vi.fn());
       model.configure(config({ [view]: makePeriodData() }));
       const original = model.positionOf('c1');
       model.setOverride('c1', { x: 10, y: 20 });
