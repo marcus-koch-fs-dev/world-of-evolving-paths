@@ -147,28 +147,29 @@ You give points without positions and the library lays them out:
 
 All events are options of `PathWorld` and `createPathWorld`.
 
-| Callback                               | When                                                                               |
-| -------------------------------------- | ---------------------------------------------------------------------------------- |
-| `onSelect(id \| null)`                 | A point was clicked, or the empty area (`null`).                                   |
-| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                |
-| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. `date` is derived from the horizontal position. |
-| `onError(errors)`                      | The data of the current view is invalid.                                           |
+| Callback                               | When                                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`). |
+| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                         |
+| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. `date` is derived from the horizontal position.          |
+| `onError(errors)`                      | The data of the current view is invalid.                                                    |
 
-Update your data in these callbacks and pass the new objects back in. Until you do, the map shows the old state again (a dragged point returns).
+Update your data in these callbacks and pass the new objects back in. The data is yours: if you do not answer a move with new data within a moment, the point springs back to where it was. A point that cannot rest where it was dropped (no room, or on a foreign line) springs to the nearest free spot first, and that spot is what onPointMove reports.
 
 ### Options
 
-| Option         | Default    | Meaning                                                                                                                             |
-| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `periods`      | —          | The `PeriodMap`.                                                                                                                    |
-| `view`         | —          | Key of the period to show.                                                                                                          |
-| `today`        | local date | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                 |
-| `seed`         | `1`        | Changes the generated layout.                                                                                                       |
-| `editable`     | `true`     | Allow moving and adding points.                                                                                                     |
-| `pointsLocked` | `false`    | Points cannot be dragged.                                                                                                           |
-| `wavy`         | `false`    | A slight wave on the lines.                                                                                                         |
-| `background`   | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }` |
-| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit).                                                                                                    |
+| Option         | Default    | Meaning                                                                                                                                                                                                                 |
+| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `periods`      | —          | The `PeriodMap`.                                                                                                                                                                                                        |
+| `view`         | —          | Key of the period to show.                                                                                                                                                                                              |
+| `today`        | local date | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                                                                                                     |
+| `seed`         | `1`        | Changes the generated layout.                                                                                                                                                                                           |
+| `editable`     | `true`     | Allow moving and adding points.                                                                                                                                                                                         |
+| `pointsLocked` | `false`    | Points cannot be dragged.                                                                                                                                                                                               |
+| `wavy`         | `false`    | A slight wave on the lines.                                                                                                                                                                                             |
+| `background`   | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale, image }`. `image` is `{ src, x, y, width, height }` in world units, behind the paths. |
+| `animate`      | `true`     | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                      |
+| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit).                                                                                                                                                                                        |
 
 ### Camera
 
@@ -200,13 +201,19 @@ Open (future) connections stay thin and dotted.
 
 Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
-| Control        | Folder           | What it does                                                                                                                   |
-| -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ZoomControls` | `zoom-controls/` | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                   |
-| `ViewBar`      | `view-bar/`      | Level buttons, previous/next period, today, pages, reroll. Holds no state.                                                     |
-| `PointMenu`    | `point-menu/`    | Tile menu at a selected point: status, next point, kind, path color, name, details, delete. Sits on the map and moves with it. |
+| Control           | Folder              | What it does                                                                                                                                                    |
+| ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                    |
+| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                     |
+| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                       |
+| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                               |
+| `PointMenu`       | `point-menu/`       | Tile menu at a selected point: status, next point, kind, path color (with slots for your own colors), name, details, delete. Sits on the map and moves with it. |
 
-Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`. They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
+Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
+
+The color slots of `PointMenu` are filled by you: it reports a confirmed color with `onCustomColor`, you remember it and pass the list back in `customColors`.
+
+They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
 
 Import `world-of-evolving-paths/style.css` once for the map and the controls. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...).
 
@@ -214,12 +221,12 @@ Import `world-of-evolving-paths/style.css` once for the map and the controls. Co
 
 - Pass a **new object for every period that changed** and keep unchanged ones as they are. The map compares periods by reference and recomputes only when one changed. Mutating an object in place is not seen.
 - Camera movement and hover never touch React state. Zooming does not re-render your tree.
-- Only changed lines and points are redrawn.
+- Only changed lines and points are redrawn. Rendering stops when nothing animates, and `animate` can turn the moving parts off.
 - Keep `background` and other object options stable between renders (define them once). They are compared field by field.
 
 ## The demo
 
-`demo/` is a complete example app: a game skill tree with five paths. It shows what your app does with the library: it holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions. It uses only the public API.
+`demo/` is a complete example app: a game skill tree with 18 paths, spread over pages. It has an editor mode (everything on) and a map mode (read only, few controls). It shows what your app does with the library: it holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions. It uses only the public API.
 
 ```bash
 npm install
@@ -234,7 +241,8 @@ src/
                    collision, strength tiers, validation, scene model
   map/             Framework-free map: Pixi renderer, camera, pointer handling, createPathWorld
   react/           React binding (PathWorld) and controls
-    controls/      One folder per control: zoom-controls, view-bar, point-menu
+    controls/      One folder per control: zoom-controls, view-bar, control-bar,
+                   background-panel, point-menu
     hooks/         One job per hook
 demo/              The demo app (not published)
 tests/             Cross-cutting tests and fixtures
@@ -256,6 +264,11 @@ Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/archi
 
 ## Not in this version
 
-The first prototype had a few things that are not part of the library yet: a tool to connect existing points, undo and redo, a toolbar and panels for background and rules, a background image, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
+The first prototype had a few things that are not part of the library yet: a tool to connect existing points, a toolbar for undo and redo, panels for paths, rules and JSON, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
 
 Controls are provided for React only. The map itself works with any framework.
+
+### Good to know
+
+- The first layout of a view costs time with many points: about 150 ms for 200 points and well over a second beyond 500, when none of them is pinned. Pinned points cost almost nothing, so store the positions the user chose (see `onPointMove`). Plan on views with a few dozen points.
+- Adding a point to a path can widen the tile and move points that are not pinned. Pin points to keep them where they are.

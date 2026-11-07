@@ -35,13 +35,24 @@ export function layoutOf(points: PlacedPoint[]): Layout {
   };
 }
 
+/** Bodies by id. Kept per layout and rebuilt only when a body was added, so a search does not rebuild it for every spot. */
+const indexes = new WeakMap<Layout, { size: number; byId: Map<string, Body> }>();
+
+function indexOf(layout: Layout): Map<string, Body> {
+  const cached = indexes.get(layout);
+  if (cached && cached.size === layout.bodies.length) return cached.byId;
+  const byId = new Map(layout.bodies.map((body) => [body.id, body]));
+  indexes.set(layout, { size: layout.bodies.length, byId });
+  return byId;
+}
+
 /**
  * Is there room for `self` at `at`? Two points keep radius + radius apart.
  * A point may not sit on a foreign line, and its own lines may not touch another point. Lines may cross.
  */
 export function isFreeAt(layout: Layout, self: Mover, at: Position): boolean {
   const radius = collisionRadius(self);
-  const byId = new Map(layout.bodies.map((body) => [body.id, body]));
+  const byId = indexOf(layout);
   for (const other of layout.bodies) {
     if (other.id === self.id) continue;
     if (Math.hypot(at.x - other.x, at.y - other.y) < radius + collisionRadius(other) - EPSILON) return false;

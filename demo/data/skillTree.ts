@@ -1,5 +1,6 @@
 ﻿import { fromDay, type PathInfo, type PathPoint, toDay } from 'world-of-evolving-paths';
 import type { DemoPoint } from '../app-logic/types';
+import { createExtraPaths } from './generatedPaths';
 
 type Step = {
   id: string;
@@ -129,5 +130,6 @@ export function createSkillTree(todayIso: string): { paths: PathInfo[]; points: 
     ...toPoints('exploration', EXPLORATION, today),
     ...toPoints('guild', GUILD, today),
   ];
-  return { paths: SKILL_PATHS, points };
+  const extra = createExtraPaths(todayIso, SKILL_PATHS.length);
+  return { paths: [...SKILL_PATHS, ...extra.paths], points: [...points, ...extra.points] };
 }
