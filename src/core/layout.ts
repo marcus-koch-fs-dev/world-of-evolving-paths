@@ -93,7 +93,8 @@ export function generateLayout(input: LayoutInput): LayoutResult {
     for (const id of point.next) if (byId.has(id) && !parentOf.has(id)) parentOf.set(id, point.id);
   }
 
-  const positions: Record<string, Position> = {};
+  // No prototype, so a point id such as "constructor" or "__proto__" is just a key
+  const positions: Record<string, Position> = Object.create(null);
   const layout: Layout = { bodies: [], links: [] };
   const place = (point: FlatPoint, at: Position) => {
     positions[point.id] = at;
@@ -155,9 +156,12 @@ export function placePeriod(data: PeriodData, view: string, today: string, seed:
   return { today, paths: flat.paths, points };
 }
 
-/** ISO date for a horizontal position in a view, for a point added by clicking there. */
-export function dateAtX(x: number, data: PeriodData, view: string, today: string): string {
+/**
+ * ISO date for a horizontal position in a calendar view, for a point added by clicking there.
+ * A view without data is as wide as the narrowest tile. A view that is not a calendar period gives today.
+ */
+export function dateAtX(x: number, data: PeriodData | null, view: string, today: string): string {
   const period = periodFromKey(view);
   if (!period) return today;
-  return fromDay(dayAtX(x, period, tileWidth(flattenPeriod(data).points)));
+  return fromDay(dayAtX(x, period, tileWidth(data ? flattenPeriod(data).points : [])));
 }

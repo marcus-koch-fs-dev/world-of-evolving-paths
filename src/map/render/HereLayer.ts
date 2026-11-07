@@ -1,10 +1,10 @@
-import { Container, Graphics } from 'pixi.js';
+﻿import { Container, Graphics, type Text } from 'pixi.js';
 import type { HereDraw } from '../../core/scene/types';
 import type { TextPool } from './TextPool';
 
 const INK = '#edefe6';
 
-type HereSlot = { container: Container; ring: Graphics };
+type HereSlot = { container: Container; ring: Graphics; label: Text };
 
 /** Draws the "today" markers: a white dot with a pulsing ring and a label. */
 export class HereLayer {
@@ -29,6 +29,7 @@ export class HereLayer {
     }
     for (const [id, slot] of this.slots) {
       if (seen.has(id)) continue;
+      this.texts.drop(slot.label);
       slot.container.destroy({ children: true });
       this.slots.delete(id);
     }
@@ -54,7 +55,7 @@ export class HereLayer {
     label.position.set(0, -13);
     container.addChild(ring, dot, label);
     this.container.addChild(container);
-    const slot = { container, ring };
+    const slot = { container, ring, label };
     this.slots.set(id, slot);
     return slot;
   }

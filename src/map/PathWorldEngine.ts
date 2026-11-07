@@ -260,7 +260,7 @@ export class PathWorldEngine implements PathWorldHandle {
     const points = this.model.world()?.points ?? [];
     const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, at));
     const data = this.model.periodData();
-    const date = data ? dateAtX(free.x, data, this.options.view, today) : today;
+    const date = dateAtX(free.x, data, this.options.view, today);
     this.options.onPointAdd?.({ ...free, date });
   }
 

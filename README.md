@@ -147,12 +147,12 @@ You give points without positions and the library lays them out:
 
 All events are options of `PathWorld` and `createPathWorld`.
 
-| Callback                               | When                                                                                        |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`). |
-| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                         |
-| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. `date` is derived from the horizontal position.          |
-| `onError(errors)`                      | The data of the current view is invalid.                                                    |
+| Callback                               | When                                                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                          |
+| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                                                  |
+| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. |
+| `onError(errors)`                      | The data of the current view is invalid.                                                                             |
 
 Update your data in these callbacks and pass the new objects back in. The data is yours: if you do not answer a move with new data within a moment, the point springs back to where it was. A point that cannot rest where it was dropped (no room, or on a foreign line) springs to the nearest free spot first, and that spot is what onPointMove reports.
 

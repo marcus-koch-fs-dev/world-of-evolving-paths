@@ -1,4 +1,4 @@
-import { BlurFilter, Container, Graphics } from 'pixi.js';
+﻿import { BlurFilter, Container, Graphics } from 'pixi.js';
 import { cutAt } from '../../core/scene/curves';
 import type { EdgeDraw } from '../../core/scene/types';
 import { strokeDashes, strokeLine } from './strokes';
@@ -22,7 +22,9 @@ function lineSignature(edge: EdgeDraw): string {
 
 function litSignature(edge: EdgeDraw): string {
   const lit = edge.lit;
-  return `${lineSignature(edge)}|${lit?.points.length}|${lit?.color}|${lit?.width}|${edge.glow}`;
+  // The tip moves as today moves along the line, even when the number of points stays the same
+  const tip = lit?.points[lit.points.length - 1];
+  return `${lineSignature(edge)}|${lit?.points.length}|${tip?.x},${tip?.y}|${lit?.color}|${lit?.width}|${edge.glow}`;
 }
 
 function drawLine(g: Graphics, edge: EdgeDraw, shift: number): void {
