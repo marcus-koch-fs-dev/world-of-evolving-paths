@@ -1,10 +1,11 @@
-import { pinchStep, screenToWorld } from '../../core/camera';
+﻿import { pinchStep, screenToWorld } from '../../core/camera';
 import type { Position } from '../../core/types';
 import type { CameraController } from '../camera/CameraController';
 
 const CLICK_TOLERANCE = 4; // pixels a press may move and still count as a click
 const WHEEL_SENSITIVITY = 0.0015;
 const UI_SELECTOR = '[data-pw-ui]';
+const PRIMARY_BUTTON = 0;
 
 export type PointerHooks = {
   /** The id of the point at a world position, if any. */
@@ -43,7 +44,7 @@ export class PointerController {
     this.listen('pointerdown', this.onDown);
     this.listen('pointermove', this.onMove);
     this.listen('pointerup', this.onUp);
-    this.listen('pointercancel', this.onUp);
+    this.listen('pointercancel', this.onCancel);
     this.listen('pointerleave', () => hooks.onHover(null));
     this.listen('dblclick', this.onDoubleClick);
   }
@@ -72,7 +73,8 @@ export class PointerController {
   }
 
   private isUi(event: Event): boolean {
-    return event.target instanceof Element && event.target.closest(UI_SELECTOR) !== null;
+    const target = event.target as { closest?: (selector: string) => unknown } | null;
+    return typeof target?.closest === 'function' && target.closest(UI_SELECTOR) !== null;
   }
 
   private readonly onWheel = (event: WheelEvent) => {
@@ -83,13 +85,13 @@ export class PointerController {
   };
 
   private readonly onDown = (event: PointerEvent) => {
-    if (this.isUi(event)) return;
+    if (this.isUi(event) || (event.pointerType === 'mouse' && event.button !== PRIMARY_BUTTON)) return;
     this.moved = false;
     this.element.setPointerCapture(event.pointerId);
     this.fingers.set(event.pointerId, this.screen(event));
     if (this.fingers.size >= 2) {
       this.pan = null;
-      this.drag = null;
+      this.endDrag();
       return;
     }
     const world = this.world(event);
@@ -138,20 +140,44 @@ export class PointerController {
   }
 
   private readonly onUp = (event: PointerEvent) => {
+    // A release whose press did not start on the map (for example in a menu field) is none of our business
+    if (!this.fingers.has(event.pointerId)) return;
     this.fingers.delete(event.pointerId);
     const drag = this.drag;
     this.drag = null;
-    // A finger that is left continues to pan from where it is, without a jump
-    const rest = [...this.fingers.values()];
-    this.pan = rest.length === 1 ? { startX: rest[0].x, startY: rest[0].y } : null;
+    this.continueWithRemainingFinger();
     if (drag) {
-      if (this.moved) this.hooks.onDragEnd(drag.id);
+      this.hooks.onDragEnd(drag.id);
       return;
     }
     if (!this.moved && !this.isUi(event) && this.hooks.pointAt(this.world(event)) === null) {
       this.hooks.onBackgroundClick();
     }
   };
+
+  /** A cancelled gesture ends a drag the normal way but is never a click. */
+  private readonly onCancel = (event: PointerEvent) => {
+    this.fingers.delete(event.pointerId);
+    this.endDrag();
+    this.continueWithRemainingFinger();
+  };
+
+  private endDrag(): void {
+    const drag = this.drag;
+    this.drag = null;
+    if (drag) this.hooks.onDragEnd(drag.id);
+  }
+
+  /** A finger that is left continues to pan from where it is, without a jump. Pan positions are client coordinates. */
+  private continueWithRemainingFinger(): void {
+    const rest = [...this.fingers.values()];
+    if (rest.length !== 1) {
+      this.pan = null;
+      return;
+    }
+    const rect = this.element.getBoundingClientRect();
+    this.pan = { startX: rest[0].x + rect.left, startY: rest[0].y + rect.top };
+  }
 
   private readonly onDoubleClick = (event: MouseEvent) => {
     if (this.isUi(event) || this.moved) return;

@@ -1,4 +1,4 @@
-import type { Camera } from '../../core/camera';
+﻿import type { Camera } from '../../core/camera';
 import type { BackgroundOptions } from '../options';
 import { backgroundCss } from './backgroundCss';
 
@@ -14,7 +14,7 @@ export class Viewport {
   readonly host: HTMLElement;
   readonly overlay: HTMLElement;
 
-  constructor(private readonly container: HTMLElement) {
+  constructor(container: HTMLElement) {
     this.root = document.createElement('div');
     Object.assign(this.root.style, {
       position: 'relative',
@@ -56,7 +56,7 @@ export class Viewport {
   }
 
   destroy(): void {
-    this.container.removeChild(this.root);
+    this.root.remove();
   }
 
   private layer(style: Partial<CSSStyleDeclaration>): HTMLElement {

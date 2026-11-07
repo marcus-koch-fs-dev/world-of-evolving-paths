@@ -1,6 +1,6 @@
-import type { Bounds, Camera } from '../core/camera';
+﻿import type { Bounds, Camera } from '../core/camera';
 import { layoutOf, nearestFree } from '../core/collision';
-import { todayLocal } from '../core/dates';
+import { isIsoDate, todayLocal } from '../core/dates';
 import { contentBounds } from '../core/geometry';
 import { dateAtX } from '../core/layout';
 import { buildScene } from '../core/scene/buildScene';
@@ -50,6 +50,8 @@ export class PathWorldEngine implements PathWorldHandle {
   private framing: Framing = null;
   private framedOnce = false;
   private worldVersion = 0;
+  private destroyed = false;
+  private reportedToday: string | null = null;
   private readonly worldListeners = new Set<() => void>();
 
   constructor(
@@ -84,10 +86,14 @@ export class PathWorldEngine implements PathWorldHandle {
     this.camera.subscribe((camera) => this.onCamera(camera));
     this.resizeObserver = new ResizeObserver(() => this.onResize());
     this.resizeObserver.observe(this.viewport.root);
-    window.addEventListener('keydown', this.onKey);
-    void this.renderer.mount(this.viewport.host);
+    this.renderer.mount(this.viewport.host).catch((error: unknown) => {
+      this.reportError([
+        `The graphics could not be started: ${error instanceof Error ? error.message : String(error)}`,
+      ]);
+    });
     this.viewport.render(this.camera.get(), options.background ?? {});
     this.update(options);
+    window.addEventListener('keydown', this.onKey);
   }
 
   get overlay(): HTMLElement {
@@ -101,9 +107,16 @@ export class PathWorldEngine implements PathWorldHandle {
       periods: options.periods,
       view: options.view,
       seed: options.seed ?? DEFAULT_SEED,
-      today: options.today ?? todayLocal(),
+      today: this.todayOf(options),
     });
-    if (viewChanged) this.framing = this.framedOnce ? 'center' : 'fit';
+    if (viewChanged) {
+      this.framing = this.framedOnce ? 'center' : 'fit';
+      this.hovered = null;
+      this.dragging = null;
+      this.dragger.cancel();
+    } else if (changed) {
+      this.dragger.acknowledge();
+    }
     if (changed || (previous.wavy === true) !== (options.wavy === true)) this.rebuildScene();
     if (changed) this.notifyWorld();
     if (!sameBackground(previous.background, options.background)) {
@@ -149,6 +162,8 @@ export class PathWorldEngine implements PathWorldHandle {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     window.removeEventListener('keydown', this.onKey);
     this.resizeObserver.disconnect();
     this.pointer.destroy();
@@ -160,6 +175,18 @@ export class PathWorldEngine implements PathWorldHandle {
   private notifyWorld(): void {
     this.worldVersion += 1;
     for (const listener of this.worldListeners) listener();
+  }
+
+  /** The date to use as today. An invalid one is reported once and the local date is used instead. */
+  private todayOf(options: PathWorldOptions): string {
+    const given = options.today;
+    if (given === undefined) return todayLocal();
+    if (isIsoDate(given)) return given;
+    if (this.reportedToday !== given) {
+      this.reportedToday = given;
+      this.reportError([`today must be a valid YYYY-MM-DD date, got "${given}". The local date is used instead.`]);
+    }
+    return todayLocal();
   }
 
   private bounds(): Bounds | null {
@@ -219,11 +246,12 @@ export class PathWorldEngine implements PathWorldHandle {
   private releasePoint(id: string): void {
     this.dragging = null;
     this.dragger.end(id);
+    this.rebuildScene();
   }
 
   private addPointAt(at: Position): void {
     if (this.options.editable === false) return;
-    const today = this.options.today ?? todayLocal();
+    const today = this.todayOf(this.options);
     const points = this.model.world()?.points ?? [];
     const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, at));
     const data = this.model.periodData();
