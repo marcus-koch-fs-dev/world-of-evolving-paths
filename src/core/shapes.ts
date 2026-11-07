@@ -1,11 +1,10 @@
-import type { PathPoint, Position } from './types';
+﻿import type { PathPoint, Position } from './types';
 
-export type Shape = 'circle' | 'diamond' | 'square' | 'triangle' | 'star';
+export type Shape = 'circle' | 'diamond' | 'triangle' | 'star';
 
 const CIRCLE_SEGMENTS = 64;
 const STAR_SPIKES = 5;
 const STAR_INNER_RATIO = 0.5;
-const SQUARE_RATIO = 0.86;
 const TOP = -90; // degrees, 0 = right
 
 /** Shape by function: start ▲, goal ★, fork (more than one way on) ◆, otherwise ●. */
@@ -31,18 +30,14 @@ function star(radius: number): Position[] {
   });
 }
 
+const SHAPE_POINTS: Record<Shape, (radius: number) => Position[]> = {
+  circle: (radius) => regularPolygon(CIRCLE_SEGMENTS, radius, 0),
+  diamond: (radius) => regularPolygon(4, radius, TOP),
+  triangle: (radius) => regularPolygon(3, radius, TOP),
+  star,
+};
+
 /** Corner points of a shape around (0, 0). The circle is approximated finely. */
 export function shapePoints(shape: Shape, radius: number): Position[] {
-  switch (shape) {
-    case 'circle':
-      return regularPolygon(CIRCLE_SEGMENTS, radius, 0);
-    case 'diamond':
-      return regularPolygon(4, radius, TOP);
-    case 'square':
-      return regularPolygon(4, radius * SQUARE_RATIO, -45);
-    case 'triangle':
-      return regularPolygon(3, radius, TOP);
-    case 'star':
-      return star(radius);
-  }
+  return SHAPE_POINTS[shape](radius);
 }

@@ -18,62 +18,97 @@ export const VIEW_LEVELS: readonly { level: ViewLevel; label: string }[] = [
   { level: 'year', label: 'Year' },
 ];
 
+type Span = { start: number; end: number };
+
+/** What a level knows about itself: which days it covers, how it is called, and where the next one starts. */
+type LevelRule = {
+  span(iso: string, options: CalendarOptions): Span;
+  label(span: Span): string;
+  /** The date inside the period `count` steps away, and the options to build that period with. */
+  shifted(period: Period, count: number): { iso: string; options: CalendarOptions };
+};
+
 const PERIOD_KEY = /^(day|week|month|halfYear|year):(\d{4}-\d{2}-\d{2})$/;
 const DAYS_PER_WEEK = 7;
 const MONTHS_PER_HALF_YEAR = 6;
+const MONTHS_PER_YEAR = 12;
 
 const pad = (value: number) => String(value).padStart(2, '0');
 const mod = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
+const yearAndMonth = (day: number) => fromDay(day).split('-').map(Number) as [number, number];
 
-function labelOf(level: ViewLevel, start: number, end: number): string {
-  const iso = fromDay(start);
-  const [year, month] = iso.split('-').map(Number);
-  switch (level) {
-    case 'day':
-      return formatDate(iso);
-    case 'week': {
-      const calendarWeek = weekdayOf(start) === 0 ? `CW ${isoWeekNumber(start + 3)}, ` : '';
-      return `${calendarWeek}${formatDayMonth(start)} – ${formatDate(fromDay(end))}`;
-    }
-    case 'month':
-      return `${monthName(month)} ${year}`;
-    case 'halfYear':
-      return `${month <= MONTHS_PER_HALF_YEAR ? 'H1' : 'H2'} ${year}`;
-    case 'year':
-      return String(year);
-  }
+/** The first day of the month `months` away from the month of a day. */
+function firstOfMonth(day: number, months: number): string {
+  const [year, month] = yearAndMonth(day);
+  const total = year * MONTHS_PER_YEAR + (month - 1) + months;
+  return `${Math.floor(total / MONTHS_PER_YEAR)}-${pad(mod(total, MONTHS_PER_YEAR) + 1)}-01`;
 }
 
-function periodBetween(level: ViewLevel, start: number, end: number): Period {
-  return { level, start, end, key: `${level}:${fromDay(start)}`, label: labelOf(level, start, end) };
+const RULES: Record<ViewLevel, LevelRule> = {
+  day: {
+    span: (iso) => ({ start: toDay(iso), end: toDay(iso) }),
+    label: ({ start }) => formatDate(fromDay(start)),
+    shifted: (period, count) => ({ iso: fromDay(period.start + count), options: {} }),
+  },
+  week: {
+    span: (iso, options) => {
+      const day = toDay(iso);
+      const start = day - mod(weekdayOf(day) - (options.weekStart ?? 0), DAYS_PER_WEEK);
+      return { start, end: start + DAYS_PER_WEEK - 1 };
+    },
+    label: ({ start, end }) => {
+      const calendarWeek = weekdayOf(start) === 0 ? `CW ${isoWeekNumber(start + 3)}, ` : '';
+      return `${calendarWeek}${formatDayMonth(start)} – ${formatDate(fromDay(end))}`;
+    },
+    // A week keeps the weekday it started on
+    shifted: (period, count) => ({
+      iso: fromDay(period.start + DAYS_PER_WEEK * count),
+      options: { weekStart: weekdayOf(period.start) },
+    }),
+  },
+  month: {
+    span: (iso) => {
+      const [year, month] = iso.split('-').map(Number);
+      return monthSpan(`${year}-${pad(month)}`);
+    },
+    label: ({ start }) => {
+      const [year, month] = yearAndMonth(start);
+      return `${monthName(month)} ${year}`;
+    },
+    shifted: (period, count) => ({ iso: firstOfMonth(period.start, count), options: {} }),
+  },
+  halfYear: {
+    span: (iso) => {
+      const [year, month] = iso.split('-').map(Number);
+      const firstHalf = month <= MONTHS_PER_HALF_YEAR;
+      return {
+        start: toDay(`${year}-${firstHalf ? '01-01' : '07-01'}`),
+        end: toDay(`${year}-${firstHalf ? '06-30' : '12-31'}`),
+      };
+    },
+    label: ({ start }) => {
+      const [year, month] = yearAndMonth(start);
+      return `${month <= MONTHS_PER_HALF_YEAR ? 'H1' : 'H2'} ${year}`;
+    },
+    shifted: (period, count) => ({ iso: firstOfMonth(period.start, MONTHS_PER_HALF_YEAR * count), options: {} }),
+  },
+  year: {
+    span: (iso) => {
+      const year = iso.slice(0, 4);
+      return { start: toDay(`${year}-01-01`), end: toDay(`${year}-12-31`) };
+    },
+    label: ({ start }) => String(yearAndMonth(start)[0]),
+    shifted: (period, count) => ({ iso: firstOfMonth(period.start, MONTHS_PER_YEAR * count), options: {} }),
+  },
+};
+
+function periodFromSpan(level: ViewLevel, span: Span): Period {
+  return { level, ...span, key: `${level}:${fromDay(span.start)}`, label: RULES[level].label(span) };
 }
 
 /** The period of a level that contains the given date. */
 export function periodOf(level: ViewLevel, iso: string, options: CalendarOptions = {}): Period {
-  const day = toDay(iso);
-  const [year, month] = iso.split('-').map(Number);
-  switch (level) {
-    case 'day':
-      return periodBetween(level, day, day);
-    case 'week': {
-      const start = day - mod(weekdayOf(day) - (options.weekStart ?? 0), DAYS_PER_WEEK);
-      return periodBetween(level, start, start + DAYS_PER_WEEK - 1);
-    }
-    case 'month': {
-      const span = monthSpan(`${year}-${pad(month)}`);
-      return periodBetween(level, span.start, span.end);
-    }
-    case 'halfYear': {
-      const firstHalf = month <= MONTHS_PER_HALF_YEAR;
-      return periodBetween(
-        level,
-        toDay(`${year}-${firstHalf ? '01-01' : '07-01'}`),
-        toDay(`${year}-${firstHalf ? '06-30' : '12-31'}`),
-      );
-    }
-    case 'year':
-      return periodBetween(level, toDay(`${year}-01-01`), toDay(`${year}-12-31`));
-  }
+  return periodFromSpan(level, RULES[level].span(iso, options));
 }
 
 /** Reads a period key such as `week:2026-11-02`. Returns null for anything else, for example a free view. */
@@ -88,22 +123,7 @@ export function periodFromKey(key: string): Period | null {
 }
 
 /** The period `count` steps away (negative: back). */
-export function shiftPeriod(period: Period, count: number, options: CalendarOptions = {}): Period {
-  const [year, month] = fromDay(period.start).split('-').map(Number);
-  const shiftedMonth = (months: number) => {
-    const total = year * 12 + (month - 1) + months;
-    return `${Math.floor(total / 12)}-${pad(mod(total, 12) + 1)}-01`;
-  };
-  switch (period.level) {
-    case 'day':
-      return periodOf('day', fromDay(period.start + count), options);
-    case 'week':
-      return periodOf('week', fromDay(period.start + DAYS_PER_WEEK * count), { weekStart: weekdayOf(period.start) });
-    case 'month':
-      return periodOf('month', shiftedMonth(count), options);
-    case 'halfYear':
-      return periodOf('halfYear', shiftedMonth(MONTHS_PER_HALF_YEAR * count), options);
-    case 'year':
-      return periodOf('year', `${year + count}-01-01`, options);
-  }
+export function shiftPeriod(period: Period, count: number): Period {
+  const { iso, options } = RULES[period.level].shifted(period, count);
+  return periodOf(period.level, iso, options);
 }

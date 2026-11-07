@@ -1,4 +1,4 @@
-import type { Camera } from '../../core/camera';
+﻿import type { Camera } from '../../core/camera';
 import type { BackgroundOptions, BackgroundPattern } from '../options';
 
 export const DEFAULT_BASE = '#0e0f0c';
@@ -93,46 +93,49 @@ function cached(key: string, make: () => string): string {
   return value;
 }
 
+type PatternContext = { camera: Camera; strength: number; color: string; scale: number };
+
+const PATTERN_LAYERS: Record<BackgroundPattern, (context: PatternContext) => Layer[]> = {
+  none: () => [],
+  hex: ({ camera, strength, color, scale }) => [
+    {
+      image: svgUrl(
+        cached(`hex-${Math.round(strength * 100)}-${color}`, () => hexSvg(color, Math.min(1, 0.14 * strength))),
+      ),
+      size: `${HEX_TILE.width * scale}px ${HEX_TILE.height * scale}px`,
+      position: `${camera.x}px ${camera.y}px`,
+    },
+  ],
+  dots: ({ camera, strength, color, scale }) => [
+    {
+      image: svgUrl(
+        cached(`dots-${Math.round(strength * 100)}-${color}`, () => dotSvg(color, Math.min(1, 0.22 * strength))),
+      ),
+      size: `${DOT_TILE * scale}px ${DOT_TILE * scale}px`,
+      position: `${camera.x}px ${camera.y}px`,
+    },
+  ],
+  stars: ({ camera, strength, color, scale }) =>
+    [NEAR_STARS, FAR_STARS].map((layer) => ({
+      image: svgUrl(
+        cached(`stars-${layer.seed}-${Math.round(strength * 100)}-${color}`, () =>
+          starSvg(layer, color, Math.min(1, layer.alpha * strength)),
+        ),
+      ),
+      size: `${STAR_TILE * scale}px ${STAR_TILE * scale}px`,
+      position: `${camera.x * layer.parallax}px ${camera.y * layer.parallax}px`,
+    })),
+};
+
 /** Pattern layers from top to bottom. All scale with the zoom; the stars move slower to look deep. */
 function patternLayers(pattern: BackgroundPattern, camera: Camera, options: BackgroundOptions): Layer[] {
-  const strength = Math.min(1, Math.max(0, options.intensity ?? 0.5)) * 2; // 0.5 is the normal value (1)
-  const color = options.color ?? DEFAULT_PATTERN_COLOR;
-  const scale = camera.zoom * (options.scale ?? 1);
-  const key = (name: string) => `${name}-${Math.round(strength * 100)}-${color}`;
-  const position = `${camera.x}px ${camera.y}px`;
-
-  switch (pattern) {
-    case 'hex':
-      return [
-        {
-          image: svgUrl(cached(key('hex'), () => hexSvg(color, Math.min(1, 0.14 * strength)))),
-          size: `${HEX_TILE.width * scale}px ${HEX_TILE.height * scale}px`,
-          position,
-        },
-      ];
-    case 'dots':
-      return [
-        {
-          image: svgUrl(cached(key('dots'), () => dotSvg(color, Math.min(1, 0.22 * strength)))),
-          size: `${DOT_TILE * scale}px ${DOT_TILE * scale}px`,
-          position,
-        },
-      ];
-    case 'stars': {
-      const size = `${STAR_TILE * scale}px ${STAR_TILE * scale}px`;
-      return [NEAR_STARS, FAR_STARS].map((layer) => ({
-        image: svgUrl(
-          cached(key(`stars-${layer.seed}`), () => starSvg(layer, color, Math.min(1, layer.alpha * strength))),
-        ),
-        size,
-        position: `${camera.x * layer.parallax}px ${camera.y * layer.parallax}px`,
-      }));
-    }
-    case 'none':
-      return [];
-  }
+  return PATTERN_LAYERS[pattern]({
+    camera,
+    strength: Math.min(1, Math.max(0, options.intensity ?? 0.5)) * 2, // 0.5 is the normal value (1)
+    color: options.color ?? DEFAULT_PATTERN_COLOR,
+    scale: camera.zoom * (options.scale ?? 1),
+  });
 }
-
 /** CSS for the background behind the map: a plain color or gradient at the bottom, a pattern on top. */
 export function backgroundCss(options: BackgroundOptions, camera: Camera): BackgroundCss {
   const base = options.base ?? DEFAULT_BASE;
