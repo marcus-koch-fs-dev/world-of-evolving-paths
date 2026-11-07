@@ -1,0 +1,29 @@
+.pw-view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.pw-view-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.pw-view-label {
+  min-width: 90px;
+  text-align: center;
+  color: var(--pw-muted);
+}
+
+.pw-select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--pw-line);
+  border-radius: 8px;
+  background: var(--pw-field);
+  color: inherit;
+  font: inherit;
+}
