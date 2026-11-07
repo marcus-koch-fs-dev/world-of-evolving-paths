@@ -4,7 +4,7 @@ import type { PlacedPoint, Position } from './types.js';
 
 export type Edge = { id: string; from: PlacedPoint; to: PlacedPoint };
 
-/** Between the two point ids in the id of a connection. Point ids may not contain it, so an edge id is unique. */
+// Between the two point ids in the id of a line. Point ids may not contain it, so a line id is unique.
 export const EDGE_SEPARATOR = '->';
 
 /** All connections, taken from the `next` lists. */

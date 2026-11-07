@@ -76,19 +76,20 @@ function circleIds(points: { id: string; next: string[] }[]): string[] {
   const nextOf = new Map(points.map((point) => [point.id, point.next]));
   const finished = new Set<string>();
   const found = new Set<string>();
-  const visit = (id: string, trail: readonly string[]): void => {
-    if (trail.includes(id)) {
+  const visiting = new Set<string>();
+  const visit = (id: string): void => {
+    if (visiting.has(id)) {
       found.add(id);
       return;
     }
     if (finished.has(id)) return;
-    (nextOf.get(id) ?? []).forEach((nextId) => {
-      visit(nextId, [...trail, id]);
-    });
+    visiting.add(id);
+    (nextOf.get(id) ?? []).forEach(visit);
+    visiting.delete(id);
     finished.add(id);
   };
   points.forEach((point) => {
-    visit(point.id, []);
+    visit(point.id);
   });
   return [...found];
 }
@@ -96,16 +97,10 @@ function circleIds(points: { id: string; next: string[] }[]): string[] {
 function referenceErrors(data: PeriodData): string[] {
   const pathIds = data.paths.map((path) => path.id);
   const points = data.paths.flatMap((path) => path.points);
-  const known = new Set(points.map((point) => point.id));
-  const unknownLinks = points.flatMap((point) =>
-    point.next
-      .filter((id) => !known.has(id))
-      .map((id) => `Point "${point.id}" links to "${id}", which does not exist.`),
-  );
+  // A link to a point that is not in this view is fine: it is dropped when the world is built
   return [
     ...duplicates(pathIds).map((id) => `Path id "${id}" is used twice.`),
     ...duplicates(points.map((point) => point.id)).map((id) => `Point id "${id}" is used twice.`),
-    ...unknownLinks,
     ...circleIds(points).map((id) => `Point "${id}" is on a circle of connections. A path only runs forward.`),
   ];
 }

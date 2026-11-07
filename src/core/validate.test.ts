@@ -27,10 +27,10 @@ describe('Period data validation', () => {
   });
 
   describe('when the connections are wrong', () => {
-    it('rejects a link to a point that does not exist', () => {
-      const data = editPoint(makePeriodData(), 'c1', { next: ['ghost'] });
+    it('accepts a link to a point that is not in the view, because it is dropped later', () => {
+      const data = editPoint(makePeriodData(), 'c1', { next: ['next-week'] });
 
-      expect(errorsFor(data)).toContain('Point "c1" links to "ghost", which does not exist.');
+      expect(validatePeriodData(data).ok).toBe(true);
     });
 
     it('rejects a circle of connections', () => {

@@ -100,7 +100,7 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are stacked by `lane` (lowest first), otherwise in list order.
 
-**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` must point to an existing point and connections never form a circle: the data is rejected with a message otherwise. Point ids may not contain `->`, it separates the ids in the id of a line.
+**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` to a point that is not in the view is dropped. Connections never form a circle: such data is rejected with a message. Point ids may not contain `->`, it separates the ids in the id of a line.
 
 **`PeriodMap`** is a hashmap from period key to `PeriodData`. Typically it holds only the view you show, and you load the next one when the user changes the view.
 

@@ -61,17 +61,14 @@ export function isFreeAt(layout: Layout, self: Mover, at: Position): boolean {
   );
   if (touchesPoint) return false;
 
-  const isOwn = (link: Link) => link.from === self.id || link.to === self.id;
-  const onForeignLine = layout.links.some((link) => {
-    if (isOwn(link)) return false;
-    const a = byId.get(link.from);
-    const b = byId.get(link.to);
-    return a !== undefined && b !== undefined && distanceToSegment(at, a, b) < radius - EPSILON;
-  });
-  if (onForeignLine) return false;
-
-  // A point has only a few lines of its own, so checking them against the other points stays small
-  return !layout.links.filter(isOwn).some((link) => {
+  // A foreign line may not pass through the spot. A line of its own may not touch another point; a point has only
+  // a few lines of its own, so that check stays small. One pass over the lines, nothing is built on the way.
+  const blocks = (link: Link) => {
+    if (link.from !== self.id && link.to !== self.id) {
+      const a = byId.get(link.from);
+      const b = byId.get(link.to);
+      return a !== undefined && b !== undefined && distanceToSegment(at, a, b) < radius - EPSILON;
+    }
     const neighbour = byId.get(link.from === self.id ? link.to : link.from);
     return (
       neighbour !== undefined &&
@@ -82,7 +79,8 @@ export function isFreeAt(layout: Layout, self: Mover, at: Position): boolean {
           distanceToSegment(body, at, neighbour) < collisionRadius(body) - EPSILON,
       )
     );
-  });
+  };
+  return !layout.links.some(blocks);
 }
 
 /** The spots on one ring around `at`, in a fixed angle order. */

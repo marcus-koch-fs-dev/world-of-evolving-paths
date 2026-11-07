@@ -54,12 +54,12 @@ export function polylineLength(points: Position[]): number {
 /** The start of a polyline up to the fraction `f` of its length. */
 export function cutAt(points: Position[], f: number): Position[] {
   if (f >= 1) return points;
-  const target = polylineLength(points) * Math.max(0, f);
   const lengths = points.slice(1).map((b, i) => Math.hypot(b.x - points[i].x, b.y - points[i].y));
   const ends: number[] = [];
   lengths.forEach((length) => {
     ends.push((ends.at(-1) ?? 0) + length);
   });
+  const target = (ends.at(-1) ?? 0) * Math.max(0, f);
   // The first piece that reaches the target holds the cut
   const index = ends.findIndex((end) => end >= target);
   if (index < 0) return points;
@@ -74,33 +74,40 @@ export function pointAt(points: Position[], f: number): Position {
   return part.at(-1) as Position;
 }
 
-type Pen = { drawing: boolean; left: number };
+type Piece = { from: Position; to: Position; start: number; end: number };
 
-/** Walks one straight piece: draws up to the next change of the pen, then goes on with the rest of the piece. */
-function walkPiece(a: Position, b: Position, segment: number, pen: Pen, dash: Dash, out: [Position, Position][]): Pen {
-  if (segment <= EPSILON) return pen;
-  const step = Math.min(pen.left, segment);
-  const t = step / segment;
-  const next = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-  if (pen.drawing) out.push([a, next]);
-  const left = pen.left - step;
-  const [on, off] = dash;
-  const turned = left <= EPSILON ? { drawing: !pen.drawing, left: pen.drawing ? off : on } : { ...pen, left };
-  return walkPiece(next, b, segment - step, turned, dash, out);
+/** The straight pieces of a polyline, each with the distance along the line where it starts and ends. */
+function piecesOf(points: Position[]): Piece[] {
+  const lengths = points.slice(1).map((b, i) => Math.hypot(b.x - points[i].x, b.y - points[i].y));
+  const ends: number[] = [];
+  lengths.forEach((length) => {
+    ends.push((ends.at(-1) ?? 0) + length);
+  });
+  return lengths.map((length, i) => ({ from: points[i], to: points[i + 1], start: ends[i] - length, end: ends[i] }));
 }
 
-/** The drawn pieces of a dashed polyline. `shift` moves the pattern forward along the line. */
+const along = (piece: Piece, distance: number): Position => {
+  const t = (distance - piece.start) / (piece.end - piece.start);
+  return { x: piece.from.x + (piece.to.x - piece.from.x) * t, y: piece.from.y + (piece.to.y - piece.from.y) * t };
+};
+
+/**
+ * The drawn pieces of a dashed polyline. `shift` moves the pattern forward along the line.
+ * The pattern repeats every `on + off` along the line, so each piece only looks at the dashes that reach it.
+ */
 export function dashSegments(points: Position[], dash: Dash, shift = 0): [Position, Position][] {
   const [on, off] = dash;
   const period = on + off;
-  const position = (((period - shift) % period) + period) % period;
-  const drawing = position < on;
-  const out: [Position, Position][] = [];
-  points
-    .slice(1)
-    .reduce<Pen>(
-      (pen, b, i) => walkPiece(points[i], b, Math.hypot(b.x - points[i].x, b.y - points[i].y), pen, dash, out),
-      { drawing, left: drawing ? on - position : period - position },
-    );
-  return out;
+  if (period <= 0 || on <= 0) return [];
+  const phase = (((period - shift) % period) + period) % period;
+  // Dash k covers the distances from k * period - phase to k * period - phase + on
+  return piecesOf(points).flatMap((piece) => {
+    const first = Math.max(0, Math.ceil((piece.start + phase - on) / period));
+    const last = Math.floor((piece.end + phase) / period);
+    return Array.from({ length: Math.max(0, last - first + 1) }, (_, i) => first + i).flatMap((k) => {
+      const from = Math.max(k * period - phase, piece.start);
+      const to = Math.min(k * period - phase + on, piece.end);
+      return to - from > EPSILON ? [[along(piece, from), along(piece, to)] as [Position, Position]] : [];
+    });
+  });
 }

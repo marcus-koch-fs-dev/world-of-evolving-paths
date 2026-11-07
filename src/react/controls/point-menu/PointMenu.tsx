@@ -48,7 +48,8 @@ export type PointMenuProps = {
   checkInCount?: number;
 };
 
-const NO_PANEL = null;
+/** The tiles that open a panel. The connect tile has none: it hands over to the app at once. */
+type PanelId = Exclude<TileId, 'connect'>;
 
 const checkInLabel = (count: number) => `${count} check-in${count === 1 ? '' : 's'}`;
 
@@ -64,7 +65,7 @@ export function PointMenu(props: PointMenuProps) {
 function PointMenuBody(props: PointMenuProps) {
   const handle = usePathWorldHandle();
   useWorldVersion(handle);
-  const [open, setOpen] = useState<TileId | null>(null);
+  const [open, setOpen] = useState<PanelId | null>(null);
   const position = handle.positionOf(props.point.id);
   if (!position) return null;
 
@@ -78,10 +79,9 @@ function PointMenuBody(props: PointMenuProps) {
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
   const placement = resolvePlacement(props.placement ?? 'auto', position.y * camera.zoom + camera.y, room);
 
-  const panels: Record<TileId, React.ReactNode> = {
+  const panels: Record<PanelId, React.ReactNode> = {
     status: <StatusPanel status={point.status} canComplete={props.canComplete ?? true} onUpdate={props.onUpdate} />,
     next: <NextPointPanel colors={colors} defaultDate={point.date} onAddNext={props.onAddNext} onDone={close} />,
-    connect: NO_PANEL,
     kind: <KindPanel kind={point.kind} branches={point.next.length >= 2} onUpdate={props.onUpdate} />,
     color: (
       <ColorPanel
@@ -129,7 +129,7 @@ function PointMenuBody(props: PointMenuProps) {
           }}
         />
       </div>
-      {open && panels[open] !== NO_PANEL && <div className="pw-menu-sub">{panels[open]}</div>}
+      {open && <div className="pw-menu-sub">{panels[open]}</div>}
     </div>,
     handle.overlay,
   );

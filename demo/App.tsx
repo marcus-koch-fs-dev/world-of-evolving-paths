@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import {
   type BackgroundOptions,
   fromDay,
@@ -137,10 +137,28 @@ export function App() {
     setNotice(null);
   };
 
+  // Connecting ends when the point it started from is no longer selected (another view, deleted) and on Escape
+  const connectingStale = connectingFrom !== null && connectingFrom !== selected?.id;
+  useEffect(() => {
+    if (!connectingStale) return;
+    setConnectingFrom(null);
+    setNotice(null);
+  }, [connectingStale]);
+  useEffect(() => {
+    if (connectingFrom === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setConnectingFrom(null);
+      setNotice(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [connectingFrom]);
+
   const toggleConnecting = (fromId: string) => {
     if (connectingFrom === fromId) return stopConnecting();
     setConnectingFrom(fromId);
-    setNotice('Click the point to connect to. Click the background to cancel.');
+    setNotice('Click the point to connect to. Click the background or press Escape to cancel.');
   };
 
   /** While connecting, the next point that is clicked is the target. Anything else selects as usual. */
