@@ -59,10 +59,10 @@ export function createPixiRenderer(): PixiRenderer {
     const bob = 0.5 - 0.5 * Math.cos((2 * Math.PI * (time % BOB_MS)) / BOB_MS);
     const drawing = edges.tick(time);
     const moving = nodes.tick(deltaMs, ringPhase, bob);
-    heres.tick(ringPhase);
+    const gliding = heres.tick(ringPhase, deltaMs);
 
     // Pixi renders after this on the same tick, so there is no render call here
-    if (!keepTicking && !drawing && !moving) app.ticker.stop();
+    if (!keepTicking && !drawing && !moving && !gliding) app.ticker.stop();
   };
 
   const resize = (width: number, height: number) => {
@@ -81,7 +81,7 @@ export function createPixiRenderer(): PixiRenderer {
     rings.sync(next.rings);
     keepTicking = edges.isAnimated() || nodes.isAnimated() || heres.isAnimated();
     app.render();
-    if (keepTicking || nodes.isMoving()) app.ticker.start();
+    if (keepTicking || nodes.isMoving() || heres.isMoving()) app.ticker.start();
     else app.ticker.stop();
   };
 
