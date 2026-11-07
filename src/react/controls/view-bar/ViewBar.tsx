@@ -23,6 +23,8 @@ export type ViewBarProps = {
   onReroll?: () => void;
   /** One dropdown for the level instead of one button per level. Saves room in a narrow bar. */
   compact?: boolean;
+  /** Only the period with its arrows and today, and the two page arrows without a label. Levels and reroll then go somewhere else, such as a `TilePanel`. */
+  periodOnly?: boolean;
 };
 
 /** Switches between levels, moves through periods and pages. It holds no state: the app decides what each button does. */
@@ -33,13 +35,15 @@ export function ViewBar(props: ViewBarProps) {
 
   return (
     <nav className="pw-view-bar" aria-label="View">
-      <LevelSwitch
-        levels={levels}
-        level={level}
-        freeLabel={props.freeLabel}
-        compact={props.compact}
-        onChange={onLevelChange}
-      />
+      {!props.periodOnly && (
+        <LevelSwitch
+          levels={levels}
+          level={level}
+          freeLabel={props.freeLabel}
+          compact={props.compact}
+          onChange={onLevelChange}
+        />
+      )}
 
       {level !== null && (
         <div className="pw-view-group">
@@ -57,7 +61,7 @@ export function ViewBar(props: ViewBarProps) {
       )}
 
       {pages > 0 && (
-        <div className="pw-view-group" title="Other graphs in the same view">
+        <div className="pw-view-group" title={`Other graphs in the same view: page ${page + 1} of ${pages}`}>
           <button
             type="button"
             className="pw-button"
@@ -67,9 +71,11 @@ export function ViewBar(props: ViewBarProps) {
           >
             ▲
           </button>
-          <span className="pw-view-label">
-            Page {page + 1}/{pages}
-          </span>
+          {!props.periodOnly && (
+            <span className="pw-view-label">
+              Page {page + 1}/{pages}
+            </span>
+          )}
           <button
             type="button"
             className="pw-button"
@@ -82,7 +88,7 @@ export function ViewBar(props: ViewBarProps) {
         </div>
       )}
 
-      {props.onReroll && level !== null && (
+      {!props.periodOnly && props.onReroll && level !== null && (
         <div className="pw-view-group">
           <button type="button" className="pw-button" title="Generate another layout" onClick={props.onReroll}>
             Reroll

@@ -1,11 +1,16 @@
 export type { BackgroundPanelProps } from './controls/background-panel/BackgroundPanel.js';
 export { BackgroundPanel } from './controls/background-panel/BackgroundPanel.js';
-export type { ControlBarPlacement, ControlBarProps } from './controls/control-bar/ControlBar.js';
+export type { ControlBarProps } from './controls/control-bar/ControlBar.js';
 export { ControlBar } from './controls/control-bar/ControlBar.js';
+export type { DockSlot } from './controls/control-bar/dock.js';
 export type { PointMenuProps } from './controls/point-menu/PointMenu.js';
 export { PointMenu } from './controls/point-menu/PointMenu.js';
 export type { MenuPlacement } from './controls/point-menu/placement.js';
 export type { NextPointInput, PointPatch, TileId } from './controls/point-menu/types.js';
+export type { SidePanelProps } from './controls/side-panel/SidePanel.js';
+export { SidePanel } from './controls/side-panel/SidePanel.js';
+export type { PanelGroup, PanelTile, TilePanelProps } from './controls/tile-panel/TilePanel.js';
+export { TilePanel } from './controls/tile-panel/TilePanel.js';
 export type { TimeSliderProps } from './controls/time-slider/TimeSlider.js';
 export { TimeSlider } from './controls/time-slider/TimeSlider.js';
 export type { ToastProps } from './controls/toast/Toast.js';

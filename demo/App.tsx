@@ -3,6 +3,7 @@ import {
   type BackgroundOptions,
   fromDay,
   isValidLocale,
+  type Orientation,
   type PeriodMap,
   periodLabel,
   toDay,
@@ -13,14 +14,15 @@ import {
 import {
   BackgroundPanel,
   ControlBar,
+  type DockSlot,
   PathWorld,
   PointMenu,
   playbackPlan,
+  SidePanel,
   TimeSlider,
   Toast,
   useTimePlayback,
   ViewBar,
-  ZoomControls,
 } from 'world-of-evolving-paths/react';
 import { rememberColor } from './app-logic/customColors';
 import { DEFAULT_LEVELS } from './app-logic/levels';
@@ -28,18 +30,29 @@ import { buildPeriodData } from './app-logic/periodData';
 import { canComplete } from './app-logic/rules';
 import { connectProblem, DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
 import { playbackStartDay } from './app-logic/timeTravel';
-import { type DemoMode, ModeToggle } from './components/ModeToggle';
+import { type DemoMode, MainMenu } from './components/MainMenu';
 import { SettingsPanel } from './components/SettingsPanel';
 import { createHabits } from './data/habits';
 import { useStoredState } from './hooks/useStoredState';
 import { useViewNavigation } from './hooks/useViewNavigation';
 
 const FREE_VIEW = 'free';
+// On a phone the bars start collapsed, so they leave room for the map
+const SMALL_SCREEN = window.matchMedia('(max-width: 600px)').matches;
+// Where the user docked the two bars
+type Docks = { main: DockSlot; time: DockSlot };
+const DEFAULT_DOCKS: Docks = { main: 'top-left', time: 'bottom-left' };
 const NO_PINS = {};
 const DEFAULT_BACKGROUND: BackgroundOptions = { pattern: 'stars', intensity: 0.5 };
 // Playing through any range takes about this long at normal speed
 const PLAY_DURATION_MS = 24000;
 const PLAY_SPEEDS = [0.5, 1, 2];
+
+// An older version of the demo could store an image in the background settings. It is dropped, it can be megabytes.
+function withoutImage(stored: BackgroundOptions): BackgroundOptions {
+  const { image: _image, ...rest } = stored as BackgroundOptions & { image?: unknown };
+  return rest;
+}
 
 /** Moving through time: the day, whether it plays, and the view it belongs to. It ends when the view changes. */
 type TimeTravel = { view: string; day: number; playing: boolean };
@@ -64,9 +77,17 @@ export function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1);
   const [travel, setTravel] = useState<TimeTravel | null>(null);
-  const [background, setBackground] = useStoredState<BackgroundOptions>('wep-demo:background', DEFAULT_BACKGROUND);
+  const [background, setBackground] = useStoredState<BackgroundOptions>(
+    'wep-demo:background',
+    DEFAULT_BACKGROUND,
+    withoutImage,
+  );
   const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
   const [levels, setLevels] = useStoredState<ViewLevel[]>('wep-demo:levels', DEFAULT_LEVELS);
+  const [orientation, setOrientation] = useStoredState<Orientation>('wep-demo:orientation', 'auto');
+  const [docks, setDocks] = useStoredState<Docks>('wep-demo:docks', DEFAULT_DOCKS);
+  // The settings slide in from the side the menu bar is not on
+  const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
   const [storedLocale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || 'en-GB');
   const locale = isValidLocale(storedLocale) ? storedLocale : 'en-GB';
   const editing = mode === 'edit';
@@ -184,6 +205,7 @@ export function App() {
         animate={animate}
         locale={locale}
         background={background}
+        orientation={orientation}
         onSelect={handleSelect}
         onPointMove={({ positions }) => dispatch({ type: 'move', viewKey: tileKey, positions })}
         onPointAdd={({ x, y, date }) => {
@@ -192,13 +214,11 @@ export function App() {
         }}
         onError={(errors) => console.error(errors.join('\n'))}
       >
-        <ControlBar placement="top">
+        <ControlBar dock={docks.main} onDockChange={(main) => setDocks({ ...docks, main })}>
           <ViewBar
-            compact
-            levels={offeredLevels}
+            periodOnly
             level={navigation.level}
             onLevelChange={navigation.chooseLevel}
-            freeLabel="Free"
             periodLabel={periodLabel(navigation.period, locale)}
             onPrevious={() => navigation.move(-1)}
             onNext={() => navigation.move(1)}
@@ -206,24 +226,24 @@ export function App() {
             page={result.page}
             pages={navigation.level === null ? 0 : result.pages}
             onPageChange={navigation.setPage}
-            onReroll={editing ? () => dispatch({ type: 'reroll', viewKey: tileKey }) : undefined}
           />
-          <ZoomControls />
-          {editing && (
-            <button
-              type="button"
-              className={`pw-button${settingsOpen ? ' is-active' : ''}`}
-              onClick={() => setSettingsOpen((open) => !open)}
-            >
-              Settings
-            </button>
-          )}
-          <ModeToggle mode={mode} onChange={setMode} />
+          <MainMenu
+            levels={offeredLevels}
+            level={navigation.level}
+            onLevelChange={navigation.chooseLevel}
+            onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey })}
+            mode={mode}
+            onModeChange={setMode}
+            settingsOpen={settingsOpen}
+            onSettingsToggle={() => setSettingsOpen((open) => !open)}
+          />
         </ControlBar>
 
         {editing && settingsOpen && (
-          <ControlBar placement="left">
+          <SidePanel side={settingsSide} title="Settings" onClose={() => setSettingsOpen(false)}>
             <SettingsPanel
+              orientation={orientation}
+              onOrientationChange={setOrientation}
               wavy={wavy}
               pointsLocked={pointsLocked}
               animate={animate}
@@ -237,10 +257,15 @@ export function App() {
             >
               <BackgroundPanel value={background} onChange={setBackground} />
             </SettingsPanel>
-          </ControlBar>
+          </SidePanel>
         )}
 
-        <ControlBar placement="bottom-left">
+        <ControlBar
+          dock={docks.time}
+          onDockChange={(time) => setDocks({ ...docks, time })}
+          label="Time"
+          startCollapsed={SMALL_SCREEN}
+        >
           <TimeSlider
             start={range.start}
             end={range.end}
@@ -259,7 +284,7 @@ export function App() {
         </ControlBar>
 
         {editing && selected && selectedPath && (
-          <ControlBar placement="bottom-right">
+          <ControlBar dock="bottom-right">
             <button
               type="button"
               className="pw-button"

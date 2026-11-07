@@ -1,0 +1,96 @@
+/* The panel sits at the edge of the bar (which is positioned), not at the button, so it stays on screen */
+.pw-tile-panel {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--pw-line);
+  border-radius: 12px;
+  background: var(--pw-panel);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+}
+
+.pw-tp-down {
+  top: calc(100% + 8px);
+}
+
+.pw-tp-up {
+  bottom: calc(100% + 8px);
+}
+
+.pw-tp-start {
+  left: 0;
+}
+
+.pw-tp-end {
+  right: 0;
+}
+
+.pw-tp-group h4 {
+  margin: 0 0 4px;
+  color: var(--pw-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pw-tp-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 62px);
+  gap: 6px;
+}
+
+.pw-tp-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 50px;
+  padding: 0 2px;
+  border: 1px solid var(--pw-line);
+  border-radius: 10px;
+  background: var(--pw-field);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pw-tp-tile:hover:not(:disabled),
+.pw-tp-tile.is-on {
+  border-color: var(--pw-lit);
+}
+
+.pw-tp-tile:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pw-tp-glyph {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.pw-tp-tile.is-danger .pw-tp-glyph {
+  color: var(--pw-danger);
+}
+
+.pw-tp-tile.is-on .pw-tp-glyph {
+  color: var(--pw-lit);
+}
+
+.pw-tp-label {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--pw-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
