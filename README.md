@@ -10,6 +10,22 @@ Paths with dates that grow stronger the more you walk them. A pannable, zoomable
 
 > Status: early (0.0.x). The API can still change.
 
+## The demo
+
+The demo in `demo/` (run it with `npm run dev`) uses the controls described below. It shows three habits over a year: reached connections are wide and lit, open ones are dotted, and the Today marker sits where each path stands.
+
+![The year view with three paths, a slim bar at the top and the time slider at the bottom](docs/demo-year.jpg)
+
+The main bar stays slim: the period with its arrows, today, the page arrows and one button that opens the tile menu. Everything else is one step away. The menu stays open until you close it.
+
+![The tile menu with view, map, layout and mode tiles](docs/demo-menu.jpg)
+
+A selected point gets its own menu with actions (next point, connect, delete) and properties (status, kind, name, path color, details).
+
+![The menu of a selected point](docs/demo-point-menu.jpg)
+
+Both bars can be dragged to the top or bottom edge, left, middle or right. The map can run left to right, right to left, top to bottom or bottom to top (`orientation`).
+
 ## Install
 
 ```bash
