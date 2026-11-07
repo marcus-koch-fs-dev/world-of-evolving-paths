@@ -33,7 +33,7 @@ describe('Background CSS', () => {
       const css = backgroundCss({ fill: 'gradient', pattern: 'dots', angle: 90 }, camera);
 
       const layers = css.backgroundImage.split('), ');
-      expect(layers[layers.length - 1]).toContain('linear-gradient(90deg');
+      expect(layers.at(-1)).toContain('linear-gradient(90deg');
     });
   });
 });

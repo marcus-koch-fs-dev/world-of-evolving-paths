@@ -41,6 +41,9 @@ The library never touches `localStorage` or stores data. A test enforces the lay
 ## Code style
 
 - **Functional approach: no classes of our own.** State lives in factory functions with closures (`createX`). Put the logic into small, separate, exported functions that take the state they need as parameters, so only what is used gets loaded. Classes from other libraries, such as Pixi's, are fine.
+- **Modern JavaScript only (ES2023).** Write it this way from the first line, not in a later cleanup. `const` by default, `let` only when a value really changes, never `var`. Destructuring, spread, optional chaining, `??`, template strings, arrow functions, `async`/`await` instead of `.then`, `.at(-1)` instead of `[length - 1]`, `includes` instead of `indexOf`.
+- **No `for` or `while` loops.** Use array methods (`map`, `filter`, `find`, `findLast`, `some`, `every`, `flatMap`, `reduce`, `forEach`). State from step to step goes into `reduce` or a small recursive function.
+- **No n² work for simple tasks.** Before iterating inside an iteration, look for a better algorithm (Map lookup, grouping, sorting).
 - No `any`. Type data and state explicitly.
 - Guard clauses over nesting. Descriptive names, no abbreviations. Magic values become named constants.
 - Fixed mappings from a union type are `Record` hashmaps, not `switch`.

@@ -43,12 +43,12 @@ export function visiblePoints(all: DemoPoint[], period: Period | null, minImport
   const shown = new Set(all.filter(isShown).map((point) => point.id));
 
   const reach = (id: string, seen: Set<string>, found: Set<string>) => {
-    for (const nextId of byId.get(id)?.next ?? []) {
-      if (seen.has(nextId)) continue;
+    (byId.get(id)?.next ?? []).forEach((nextId) => {
+      if (seen.has(nextId)) return;
       seen.add(nextId);
       if (shown.has(nextId)) found.add(nextId);
       else reach(nextId, seen, found);
-    }
+    });
   };
 
   return all
@@ -62,10 +62,12 @@ export function visiblePoints(all: DemoPoint[], period: Period | null, minImport
 
 /** Strength tier of every reached point, counted over all check-ins of its path, also those the view hides. */
 export function withStrength(visible: DemoPoint[], checkIns: CheckIn[]): DemoPoint[] {
-  const daysByPath = new Map<string, number[]>();
-  for (const checkIn of checkIns) {
-    daysByPath.set(checkIn.pathId, [...(daysByPath.get(checkIn.pathId) ?? []), toDay(checkIn.date)]);
-  }
+  const daysByPath = checkIns.reduce((groups, checkIn) => {
+    const days = groups.get(checkIn.pathId);
+    if (days) days.push(toDay(checkIn.date));
+    else groups.set(checkIn.pathId, [toDay(checkIn.date)]);
+    return groups;
+  }, new Map<string, number[]>());
   return visible.map((point) =>
     point.status === 'done' || point.status === 'current'
       ? { ...point, strength: tierAt(daysByPath.get(point.pathId) ?? [], toDay(point.date)) }
@@ -79,13 +81,15 @@ export function withStrength(visible: DemoPoint[], checkIns: CheckIn[]): DemoPoi
  */
 export function withStatusAsOf(points: DemoPoint[], asOf: string): DemoPoint[] {
   const day = toDay(asOf);
-  const currentIds = new Set<string>();
-  for (const path of new Set(points.map((point) => point.pathId))) {
-    const ahead = points
-      .filter((point) => point.pathId === path && point.status !== 'abandoned' && toDay(point.date) >= day)
-      .sort((a, b) => toDay(a.date) - toDay(b.date));
-    if (ahead[0]) currentIds.add(ahead[0].id);
-  }
+  // One pass: per path the earliest point that is not abandoned and not before the day
+  const nextByPath = points
+    .filter((point) => point.status !== 'abandoned' && toDay(point.date) >= day)
+    .reduce((earliest, point) => {
+      const best = earliest.get(point.pathId);
+      if (!best || toDay(point.date) < toDay(best.date)) earliest.set(point.pathId, point);
+      return earliest;
+    }, new Map<string, DemoPoint>());
+  const currentIds = new Set([...nextByPath.values()].map((point) => point.id));
   return points.map((point) => {
     if (point.status === 'abandoned') return point;
     if (toDay(point.date) < day) return { ...point, status: 'done' as const };

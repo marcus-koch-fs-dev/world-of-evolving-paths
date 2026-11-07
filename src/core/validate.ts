@@ -63,7 +63,9 @@ function pathErrors(path: unknown, index: number): string[] {
 function duplicates(ids: string[]): string[] {
   const seen = new Set<string>();
   const repeated = new Set<string>();
-  for (const id of ids) (seen.has(id) ? repeated : seen).add(id);
+  ids.forEach((id) => {
+    (seen.has(id) ? repeated : seen).add(id);
+  });
   return [...repeated];
 }
 

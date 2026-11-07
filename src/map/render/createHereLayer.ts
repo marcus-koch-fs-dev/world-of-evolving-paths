@@ -55,23 +55,23 @@ export function createHereLayer(texts: TextPool): HereLayer {
 
     sync(heres) {
       const seen = new Set<string>();
-      for (const here of heres) {
+      heres.forEach((here) => {
         seen.add(here.id);
         slotFor(here.id).container.position.set(here.x, here.y);
-      }
-      for (const [id, slot] of slots) {
-        if (seen.has(id)) continue;
+      });
+      slots.forEach((slot, id) => {
+        if (seen.has(id)) return;
         texts.drop(slot.label);
         slot.container.destroy({ children: true });
         slots.delete(id);
-      }
+      });
     },
 
     tick(phase) {
-      for (const slot of slots.values()) {
+      slots.forEach((slot) => {
         slot.ring.scale.set(1 + 1.2 * phase);
         slot.ring.alpha = 0.6 * (1 - phase);
-      }
+      });
     },
   };
 }

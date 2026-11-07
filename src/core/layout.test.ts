@@ -36,12 +36,11 @@ describe('Layout', () => {
       const { positions } = layoutOf(1);
 
       const ids = flattenPeriod(makePeriodData()).points.map((point) => point.id);
-      for (const a of ids) {
-        for (const b of ids.filter((id) => id > a)) {
-          const distance = Math.hypot(positions[a].x - positions[b].x, positions[a].y - positions[b].y);
-          expect(distance).toBeGreaterThanOrEqual(collisionRadius({ kind: 'milestone' }) * 2 - 0.5);
-        }
-      }
+      const pairs = ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b]));
+      pairs.forEach(([a, b]) => {
+        const distance = Math.hypot(positions[a].x - positions[b].x, positions[a].y - positions[b].y);
+        expect(distance).toBeGreaterThanOrEqual(collisionRadius({ kind: 'milestone' }) * 2 - 0.5);
+      });
     });
 
     it('puts earlier dates further left on the same path', () => {
@@ -54,10 +53,10 @@ describe('Layout', () => {
     it('keeps the points inside the width of the tile', () => {
       const { positions, width } = layoutOf(1);
 
-      for (const position of Object.values(positions)) {
+      Object.values(positions).forEach((position) => {
         expect(position.x).toBeGreaterThanOrEqual(0);
         expect(position.x).toBeLessThanOrEqual(width);
-      }
+      });
     });
   });
 

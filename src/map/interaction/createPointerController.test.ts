@@ -30,7 +30,9 @@ function fakeElement(offset = { left: 0, top: 0 }) {
       preventDefault: () => undefined,
       ...props,
     };
-    for (const listener of listeners.get(type) ?? []) listener(event);
+    (listeners.get(type) ?? []).forEach((listener) => {
+      listener(event);
+    });
   };
   return { element: element as unknown as HTMLElement, fire };
 }

@@ -235,7 +235,7 @@ export function createNodeLayer(texts: TextPool): NodeLayer {
 
     sync(nodes) {
       const seen = new Set<string>();
-      for (const node of nodes) {
+      nodes.forEach((node) => {
         seen.add(node.id);
         const slot = slotFor(node);
         slot.node = node;
@@ -245,27 +245,30 @@ export function createNodeLayer(texts: TextPool): NodeLayer {
         }
         paint(slot, texts);
         place(slot);
-      }
-      for (const [id, slot] of slots) {
-        if (seen.has(id)) continue;
-        for (const text of [slot.arrow, slot.glyph, slot.name, slot.date]) texts.drop(text);
+      });
+      slots.forEach((slot, id) => {
+        if (seen.has(id)) return;
+        [slot.arrow, slot.glyph, slot.name, slot.date].forEach((text) => {
+          texts.drop(text);
+        });
         slot.root.destroy({ children: true });
         slots.delete(id);
-      }
+      });
     },
 
     tick(deltaMs, ringPhase, bob) {
-      let busy = false;
-      for (const slot of slots.values()) {
-        busy = follow(slot, deltaMs) || busy;
+      // Every slot must follow, so collect the results first and only then ask whether any is still moving
+      const moving = [...slots.values()].map((slot) => {
+        const busy = follow(slot, deltaMs);
         place(slot);
         if (slot.ring) {
           slot.ring.scale.set(1 + 1.2 * ringPhase);
           slot.ring.alpha = 0.6 * (1 - ringPhase);
         }
         if (slot.arrow) slot.arrow.position.set(-5, -slot.node.size / 2 - ARROW_LIFT - ARROW_BOB * bob);
-      }
-      return busy;
+        return busy;
+      });
+      return moving.some(Boolean);
     },
   };
 }

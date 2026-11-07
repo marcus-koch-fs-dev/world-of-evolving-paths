@@ -57,7 +57,9 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
 
   const notifyWorld = () => {
     worldVersion += 1;
-    for (const listener of worldListeners) listener();
+    worldListeners.forEach((listener) => {
+      listener();
+    });
   };
 
   const rebuildScene = () => {

@@ -42,7 +42,9 @@ export function createTextPool(requestRender: () => void): TextPool {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         const resolution = resolutionFor(zoom);
-        for (const text of texts) text.resolution = resolution;
+        texts.forEach((text) => {
+          text.resolution = resolution;
+        });
         requestRender();
       }, SETTLE_MS);
     },

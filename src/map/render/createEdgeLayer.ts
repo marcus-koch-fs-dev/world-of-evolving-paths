@@ -1,6 +1,7 @@
 import { BlurFilter, Container, Graphics } from 'pixi.js';
 import { cutAt } from '../../core/scene/curves';
 import type { EdgeDraw } from '../../core/scene/types';
+import type { Position } from '../../core/types';
 import { strokeDashes, strokeLine } from './strokes';
 import { DRAW_MS, easeOut, flowShift, GLOW_MS, now } from './timing';
 
@@ -30,7 +31,7 @@ export type EdgeLayer = {
 /** A signature that changes whenever a line looks different. The wave only changes the course, not the ends. */
 function lineSignature(edge: EdgeDraw): string {
   const first = edge.points[0];
-  const last = edge.points[edge.points.length - 1];
+  const last = edge.points.at(-1) as Position;
   const quarter = edge.points[Math.floor(edge.points.length / 4)];
   return `${first.x},${first.y},${quarter.x},${quarter.y},${last.x},${last.y}|${edge.color}|${edge.width}|${edge.alpha}|${edge.dash ?? ''}`;
 }
@@ -38,7 +39,7 @@ function lineSignature(edge: EdgeDraw): string {
 function litSignature(edge: EdgeDraw): string {
   const lit = edge.lit;
   // The tip moves as today moves along the line, even when the number of points stays the same
-  const tip = lit?.points[lit.points.length - 1];
+  const tip = lit?.points.at(-1);
   return `${lineSignature(edge)}|${lit?.points.length}|${tip?.x},${tip?.y}|${lit?.color}|${lit?.width}|${edge.glow}`;
 }
 
@@ -112,17 +113,17 @@ export function createEdgeLayer(): EdgeLayer {
   };
 
   const dropMissing = (seen: Set<string>, walked: Set<string>) => {
-    for (const [id, slot] of lineSlots) {
-      if (seen.has(id)) continue;
+    lineSlots.forEach((slot, id) => {
+      if (seen.has(id)) return;
       slot.g.destroy();
       lineSlots.delete(id);
-    }
-    for (const [id, slot] of litSlots) {
-      if (walked.has(id)) continue;
+    });
+    litSlots.forEach((slot, id) => {
+      if (walked.has(id)) return;
       slot.g.destroy();
       slot.glow.destroy();
       litSlots.delete(id);
-    }
+    });
   };
 
   return {
@@ -140,13 +141,13 @@ export function createEdgeLayer(): EdgeLayer {
     sync(edges) {
       const seen = new Set<string>();
       const walked = new Set<string>();
-      for (const edge of edges) {
+      edges.forEach((edge) => {
         seen.add(edge.id);
         syncLine(edge);
-        if (!edge.lit) continue;
+        if (!edge.lit) return;
         walked.add(edge.id);
         syncLit(edge);
-      }
+      });
       dropMissing(seen, walked);
       if (!animate) glow.alpha = GLOW_BASE_ALPHA + GLOW_BREATH / 2;
     },
@@ -154,14 +155,14 @@ export function createEdgeLayer(): EdgeLayer {
     tick(time) {
       glow.alpha = GLOW_BASE_ALPHA + GLOW_BREATH * (0.5 - 0.5 * Math.cos((2 * Math.PI * time) / (GLOW_MS * 2)));
       const shift = flowShift(time);
-      for (const slot of lineSlots.values()) if (slot.edge.flow) drawLine(slot.g, slot.edge, shift);
-      let busy = false;
-      for (const slot of litSlots.values()) {
-        if (!slot.drawing) continue;
-        drawLit(slot);
-        busy = true;
-      }
-      return busy;
+      [...lineSlots.values()]
+        .filter((slot) => slot.edge.flow)
+        .forEach((slot) => {
+          drawLine(slot.g, slot.edge, shift);
+        });
+      const drawing = [...litSlots.values()].filter((slot) => slot.drawing);
+      drawing.forEach(drawLit);
+      return drawing.length > 0;
     },
   };
 }

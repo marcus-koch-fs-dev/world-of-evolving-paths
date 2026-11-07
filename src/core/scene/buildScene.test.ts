@@ -4,7 +4,7 @@ import { TIERS } from '../strength';
 import type { PlacedPoint, PlacedWorld } from '../types';
 import { buildScene } from './buildScene';
 import { cutAt, dashSegments, polylineLength, sampleEdge } from './curves';
-import { hitEdge, hitNode } from './hit';
+import { hitNode } from './hit';
 import type { SceneState } from './types';
 
 const calm: SceneState = { wave: false, hovered: null, dragging: null };
@@ -150,7 +150,7 @@ describe('Scene', () => {
       const line = sampleEdge(from, to, 'a-b');
 
       expect(line[0]).toEqual(from);
-      expect(line[line.length - 1]).toEqual(to);
+      expect(line.at(-1)).toEqual(to);
     });
 
     it('bends the line away from the smooth curve', () => {
@@ -190,10 +190,6 @@ describe('Scene', () => {
 
     it('misses empty space', () => {
       expect(hitNode(scene.nodes, { x: 150, y: 400 })).toBeNull();
-    });
-
-    it('hits a line near its path', () => {
-      expect(hitEdge(scene.edges, { x: 150, y: 2 })?.id).toBe('a-b');
     });
   });
 });

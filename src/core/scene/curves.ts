@@ -45,63 +45,62 @@ export function sampleEdge(from: Position, to: Position, seed?: string): Positio
 
 /** Total length of a polyline. */
 export function polylineLength(points: Position[]): number {
-  let sum = 0;
-  for (let i = 1; i < points.length; i++)
-    sum += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
-  return sum;
+  return points.reduce(
+    (sum, point, i) => (i === 0 ? 0 : sum + Math.hypot(point.x - points[i - 1].x, point.y - points[i - 1].y)),
+    0,
+  );
 }
 
 /** The start of a polyline up to the fraction `f` of its length. */
 export function cutAt(points: Position[], f: number): Position[] {
   if (f >= 1) return points;
-  let left = polylineLength(points) * Math.max(0, f);
-  const out = [points[0]];
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1];
-    const b = points[i];
-    const segment = Math.hypot(b.x - a.x, b.y - a.y);
-    if (segment >= left) {
-      const t = segment === 0 ? 0 : left / segment;
-      out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
-      return out;
-    }
-    out.push(b);
-    left -= segment;
-  }
-  return out;
+  const target = polylineLength(points) * Math.max(0, f);
+  const lengths = points.slice(1).map((b, i) => Math.hypot(b.x - points[i].x, b.y - points[i].y));
+  const ends: number[] = [];
+  lengths.forEach((length) => {
+    ends.push((ends.at(-1) ?? 0) + length);
+  });
+  // The first piece that reaches the target holds the cut
+  const index = ends.findIndex((end) => end >= target);
+  if (index < 0) return points;
+  const [a, b] = [points[index], points[index + 1]];
+  const t = lengths[index] === 0 ? 0 : (target - (ends[index] - lengths[index])) / lengths[index];
+  return [...points.slice(0, index + 1), { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }];
 }
 
 /** The point at the fraction `f` of the length of a polyline. */
 export function pointAt(points: Position[], f: number): Position {
   const part = cutAt(points, f);
-  return part[part.length - 1];
+  return part.at(-1) as Position;
+}
+
+type Pen = { drawing: boolean; left: number };
+
+/** Walks one straight piece: draws up to the next change of the pen, then goes on with the rest of the piece. */
+function walkPiece(a: Position, b: Position, segment: number, pen: Pen, dash: Dash, out: [Position, Position][]): Pen {
+  if (segment <= EPSILON) return pen;
+  const step = Math.min(pen.left, segment);
+  const t = step / segment;
+  const next = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+  if (pen.drawing) out.push([a, next]);
+  const left = pen.left - step;
+  const [on, off] = dash;
+  const turned = left <= EPSILON ? { drawing: !pen.drawing, left: pen.drawing ? off : on } : { ...pen, left };
+  return walkPiece(next, b, segment - step, turned, dash, out);
 }
 
 /** The drawn pieces of a dashed polyline. `shift` moves the pattern forward along the line. */
 export function dashSegments(points: Position[], dash: Dash, shift = 0): [Position, Position][] {
   const [on, off] = dash;
-  const out: [Position, Position][] = [];
   const period = on + off;
   const position = (((period - shift) % period) + period) % period;
-  let drawing = position < on;
-  let left = drawing ? on - position : period - position;
-  for (let i = 0; i < points.length - 1; i++) {
-    let a = points[i];
-    const b = points[i + 1];
-    let segment = Math.hypot(b.x - a.x, b.y - a.y);
-    while (segment > EPSILON) {
-      const step = Math.min(left, segment);
-      const t = step / segment;
-      const next = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-      if (drawing) out.push([a, next]);
-      a = next;
-      segment -= step;
-      left -= step;
-      if (left <= EPSILON) {
-        drawing = !drawing;
-        left = drawing ? on : off;
-      }
-    }
-  }
+  const drawing = position < on;
+  const out: [Position, Position][] = [];
+  points
+    .slice(1)
+    .reduce<Pen>(
+      (pen, b, i) => walkPiece(points[i], b, Math.hypot(b.x - points[i].x, b.y - points[i].y), pen, dash, out),
+      { drawing, left: drawing ? on - position : period - position },
+    );
   return out;
 }

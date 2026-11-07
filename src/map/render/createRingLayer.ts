@@ -18,13 +18,13 @@ export function createRingLayer(): RingLayer {
     container,
     sync(rings) {
       graphics.clear();
-      for (const ring of rings) {
+      rings.forEach((ring) => {
         graphics.circle(ring.x, ring.y, ring.radius).stroke({
           width: RING_WIDTH,
           color: RING_COLOR,
           alpha: ring.dragged ? DRAGGED_ALPHA : NEIGHBOUR_ALPHA,
         });
-      }
+      });
     },
   };
 }

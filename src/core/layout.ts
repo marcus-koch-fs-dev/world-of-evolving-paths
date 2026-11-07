@@ -50,8 +50,10 @@ function spanOf(input: LayoutInput): { start: number; end: number } {
 
 /** Width of a tile: grows with the busiest path. */
 export function tileWidth(points: FlatPoint[]): number {
-  const perPath = new Map<string, number>();
-  for (const point of points) perPath.set(point.pathId, (perPath.get(point.pathId) ?? 0) + 1);
+  const perPath = points.reduce(
+    (counts, point) => counts.set(point.pathId, (counts.get(point.pathId) ?? 0) + 1),
+    new Map<string, number>(),
+  );
   return Math.max(MIN_WIDTH, Math.max(0, ...perPath.values()) * SPACING);
 }
 
@@ -89,9 +91,11 @@ export function generateLayout(input: LayoutInput): LayoutResult {
 
   const ordered = [...points].sort(compareByDate);
   const parentOf = new Map<string, string>();
-  for (const point of ordered) {
-    for (const id of point.next) if (byId.has(id) && !parentOf.has(id)) parentOf.set(id, point.id);
-  }
+  ordered
+    .flatMap((point) => point.next.filter((id) => byId.has(id)).map((id): [string, string] => [id, point.id]))
+    .forEach(([id, parent]) => {
+      if (!parentOf.has(id)) parentOf.set(id, parent);
+    });
 
   // No prototype, so a point id such as "constructor" or "__proto__" is just a key
   const positions: Record<string, Position> = Object.create(null);
@@ -102,42 +106,50 @@ export function generateLayout(input: LayoutInput): LayoutResult {
   };
 
   // Pinned points first: they stay, the others make room
-  for (const point of ordered) if (hasPin(point)) place(point, { x: point.x, y: point.y });
-  for (const point of ordered) {
+  const pinned = ordered.filter(hasPin);
+  pinned.forEach((point) => {
+    place(point, { x: point.x, y: point.y });
+  });
+  pinned.forEach((point) => {
     const parentId = parentOf.get(point.id);
     const parent = parentId ? byId.get(parentId) : undefined;
-    if (parentId && parent && hasPin(point) && hasPin(parent)) layout.links.push({ from: parentId, to: point.id });
-  }
+    if (parentId && parent && hasPin(parent)) layout.links.push({ from: parentId, to: point.id });
+  });
 
   const range = { minX: 0, maxX: width };
-  for (const point of ordered) {
-    if (hasPin(point)) continue;
-    const parentId = parentOf.get(point.id);
-    const parent = parentId ? byId.get(parentId) : undefined;
-    const x = xOf(point.date);
-    const lane = laneOf.get(point.pathId) ?? 0;
-    const drift = Math.max(-MAX_DRIFT, Math.min(MAX_DRIFT, lane / DRIFT_DIVISOR));
-    const jitter = (pick(`${seed}|${point.id}|y`) - 0.5) * 2 * WOBBLE;
-    let y: number;
-    const parentAt = parent ? positions[parent.id] : undefined;
-    if (parent && parentAt) {
-      y = parentAt.y + drift * (x - parentAt.x) + jitter;
-      if (spreadOf(parent) === 'widen') {
-        const children = parent.next.filter((id) => byId.has(id));
-        y += (children.indexOf(point.id) - (children.length - 1) / 2) * WIDEN;
+  ordered
+    .filter((point) => !hasPin(point))
+    .forEach((point) => {
+      const parentId = parentOf.get(point.id);
+      const parent = parentId ? byId.get(parentId) : undefined;
+      const x = xOf(point.date);
+      const lane = laneOf.get(point.pathId) ?? 0;
+      const drift = Math.max(-MAX_DRIFT, Math.min(MAX_DRIFT, lane / DRIFT_DIVISOR));
+      const jitter = (pick(`${seed}|${point.id}|y`) - 0.5) * 2 * WOBBLE;
+      let y: number;
+      const parentAt = parent ? positions[parent.id] : undefined;
+      if (parent && parentAt) {
+        y = parentAt.y + drift * (x - parentAt.x) + jitter;
+        if (spreadOf(parent) === 'widen') {
+          const children = parent.next.filter((id) => byId.has(id));
+          y += (children.indexOf(point.id) - (children.length - 1) / 2) * WIDEN;
+        }
+      } else {
+        y = lane + (pick(`${seed}|${point.id}|s`) - 0.5) * START_SCATTER;
       }
-    } else {
-      y = lane + (pick(`${seed}|${point.id}|s`) - 0.5) * START_SCATTER;
-    }
-    // The line to the parent counts during the search: it may not touch another point
-    if (parentId && positions[parentId]) layout.links.push({ from: parentId, to: point.id });
-    const free = nearestFree(layout, point, { x, y }, range);
-    place(point, { x: Math.round(free.x), y: Math.round(free.y) });
-    for (const id of point.next) {
-      const child = byId.get(id);
-      if (child && hasPin(child)) layout.links.push({ from: point.id, to: id });
-    }
-  }
+      // The line to the parent counts during the search: it may not touch another point
+      if (parentId && positions[parentId]) layout.links.push({ from: parentId, to: point.id });
+      const free = nearestFree(layout, point, { x, y }, range);
+      place(point, { x: Math.round(free.x), y: Math.round(free.y) });
+      point.next
+        .filter((id) => {
+          const child = byId.get(id);
+          return child !== undefined && hasPin(child);
+        })
+        .forEach((id) => {
+          layout.links.push({ from: point.id, to: id });
+        });
+    });
   return { positions, width };
 }
 

@@ -141,13 +141,11 @@ function toPoints(pathId: string, steps: Step[], today: number, isMainChain: boo
 /** One check-in on the days a habit is practised, spread evenly over each week, ending today. */
 function checkInsFor(pathId: string, habit: Habit, today: number): CheckIn[] {
   const days = Math.round(habit.weeks * DAYS_PER_WEEK);
-  const checkIns: CheckIn[] = [];
-  for (let i = 0; i < days; i++) {
-    const practised =
-      Math.floor(((i + 1) * habit.perWeek) / DAYS_PER_WEEK) > Math.floor((i * habit.perWeek) / DAYS_PER_WEEK);
-    if (practised) checkIns.push({ pathId, date: fromDay(today - (days - 1 - i)) });
-  }
-  return checkIns;
+  const isPractised = (i: number) =>
+    Math.floor(((i + 1) * habit.perWeek) / DAYS_PER_WEEK) > Math.floor((i * habit.perWeek) / DAYS_PER_WEEK);
+  return Array.from({ length: days }, (_, i) => i)
+    .filter(isPractised)
+    .map((i) => ({ pathId, date: fromDay(today - (days - 1 - i)) }));
 }
 
 /**

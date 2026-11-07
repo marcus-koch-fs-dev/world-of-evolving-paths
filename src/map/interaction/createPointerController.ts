@@ -189,7 +189,9 @@ export function createPointerController(
 
   return {
     destroy() {
-      for (const remove of cleanup) remove();
+      cleanup.forEach((remove) => {
+        remove();
+      });
     },
     cancel() {
       drag = null;

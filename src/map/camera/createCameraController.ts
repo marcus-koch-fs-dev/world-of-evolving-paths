@@ -22,7 +22,9 @@ export function createCameraController(viewportSize: () => ViewportSize): Camera
 
   const set = (next: Camera) => {
     camera = next;
-    for (const listener of listeners) listener(next);
+    listeners.forEach((listener) => {
+      listener(next);
+    });
   };
 
   const zoomAtPoint = (screenX: number, screenY: number, factor: number) =>
