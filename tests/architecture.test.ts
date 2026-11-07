@@ -27,7 +27,7 @@ function importsOf(file: string): string[] {
 }
 
 describe('Architecture', () => {
-  for (const [index, layer] of LAYERS.entries()) {
+  LAYERS.forEach((layer, index) => {
     describe(`when reading the ${layer} layer`, () => {
       const higher = LAYERS.slice(index + 1);
       const files = sourceFiles(join(SRC, layer));
@@ -62,5 +62,5 @@ describe('Architecture', () => {
         expect(offenders.map((file) => relative(SRC, file))).toEqual([]);
       });
     });
-  }
+  });
 });

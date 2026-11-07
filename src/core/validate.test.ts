@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { editPoint, makePeriodData } from '../../tests/fixtures';
-import { validatePeriodData } from './validate';
+import { editPoint, makePeriodData } from '../../tests/fixtures.js';
+import { validatePeriodData } from './validate.js';
 
 function errorsFor(input: unknown): string[] {
   const result = validatePeriodData(input);
@@ -23,6 +23,20 @@ describe('Period data validation', () => {
       const path = { id: 'a', name: 'a', color: '#ffffff' };
 
       expect(errorsFor({ paths: [path] })[0]).toContain('points must be a list');
+    });
+  });
+
+  describe('when the connections are wrong', () => {
+    it('accepts a link to a point that is not in the view, because it is dropped later', () => {
+      const data = editPoint(makePeriodData(), 'c1', { next: ['next-week'] });
+
+      expect(validatePeriodData(data).ok).toBe(true);
+    });
+
+    it('rejects a circle of connections', () => {
+      const circle = editPoint(editPoint(makePeriodData(), 'c1', { next: ['c2'] }), 'c2', { next: ['c1'] });
+
+      expect(errorsFor(circle).some((message) => message.includes('circle'))).toBe(true);
     });
   });
 

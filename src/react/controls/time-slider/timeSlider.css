@@ -1,15 +1,32 @@
 .pw-time-slider {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .pw-time-slider input[type="range"] {
   width: 260px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .pw-time-label {
   min-width: 84px;
   text-align: center;
   color: var(--pw-muted);
+}
+
+.pw-speeds {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pw-speeds .pw-button {
+  min-width: 36px;
+  padding: 0 6px;
 }

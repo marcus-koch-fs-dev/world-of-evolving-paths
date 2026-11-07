@@ -1,5 +1,5 @@
-import type { Shape } from '../shapes';
-import type { Position } from '../types';
+import type { Shape } from '../shapes.js';
+import type { Position } from '../types.js';
 
 export type Dash = [on: number, off: number];
 

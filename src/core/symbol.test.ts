@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { symbolSize } from './symbol';
+import { symbolSize } from './symbol.js';
 
 describe('Symbol size', () => {
   describe('when comparing points', () => {

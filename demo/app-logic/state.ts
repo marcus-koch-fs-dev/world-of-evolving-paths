@@ -22,7 +22,8 @@ export type DemoAction =
   | { type: 'pathColor'; pathId: string; color: string }
   | { type: 'delete'; id: string }
   | { type: 'reroll'; viewKey: string }
-  | { type: 'checkIn'; pathId: string; date: string };
+  | { type: 'checkIn'; pathId: string; date: string }
+  | { type: 'connect'; fromId: string; toId: string };
 
 export const DEFAULT_SEED = 1;
 
@@ -36,6 +37,32 @@ export function nextPointProblem(input: NextPointInput): string | null {
   if (!input.title.trim()) return 'The name is missing.';
   if (!isIsoDate(input.date)) return 'The date is not valid.';
   return null;
+}
+
+/** Does following the connections from `startId` lead to `targetId`? */
+function leadsTo(points: DemoPoint[], startId: string, targetId: string, seen = new Set<string>()): boolean {
+  if (startId === targetId) return true;
+  if (seen.has(startId)) return false;
+  seen.add(startId);
+  const next = points.find((point) => point.id === startId)?.next ?? [];
+  return next.some((id) => leadsTo(points, id, targetId, seen));
+}
+
+/** The message to show when two points cannot be connected, or null when they can. */
+export function connectProblem(points: DemoPoint[], fromId: string, toId: string): string | null {
+  const from = points.find((point) => point.id === fromId);
+  if (!from || fromId === toId) return 'Pick another point to connect to.';
+  if (from.next.includes(toId)) return 'These points are already connected.';
+  if (leadsTo(points, toId, fromId)) return 'That would make a circle. A path only runs forward.';
+  return null;
+}
+
+function connectPoints(state: DemoState, fromId: string, toId: string): DemoState {
+  if (connectProblem(state.points, fromId, toId)) return state;
+  return {
+    ...state,
+    points: state.points.map((point) => (point.id === fromId ? { ...point, next: [...point.next, toId] } : point)),
+  };
 }
 
 function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>): DemoState {
@@ -134,6 +161,8 @@ export function reduce(state: DemoState, action: DemoAction): DemoState {
       return deletePoint(state, action.id);
     case 'checkIn':
       return addCheckIn(state, action.pathId, action.date);
+    case 'connect':
+      return connectPoints(state, action.fromId, action.toId);
     case 'reroll':
       return {
         ...state,

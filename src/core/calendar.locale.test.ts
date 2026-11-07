@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { periodLabel, periodOf } from './calendar';
+import { periodLabel, periodOf } from './calendar.js';
 
 describe('Period labels by language', () => {
   describe('when a locale is given', () => {

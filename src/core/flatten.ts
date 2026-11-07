@@ -1,4 +1,4 @@
-import type { FlatPoint, PathInfo, PeriodData } from './types';
+import type { FlatPoint, PathInfo, PeriodData } from './types.js';
 
 /** Splits the nested period data into path styles and one flat list of points that remember their path. */
 export function flattenPeriod(data: PeriodData): { paths: PathInfo[]; points: FlatPoint[] } {

@@ -1,9 +1,9 @@
-import { edgeProgress, getEdges } from '../geometry';
-import { TIERS } from '../strength';
-import type { PlacedWorld } from '../types';
-import { cutAt, sampleEdge } from './curves';
-import { pathColorOf } from './paths';
-import type { EdgeDraw, SceneState } from './types';
+import { edgeProgress, getEdges } from '../geometry.js';
+import { TIERS } from '../strength.js';
+import type { PlacedWorld } from '../types.js';
+import { cutAt, sampleEdge } from './curves.js';
+import { pathColorOf } from './paths.js';
+import type { EdgeDraw, SceneState } from './types.js';
 
 const INK = '#edefe6';
 const HIGHLIGHT = '#ffffff';

@@ -10,6 +10,22 @@ Paths with dates that grow stronger the more you walk them. A pannable, zoomable
 
 > Status: early (0.0.x). The API can still change.
 
+## The demo
+
+The demo in `demo/` (run it with `npm run dev`) uses the controls described below. It shows three habits over a year: reached connections are wide and lit, open ones are dotted, and the Today marker sits where each path stands.
+
+![The year view with three paths, a slim bar at the top and the time slider at the bottom](docs/demo-year.jpg)
+
+The main bar stays slim: the period with its arrows, today, the page arrows and one button that opens the tile menu. Everything else is one step away. The menu stays open until you close it.
+
+![The tile menu with view, map, layout and mode tiles](docs/demo-menu.jpg)
+
+A selected point gets its own menu with actions (next point, connect, delete) and properties (status, kind, name, path color, details).
+
+![The menu of a selected point](docs/demo-point-menu.jpg)
+
+Both bars can be dragged to the top or bottom edge, left, middle or right. The map can run left to right, right to left, top to bottom or bottom to top (`orientation`).
+
 ## Install
 
 ```bash
@@ -100,7 +116,7 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are stacked by `lane` (lowest first), otherwise in list order.
 
-**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge.
+**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` to a point that is not in the view is dropped. Connections never form a circle: such data is rejected with a message. Point ids may not contain `->`, it separates the ids in the id of a line.
 
 **`PeriodMap`** is a hashmap from period key to `PeriodData`. Typically it holds only the view you show, and you load the next one when the user changes the view.
 
@@ -158,24 +174,25 @@ Update your data in these callbacks and pass the new objects back in. The data i
 
 ### Options
 
-| Option         | Default    | Meaning                                                                                                                                                                                                                 |
-| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `periods`      | —          | The `PeriodMap`.                                                                                                                                                                                                        |
-| `view`         | —          | Key of the period to show.                                                                                                                                                                                              |
-| `today`        | local date | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                                                                                                     |
-| `seed`         | `1`        | Changes the generated layout.                                                                                                                                                                                           |
-| `editable`     | `true`     | Allow moving and adding points.                                                                                                                                                                                         |
-| `pointsLocked` | `false`    | Points cannot be dragged.                                                                                                                                                                                               |
-| `wavy`         | `false`    | A slight wave on the lines.                                                                                                                                                                                             |
-| `background`   | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale, image }`. `image` is `{ src, x, y, width, height }` in world units, behind the paths. |
-| `animate`      | `true`     | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                      |
-| `locale`       | browser    | Language of the dates under the points, such as `de`.                                                                                                                                                                   |
-| `formatDate`   | —          | Writes the date under a point yourself. Wins over `locale`.                                                                                                                                                             |
-| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit).                                                                                                                                                                                        |
+| Option         | Default        | Meaning                                                                                                                                                                                                                                                                                                                           |
+| -------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `periods`      | —              | The `PeriodMap`.                                                                                                                                                                                                                                                                                                                  |
+| `view`         | —              | Key of the period to show.                                                                                                                                                                                                                                                                                                        |
+| `today`        | local date     | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                                                                                                                                                                                                               |
+| `seed`         | `1`            | Changes the generated layout.                                                                                                                                                                                                                                                                                                     |
+| `editable`     | `true`         | Allow moving and adding points.                                                                                                                                                                                                                                                                                                   |
+| `pointsLocked` | `false`        | Points cannot be dragged.                                                                                                                                                                                                                                                                                                         |
+| `wavy`         | `false`        | A slight wave on the lines.                                                                                                                                                                                                                                                                                                       |
+| `background`   | black          | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }`.                                                                                                                                                                                              |
+| `orientation`  | `'horizontal'` | Which way time runs: `horizontal` (left to right), `horizontal-inverted` (right to left), `vertical` (top to bottom), `vertical-inverted` (bottom to top) or `auto` (vertical while the map is taller than wide, for phones in portrait). Only the picture turns: the data, the positions you store and the events stay the same. |
+| `animate`      | `true`         | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                                                                                                                                |
+| `locale`       | browser        | Language of the dates under the points, such as `de`.                                                                                                                                                                                                                                                                             |
+| `formatDate`   | —              | Writes the date under a point yourself. Wins over `locale`.                                                                                                                                                                                                                                                                       |
+| `shortcuts`    | `true`         | Keys `M` (center) and `E` (fit), only while the pointer is over the map or the focus is inside it.                                                                                                                                                                                                                                |
 
 ### Camera
 
-Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about three quarters of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code.
+Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about three quarters of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code. With React, put a `ref` on `<PathWorld>` to get the handle (it is `null` until the map exists).
 
 ### Dates and language
 
@@ -217,14 +234,16 @@ Open (future) connections stay thin and dotted. While a point is dragged, thin r
 
 Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
-| Control           | Folder              | What it does                                                                                                                                                                         |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                         |
-| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                          |
-| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                            |
-| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                    |
-| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, delete. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. |
-| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                            |
+| Control           | Folder              | What it does                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                                                                                                                      |
+| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                                                                                                                       |
+| `ControlBar`      | `control-bar/`      | A bar docked at the top or bottom edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). Bars on one edge sit side by side. With `onDockChange` the user drags it to another place, you store it; with `label` it collapses.                                                                                                                                                                         |
+| `TilePanel`       | `tile-panel/`       | One button (`▦`) that opens a small panel of tiles in groups, like a number pad. You give the groups and tiles (glyph, label, `active`, `disabled`, `onClick`). It opens away from the edge of its `ControlBar` and stays open until the button is clicked again or Escape is pressed. `ViewBar` with `periodOnly` pairs with it: the period stays in the bar, everything else goes into tiles.                   |
+| `SidePanel`       | `side-panel/`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                                     |
+| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness and size. Holds no state.                                                                                                                                                                                                                                                                                                                           |
+| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, connect (when you pass `onConnect`), delete. `checkInCount` shows the check-ins of the path under the name. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. Placed below the point by default, above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
+| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                         |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
 
@@ -232,7 +251,7 @@ The color slots of `PointMenu` are filled by you: it reports a confirmed color w
 
 They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
 
-`useTimePlayback` moves the day of a `TimeSlider` forward while it plays. Moving through time only changes `today`, so the points keep their places. Statuses and strengths as of that day are your app's to work out, the demo shows how.
+`useTimePlayback` moves the day of a `TimeSlider` forward while it plays. `playbackPlan(days, durationMs)` works out the pace so that any range takes the same time, and the slider can show speed buttons (`speeds`, `speed`, `onSpeedChange`). Moving through time only changes `today`, so the points keep their places. Statuses and strengths as of that day are your app's to work out, the demo shows how.
 
 Import `world-of-evolving-paths/style.css` once for the map and the controls. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...).
 
@@ -283,7 +302,7 @@ Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/archi
 
 ## Not in this version
 
-The first prototype had a few things that are not part of the library yet: a tool to connect existing points, a toolbar for undo and redo, panels for paths, rules and JSON, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
+The first prototype had a few things that are not part of the library yet: a toolbar for undo and redo, panels for paths, rules and JSON, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
 
 Controls are provided for React only. The map itself works with any framework.
 

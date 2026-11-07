@@ -1,6 +1,6 @@
-import { distanceToSegment, getEdges } from './geometry';
-import { symbolSize } from './symbol';
-import type { PlacedPoint, PointKind, Position } from './types';
+import { distanceToSegment, getEdges } from './geometry.js';
+import { symbolSize } from './symbol.js';
+import type { PlacedPoint, PointKind, Position } from './types.js';
 
 export type Body = { id: string; x: number; y: number; kind: PointKind; importance?: number };
 export type Link = { from: string; to: string };
@@ -15,6 +15,8 @@ const RING_LIMIT = 6000;
 const RING_ANGLES = 32;
 const SETTLE_STEPS = 48;
 const SETTLE_REFINEMENTS = 14;
+
+const ringAngles = Array.from({ length: RING_ANGLES }, (_, k) => (k / RING_ANGLES) * Math.PI * 2);
 
 /** Collision radius: half the symbol size plus some air, so bigger symbols keep more distance. */
 export function collisionRadius(point: { kind: PointKind; importance?: number }): number {
@@ -53,26 +55,37 @@ function indexOf(layout: Layout): Map<string, Body> {
 export function isFreeAt(layout: Layout, self: Mover, at: Position): boolean {
   const radius = collisionRadius(self);
   const byId = indexOf(layout);
-  for (const other of layout.bodies) {
-    if (other.id === self.id) continue;
-    if (Math.hypot(at.x - other.x, at.y - other.y) < radius + collisionRadius(other) - EPSILON) return false;
-  }
-  for (const link of layout.links) {
-    const own = link.from === self.id || link.to === self.id;
-    if (!own) {
+  const touchesPoint = layout.bodies.some(
+    (other) =>
+      other.id !== self.id && Math.hypot(at.x - other.x, at.y - other.y) < radius + collisionRadius(other) - EPSILON,
+  );
+  if (touchesPoint) return false;
+
+  // A foreign line may not pass through the spot. A line of its own may not touch another point; a point has only
+  // a few lines of its own, so that check stays small. One pass over the lines, nothing is built on the way.
+  const blocks = (link: Link) => {
+    if (link.from !== self.id && link.to !== self.id) {
       const a = byId.get(link.from);
       const b = byId.get(link.to);
-      if (a && b && distanceToSegment(at, a, b) < radius - EPSILON) return false;
-      continue;
+      return a !== undefined && b !== undefined && distanceToSegment(at, a, b) < radius - EPSILON;
     }
     const neighbour = byId.get(link.from === self.id ? link.to : link.from);
-    if (!neighbour) continue;
-    for (const body of layout.bodies) {
-      if (body.id === self.id || body.id === neighbour.id) continue;
-      if (distanceToSegment(body, at, neighbour) < collisionRadius(body) - EPSILON) return false;
-    }
-  }
-  return true;
+    return (
+      neighbour !== undefined &&
+      layout.bodies.some(
+        (body) =>
+          body.id !== self.id &&
+          body.id !== neighbour.id &&
+          distanceToSegment(body, at, neighbour) < collisionRadius(body) - EPSILON,
+      )
+    );
+  };
+  return !layout.links.some(blocks);
+}
+
+/** The spots on one ring around `at`, in a fixed angle order. */
+function ringAround(at: Position, distance: number): Position[] {
+  return ringAngles.map((angle) => ({ x: at.x + Math.cos(angle) * distance, y: at.y + Math.sin(angle) * distance }));
 }
 
 /**
@@ -80,16 +93,25 @@ export function isFreeAt(layout: Layout, self: Mover, at: Position): boolean {
  * With `range` the spot stays inside the x limits (for example the calendar area of a view).
  */
 export function nearestFree(layout: Layout, self: Mover, at: Position, range?: XRange): Position {
-  const inRange = (spot: Position) => !range || (spot.x >= range.minX && spot.x <= range.maxX);
-  if (inRange(at) && isFreeAt(layout, self, at)) return at;
-  for (let distance = RING_STEP; distance <= RING_LIMIT; distance += RING_STEP) {
-    for (let k = 0; k < RING_ANGLES; k++) {
-      const angle = (k / RING_ANGLES) * Math.PI * 2;
-      const spot = { x: at.x + Math.cos(angle) * distance, y: at.y + Math.sin(angle) * distance };
-      if (inRange(spot) && isFreeAt(layout, self, spot)) return spot;
-    }
-  }
-  return at;
+  const usable = (spot: Position) =>
+    (!range || (spot.x >= range.minX && spot.x <= range.maxX)) && isFreeAt(layout, self, spot);
+  if (usable(at)) return at;
+  // Ring by ring outwards; a ring is only made once the rings before it had no free spot
+  const search = (distance: number): Position =>
+    ringAround(at, distance).find(usable) ?? (distance + RING_STEP <= RING_LIMIT ? search(distance + RING_STEP) : at);
+  return search(RING_STEP);
+}
+
+/** Halves the gap between a free and a blocked position again and again, keeping the free side: the tightest free spot. */
+function tightest(isFree: (t: number) => boolean, free: number, blocked: number): number {
+  const [low] = Array.from({ length: SETTLE_REFINEMENTS }).reduce<[number, number]>(
+    ([lo, hi]) => {
+      const middle = (lo + hi) / 2;
+      return isFree(middle) ? [middle, hi] : [lo, middle];
+    },
+    [free, blocked],
+  );
+  return low;
 }
 
 /**
@@ -102,18 +124,9 @@ export function settle(layout: Layout, self: Mover, start: Position, target: Pos
     x: start.x + (target.x - start.x) * t,
     y: start.y + (target.y - start.y) * t,
   });
-  for (let i = SETTLE_STEPS - 1; i >= 0; i--) {
-    const free = i / SETTLE_STEPS;
-    if (!isFreeAt(layout, self, along(free))) continue;
-    // Between a free step and the blocked next one, find the tightest free spot
-    let low = free;
-    let high = (i + 1) / SETTLE_STEPS;
-    for (let n = 0; n < SETTLE_REFINEMENTS; n++) {
-      const middle = (low + high) / 2;
-      if (isFreeAt(layout, self, along(middle))) low = middle;
-      else high = middle;
-    }
-    return along(low);
-  }
-  return nearestFree(layout, self, target);
+  const isFree = (t: number) => isFreeAt(layout, self, along(t));
+  const steps = Array.from({ length: SETTLE_STEPS }, (_, i) => i / SETTLE_STEPS);
+  const free = steps.findLast(isFree);
+  if (free === undefined) return nearestFree(layout, self, target);
+  return along(tightest(isFree, free, free + 1 / SETTLE_STEPS));
 }

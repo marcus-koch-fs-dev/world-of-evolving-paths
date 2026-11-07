@@ -4,11 +4,29 @@
   "description": "Evolving, date-based paths on a pannable, zoomable canvas.",
   "type": "module",
   "license": "MIT",
+  "author": "Marcus Koch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcus-koch-fs-dev/world-of-evolving-paths.git"
+  },
+  "homepage": "https://github.com/marcus-koch-fs-dev/world-of-evolving-paths#readme",
+  "bugs": {
+    "url": "https://github.com/marcus-koch-fs-dev/world-of-evolving-paths/issues"
+  },
+  "keywords": [
+    "timeline",
+    "paths",
+    "canvas",
+    "pixi",
+    "react",
+    "habits",
+    "visualization"
+  ],
   "sideEffects": [
     "**/*.css"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "files": [
     "dist"

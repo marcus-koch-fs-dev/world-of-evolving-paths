@@ -1,4 +1,4 @@
-import type { Position } from './types';
+import type { Position } from './types.js';
 
 /** Screen = world * zoom + (x, y). */
 export type Camera = { x: number; y: number; zoom: number };

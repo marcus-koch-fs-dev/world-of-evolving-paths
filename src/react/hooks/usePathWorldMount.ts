@@ -1,5 +1,5 @@
 import { type RefObject, useEffect, useState } from 'react';
-import { createPathWorld, type PathWorldHandle, type PathWorldOptions } from '../../map';
+import { createPathWorld, type PathWorldHandle, type PathWorldOptions } from '../../map/index.js';
 
 /**
  * Creates the map on the element once, keeps it in sync with the options, and removes it on unmount.

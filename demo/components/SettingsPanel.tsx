@@ -1,13 +1,23 @@
 import type { ReactNode } from 'react';
-import { VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
+import { type Orientation, VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
 
 export const LOCALES = [
-  { locale: 'en-GB', label: 'English (day/month)' },
-  { locale: 'en-US', label: 'English (US)' },
-  { locale: 'de', label: 'Deutsch' },
+  { locale: 'de', label: 'European · 2.11.' },
+  { locale: 'en-GB', label: 'British · 2/11' },
+  { locale: 'en-US', label: 'American · 11/2' },
+];
+
+const ORIENTATIONS: { orientation: Orientation; label: string }[] = [
+  { orientation: 'auto', label: 'Auto (vertical on a tall screen)' },
+  { orientation: 'horizontal', label: 'Horizontal' },
+  { orientation: 'horizontal-inverted', label: 'Horizontal inverted' },
+  { orientation: 'vertical', label: 'Vertical' },
+  { orientation: 'vertical-inverted', label: 'Vertical inverted' },
 ];
 
 type Props = {
+  orientation: Orientation;
+  onOrientationChange: (orientation: Orientation) => void;
   wavy: boolean;
   pointsLocked: boolean;
   animate: boolean;
@@ -33,8 +43,7 @@ export function SettingsPanel(props: Props) {
   };
 
   return (
-    <aside className="demo-settings">
-      <h3>Settings</h3>
+    <div className="demo-settings">
       <label>
         <input type="checkbox" checked={props.wavy} onChange={(event) => props.onWavyChange(event.target.checked)} />
         Wave on the lines
@@ -71,7 +80,21 @@ export function SettingsPanel(props: Props) {
       </fieldset>
 
       <label>
-        Language of dates
+        Map orientation
+        <select
+          value={props.orientation}
+          onChange={(event) => props.onOrientationChange(event.target.value as Orientation)}
+        >
+          {ORIENTATIONS.map((option) => (
+            <option key={option.orientation} value={option.orientation}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        Date format
         <select value={props.locale} onChange={(event) => props.onLocaleChange(event.target.value)}>
           {LOCALES.map((option) => (
             <option key={option.locale} value={option.locale}>
@@ -85,6 +108,6 @@ export function SettingsPanel(props: Props) {
         Double-click empty space to add a point. Click a point for its menu. Keys: M center, E fit.
       </p>
       {props.children}
-    </aside>
+    </div>
   );
 }

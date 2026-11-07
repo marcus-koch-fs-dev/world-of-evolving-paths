@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeDaysIn, STRENGTH_RULE, tierAt, tierOf } from './strength';
+import { activeDaysIn, STRENGTH_RULE, tierAt, tierOf } from './strength.js';
 
 const consecutive = (from: number, count: number) => Array.from({ length: count }, (_, i) => from + i);
 

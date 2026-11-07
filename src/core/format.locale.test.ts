@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidLocale } from './format';
+import { isValidLocale } from './format.js';
 
 describe('Language tags', () => {
   describe('when checking a locale', () => {

@@ -17,6 +17,18 @@ type Options = {
   stepDays?: number;
 };
 
+const MIN_INTERVAL_MS = 40; // no step comes faster than this, so the map can keep up
+
+/**
+ * How fast to play so that the whole range takes durationMs: a short range gets a long wait between days,
+ * a long one gets a short wait and, if needed, several days per step.
+ */
+export function playbackPlan(days: number, durationMs: number): { intervalMs: number; stepDays: number } {
+  const safeDays = Math.max(1, days);
+  const intervalMs = Math.max(MIN_INTERVAL_MS, durationMs / safeDays);
+  return { intervalMs, stepDays: Math.max(1, Math.ceil((safeDays * intervalMs) / durationMs)) };
+}
+
 /** One step of playback: the next day, never past the end, and whether the end is reached. */
 export function stepPlayback(day: number, end: number, stepDays: number): { day: number; finished: boolean } {
   const next = Math.min(end, day + stepDays);

@@ -1,4 +1,4 @@
-import type { PathPoint } from '../../../core';
+import type { PathPoint } from '../../../core/index.js';
 
 export type PointPatch = Partial<Pick<PathPoint, 'title' | 'status' | 'kind' | 'date' | 'importance' | 'note'>>;
 
@@ -11,4 +11,4 @@ export type NextPointInput = {
   color: string;
 };
 
-export type TileId = 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove';
+export type TileId = 'status' | 'next' | 'connect' | 'kind' | 'color' | 'rename' | 'details' | 'remove';

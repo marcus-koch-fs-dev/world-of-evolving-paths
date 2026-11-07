@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { PathPoint } from '../../../../core';
-import type { PointPatch } from '../types';
-import { InfoToggle } from './InfoToggle';
+import type { PathPoint } from '../../../../core/index.js';
+import type { PointPatch } from '../types.js';
+import { InfoToggle } from './InfoToggle.js';
 
 type Props = {
   point: Pick<PathPoint, 'date' | 'importance' | 'note'>;

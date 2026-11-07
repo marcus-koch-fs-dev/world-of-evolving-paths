@@ -39,11 +39,6 @@
   background: var(--pw-field);
 }
 
-.pw-field input[type="file"] {
-  color: var(--pw-muted);
-  font: inherit;
-}
-
 .pw-error {
   margin: 0;
   color: var(--pw-danger);

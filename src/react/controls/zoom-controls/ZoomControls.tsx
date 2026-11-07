@@ -1,5 +1,5 @@
-import { useCameraZoom } from '../../hooks/useCameraZoom';
-import { usePathWorldHandle } from '../../PathWorldContext';
+import { useCameraZoom } from '../../hooks/useCameraZoom.js';
+import { usePathWorldHandle } from '../../PathWorldContext.js';
 import './zoomControls.css';
 
 const ZOOM_STEP = 1.25;

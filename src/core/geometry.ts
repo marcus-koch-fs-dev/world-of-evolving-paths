@@ -1,8 +1,11 @@
-import type { Bounds } from './camera';
-import { toDay } from './dates';
-import type { PlacedPoint, Position } from './types';
+import type { Bounds } from './camera.js';
+import { toDay } from './dates.js';
+import type { PlacedPoint, Position } from './types.js';
 
 export type Edge = { id: string; from: PlacedPoint; to: PlacedPoint };
+
+// Between the two point ids in the id of a line. Point ids may not contain it, so a line id is unique.
+export const EDGE_SEPARATOR = '->';
 
 /** All connections, taken from the `next` lists. */
 export function getEdges(points: PlacedPoint[]): Edge[] {
@@ -10,7 +13,7 @@ export function getEdges(points: PlacedPoint[]): Edge[] {
   return points.flatMap((from) =>
     from.next.flatMap((id) => {
       const to = byId.get(id);
-      return to ? [{ id: `${from.id}-${to.id}`, from, to }] : [];
+      return to ? [{ id: `${from.id}${EDGE_SEPARATOR}${to.id}`, from, to }] : [];
     }),
   );
 }

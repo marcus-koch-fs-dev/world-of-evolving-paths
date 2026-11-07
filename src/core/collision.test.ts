@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collisionRadius, isFreeAt, type Layout, nearestFree, settle } from './collision';
+import { collisionRadius, isFreeAt, type Layout, nearestFree, settle } from './collision.js';
 
 const mover = { id: 'self', kind: 'milestone' as const };
 const body = (id: string, x: number, y: number) => ({ id, x, y, kind: 'milestone' as const });

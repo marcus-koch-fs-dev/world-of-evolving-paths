@@ -4,8 +4,7 @@ const SINE_SCALE = 43758.5453;
 
 /** Fixed pseudo-random number in [0, 1) for a name: the same name always gives the same number. */
 export function pick(name: string): number {
-  let hash = FNV_OFFSET;
-  for (let i = 0; i < name.length; i++) hash = Math.imul(hash ^ name.charCodeAt(i), FNV_PRIME);
+  const hash = name.split('').reduce((sum, char) => Math.imul(sum ^ char.charCodeAt(0), FNV_PRIME), FNV_OFFSET);
   const value = Math.sin(hash) * SINE_SCALE;
   return value - Math.floor(value);
 }

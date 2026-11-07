@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { backgroundCss, DEFAULT_BASE } from './backgroundCss';
+import { backgroundCss, DEFAULT_BASE } from './backgroundCss.js';
 
 const camera = { x: 10, y: 20, zoom: 2 };
 
@@ -33,7 +33,7 @@ describe('Background CSS', () => {
       const css = backgroundCss({ fill: 'gradient', pattern: 'dots', angle: 90 }, camera);
 
       const layers = css.backgroundImage.split('), ');
-      expect(layers[layers.length - 1]).toContain('linear-gradient(90deg');
+      expect(layers.at(-1)).toContain('linear-gradient(90deg');
     });
   });
 });

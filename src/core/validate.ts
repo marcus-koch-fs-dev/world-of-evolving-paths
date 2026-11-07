@@ -1,5 +1,6 @@
-import { isIsoDate } from './dates';
-import type { PeriodData, PointKind, PointStatus } from './types';
+import { isIsoDate } from './dates.js';
+import { EDGE_SEPARATOR } from './geometry.js';
+import type { PeriodData, PointKind, PointStatus } from './types.js';
 
 export type Validation = { ok: true; data: PeriodData } | { ok: false; errors: string[] };
 
@@ -21,6 +22,7 @@ function pointErrors(point: unknown, where: string): string[] {
   if (!isRecord(point)) return [`${where} must be an object.`];
   const errors: string[] = [];
   if (!isNonEmptyString(point.id)) errors.push(`${where}.id must be a non-empty string.`);
+  else if (point.id.includes(EDGE_SEPARATOR)) errors.push(`${where}.id may not contain "${EDGE_SEPARATOR}".`);
   if (typeof point.title !== 'string') errors.push(`${where}.title must be a string.`);
   if (typeof point.date !== 'string' || !isIsoDate(point.date))
     errors.push(`${where}.date must be a valid YYYY-MM-DD date.`);
@@ -63,16 +65,43 @@ function pathErrors(path: unknown, index: number): string[] {
 function duplicates(ids: string[]): string[] {
   const seen = new Set<string>();
   const repeated = new Set<string>();
-  for (const id of ids) (seen.has(id) ? repeated : seen).add(id);
+  ids.forEach((id) => {
+    (seen.has(id) ? repeated : seen).add(id);
+  });
   return [...repeated];
+}
+
+/** The ids of points that lie on a circle of connections. A path only runs forward. */
+function circleIds(points: { id: string; next: string[] }[]): string[] {
+  const nextOf = new Map(points.map((point) => [point.id, point.next]));
+  const finished = new Set<string>();
+  const found = new Set<string>();
+  const visiting = new Set<string>();
+  const visit = (id: string): void => {
+    if (visiting.has(id)) {
+      found.add(id);
+      return;
+    }
+    if (finished.has(id)) return;
+    visiting.add(id);
+    (nextOf.get(id) ?? []).forEach(visit);
+    visiting.delete(id);
+    finished.add(id);
+  };
+  points.forEach((point) => {
+    visit(point.id);
+  });
+  return [...found];
 }
 
 function referenceErrors(data: PeriodData): string[] {
   const pathIds = data.paths.map((path) => path.id);
-  const pointIds = data.paths.flatMap((path) => path.points.map((point) => point.id));
+  const points = data.paths.flatMap((path) => path.points);
+  // A link to a point that is not in this view is fine: it is dropped when the world is built
   return [
     ...duplicates(pathIds).map((id) => `Path id "${id}" is used twice.`),
-    ...duplicates(pointIds).map((id) => `Point id "${id}" is used twice.`),
+    ...duplicates(points.map((point) => point.id)).map((id) => `Point id "${id}" is used twice.`),
+    ...circleIds(points).map((id) => `Point "${id}" is on a circle of connections. A path only runs forward.`),
   ];
 }
 

@@ -1,5 +1,5 @@
-import type { PointKind } from '../../../../core';
-import type { PointPatch } from '../types';
+import type { PointKind } from '../../../../core/index.js';
+import type { PointPatch } from '../types.js';
 
 const KINDS: { kind: PointKind; label: string; glyph: string; hint: string }[] = [
   { kind: 'start', label: 'Start', glyph: '▲', hint: 'Beginning of a path' },

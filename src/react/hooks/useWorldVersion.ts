@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import type { PathWorldHandle } from '../../map';
+import type { PathWorldHandle } from '../../map/index.js';
 
 /** Changes whenever the points of the map were laid out again or moved. Use it to follow a point's position. */
 export function useWorldVersion(handle: PathWorldHandle): number {

@@ -1,5 +1,5 @@
-import type { Camera } from '../../core/camera';
-import type { BackgroundOptions, BackgroundPattern } from '../options';
+import type { Camera } from '../../core/camera.js';
+import type { BackgroundOptions, BackgroundPattern } from '../options.js';
 
 export const DEFAULT_BASE = '#0e0f0c';
 export const DEFAULT_PATTERN_COLOR = '#edefe6';
@@ -84,13 +84,12 @@ function dotSvg(color: string, alpha: number): string {
 
 function starSvg(layer: typeof NEAR_STARS, color: string, alpha: number): string {
   const random = mulberry32(layer.seed);
-  let circles = '';
-  for (let i = 0; i < layer.count; i++) {
+  const circles = Array.from({ length: layer.count }, () => {
     const x = (random() * STAR_TILE).toFixed(1);
     const y = (random() * STAR_TILE).toFixed(1);
     const radius = (0.3 + random() * layer.maxRadius).toFixed(2);
-    circles += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${rgba(color, alpha * (0.4 + random() * 0.6))}"/>`;
-  }
+    return `<circle cx="${x}" cy="${y}" r="${radius}" fill="${rgba(color, alpha * (0.4 + random() * 0.6))}"/>`;
+  }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${STAR_TILE}" height="${STAR_TILE}">${circles}</svg>`;
 }
 

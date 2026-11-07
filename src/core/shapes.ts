@@ -1,4 +1,4 @@
-import type { PathPoint, Position } from './types';
+import type { PathPoint, Position } from './types.js';
 
 export type Shape = 'circle' | 'diamond' | 'triangle' | 'star';
 
