@@ -49,6 +49,8 @@ export class PathWorldEngine implements PathWorldHandle {
   private dragging: string | null = null;
   private framing: Framing = null;
   private framedOnce = false;
+  private worldVersion = 0;
+  private readonly worldListeners = new Set<() => void>();
 
   constructor(
     container: HTMLElement,
@@ -59,7 +61,10 @@ export class PathWorldEngine implements PathWorldHandle {
     this.model = new WorldModel((errors) => this.reportError(errors));
     this.dragger = new PointDragger({
       model: this.model,
-      onChange: () => this.rebuildScene(),
+      onChange: () => {
+        this.rebuildScene();
+        this.notifyWorld();
+      },
       onMoved: (id, position) => this.emitMoved(id, position),
     });
     this.pointer = new PointerController(
@@ -100,6 +105,7 @@ export class PathWorldEngine implements PathWorldHandle {
     });
     if (viewChanged) this.framing = this.framedOnce ? 'center' : 'fit';
     if (changed || (previous.wavy === true) !== (options.wavy === true)) this.rebuildScene();
+    if (changed) this.notifyWorld();
     if (!sameBackground(previous.background, options.background)) {
       this.viewport.render(this.camera.get(), options.background ?? {});
     }
@@ -133,6 +139,15 @@ export class PathWorldEngine implements PathWorldHandle {
     return this.camera.subscribe(listener);
   }
 
+  subscribeWorld(listener: () => void): () => void {
+    this.worldListeners.add(listener);
+    return () => this.worldListeners.delete(listener);
+  }
+
+  getWorldVersion(): number {
+    return this.worldVersion;
+  }
+
   destroy(): void {
     window.removeEventListener('keydown', this.onKey);
     this.resizeObserver.disconnect();
@@ -140,6 +155,11 @@ export class PathWorldEngine implements PathWorldHandle {
     this.dragger.cancel();
     this.renderer.destroy();
     this.viewport.destroy();
+  }
+
+  private notifyWorld(): void {
+    this.worldVersion += 1;
+    for (const listener of this.worldListeners) listener();
   }
 
   private bounds(): Bounds | null {

@@ -95,12 +95,7 @@ export function ViewBar(props: ViewBarProps) {
 
       {props.onReroll && level !== null && (
         <div className="pw-view-group">
-          <button
-            type="button"
-            className="pw-button"
-            title="Generate another layout. Pinned points stay"
-            onClick={props.onReroll}
-          >
+          <button type="button" className="pw-button" title="Generate another layout" onClick={props.onReroll}>
             Reroll
           </button>
         </div>

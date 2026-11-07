@@ -78,6 +78,10 @@ export type PathWorldHandle = {
   positionOf(id: string): Position | null;
   /** Calls the listener on every camera change. Returns a function that stops listening. */
   subscribeCamera(listener: CameraListener): () => void;
+  /** Calls the listener when points were laid out again or moved. Returns a function that stops listening. */
+  subscribeWorld(listener: () => void): () => void;
+  /** Increases whenever the points were laid out again or moved. */
+  getWorldVersion(): number;
   /** Element that follows the camera. Controls placed here move and scale with the world. */
   readonly overlay: HTMLElement;
   destroy(): void;

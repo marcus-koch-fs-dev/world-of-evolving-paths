@@ -5,6 +5,7 @@ export type { ViewBarProps } from './controls/view-bar/ViewBar';
 export { ViewBar } from './controls/view-bar/ViewBar';
 export { ZoomControls } from './controls/zoom-controls/ZoomControls';
 export { useCameraZoom } from './hooks/useCameraZoom';
+export { useWorldVersion } from './hooks/useWorldVersion';
 export type { PathWorldProps } from './PathWorld';
 export { PathWorld } from './PathWorld';
 export { usePathWorldHandle } from './PathWorldContext';

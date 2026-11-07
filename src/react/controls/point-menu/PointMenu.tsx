@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PATH_PALETTE, type Path, type PathPoint } from '../../../core';
+import { useWorldVersion } from '../../hooks/useWorldVersion';
 import { usePathWorldHandle } from '../../PathWorldContext';
 import { ColorPanel } from './panels/ColorPanel';
 import { DeletePanel } from './panels/DeletePanel';
@@ -40,6 +41,7 @@ export type PointMenuProps = {
  */
 export function PointMenu(props: PointMenuProps) {
   const handle = usePathWorldHandle();
+  useWorldVersion(handle);
   const [open, setOpen] = useState<TileId | null>(null);
   const position = handle.positionOf(props.point.id);
   if (!position) return null;
