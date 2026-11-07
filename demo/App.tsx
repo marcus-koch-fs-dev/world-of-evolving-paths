@@ -15,6 +15,7 @@ import {
   PathWorld,
   PointMenu,
   TimeSlider,
+  Toast,
   useTimePlayback,
   ViewBar,
   ZoomControls,
@@ -213,14 +214,7 @@ export function App() {
           </ControlBar>
         )}
 
-        {notice && (
-          <ControlBar placement="bottom-right">
-            <span className="demo-notice">{notice}</span>
-            <button type="button" className="pw-button" aria-label="Dismiss" onClick={() => setNotice(null)}>
-              ×
-            </button>
-          </ControlBar>
-        )}
+        <Toast message={notice} onDismiss={() => setNotice(null)} />
 
         {editing && selected && selectedPath && (
           <PointMenu

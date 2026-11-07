@@ -17,8 +17,8 @@ export type LayoutInput = {
 export type LayoutResult = { positions: Record<string, Position>; width: number };
 
 const LANE_GAP = 200; // distance between two lanes
-const SPACING = 140; // room per point along a path
-const MIN_WIDTH = 1400; // no tile gets narrower than this
+const SPACING = 200; // room per point along a path
+const MIN_WIDTH = 2200; // no tile gets narrower than this
 const EDGE_PADDING = 60;
 const WOBBLE = 70; // how far a point may stray from the drift in y
 const WIDEN = 240; // how far the branches of a fork go apart

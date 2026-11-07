@@ -8,7 +8,7 @@ export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 3;
 
 /** Fitting fills this share of the viewport, so the content keeps a frame around it. */
-const FIT_FILL = 0.75;
+const FIT_FILL = 0.6;
 /** A lone point or a tiny group is not blown up beyond this zoom when fitting. */
 const MAX_FIT_ZOOM = 1.25;
 

@@ -87,13 +87,13 @@ describe('Layout', () => {
 
   describe('when the tile grows', () => {
     it('is never narrower than the minimum', () => {
-      expect(tileWidth([makePoint({ id: 'one' })])).toBe(1400);
+      expect(tileWidth([makePoint({ id: 'one' })])).toBe(2200);
     });
 
     it('widens with the busiest path', () => {
       const many = Array.from({ length: 20 }, (_, i) => makePoint({ id: `p${i}` }));
 
-      expect(tileWidth(many)).toBe(20 * 140);
+      expect(tileWidth(many)).toBe(20 * 200);
     });
   });
 

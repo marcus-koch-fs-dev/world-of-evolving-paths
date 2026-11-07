@@ -1,0 +1,35 @@
+/* Below the top bar, in the middle, so it comes into view where the eyes already are */
+.pw-toast {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(520px, calc(100% - 24px));
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--pw-lit);
+  border-radius: 12px;
+  background: var(--pw-panel);
+  color: var(--pw-ink);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+  transform: translateX(-50%);
+  animation: pw-toast-in 220ms ease-out;
+}
+
+@keyframes pw-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-toast {
+    animation: none;
+  }
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { PathPoint } from '../../../../core';
 import type { PointPatch } from '../types';
+import { InfoToggle } from './InfoToggle';
 
 type Props = {
   point: Pick<PathPoint, 'date' | 'importance' | 'note'>;
@@ -24,14 +25,17 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
           onChange={(event) => event.target.value && onUpdate({ date: event.target.value })}
         />
       </label>
-      <p className="pw-help">
-        Importance is your own rating, 1 to 5. A more important point is drawn bigger, keeps more distance to others and
-        stays visible in wider views such as month and year. The thickness of its outline shows how strong the path is
-        that leads to it, and that comes from how often you walk it.
-      </p>
-      <label>
-        Importance
+      <div className="pw-field">
+        <div className="pw-info-row">
+          <span>Importance</span>
+          <InfoToggle label="What importance means">
+            Your own rating, 1 to 5. A more important point is drawn bigger, keeps more distance to others and stays
+            visible in wider views such as month and year. The thickness of its outline shows how strong the path is
+            that leads to it, and that comes from how often you walk it.
+          </InfoToggle>
+        </div>
         <select
+          aria-label="Importance"
           value={point.importance ?? min}
           onChange={(event) => onUpdate({ importance: Number(event.target.value) })}
         >
@@ -41,7 +45,7 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
             </option>
           ))}
         </select>
-      </label>
+      </div>
       <label>
         Note
         <textarea

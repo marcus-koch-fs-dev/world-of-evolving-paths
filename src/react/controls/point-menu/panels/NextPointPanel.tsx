@@ -17,6 +17,8 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
   const [color, setColor] = useState(colors[0] ?? '#ffffff');
   const [error, setError] = useState<string | null>(null);
 
+  const earlier = date !== '' && date < defaultDate;
+
   const submit = () => {
     if (!title.trim()) return setError('The name is missing.');
     if (!date) return setError('The date is missing. Every point needs a date.');
@@ -42,6 +44,7 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
         Date (required)
         <input type="date" required value={date} onChange={(event) => setDate(event.target.value)} />
       </label>
+      {earlier && <p className="pw-warn">This date is before the point it follows, so the line will run backwards.</p>}
       <label className="pw-inline">
         <input type="checkbox" checked={newPath} onChange={(event) => setNewPath(event.target.checked)} />
         On a new path (own color)

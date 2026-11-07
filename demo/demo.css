@@ -91,9 +91,3 @@ body,
   color: inherit;
   font: inherit;
 }
-
-.demo-notice {
-  max-width: 260px;
-  color: #edefe6;
-  font-size: 13px;
-}

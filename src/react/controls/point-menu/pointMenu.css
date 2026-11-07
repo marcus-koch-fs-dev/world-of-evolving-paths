@@ -214,3 +214,34 @@
   font-size: 11px;
   line-height: 1.4;
 }
+
+.pw-menu-sub .pw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--pw-muted);
+}
+
+.pw-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pw-menu-sub .pw-info-button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.pw-info-row .pw-help {
+  flex-basis: 100%;
+}
+
+.pw-menu-sub .pw-warn {
+  margin: 0;
+  color: #f2c46d;
+}

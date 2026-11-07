@@ -7,6 +7,8 @@ export { PointMenu } from './controls/point-menu/PointMenu';
 export type { NextPointInput, PointPatch, TileId } from './controls/point-menu/types';
 export type { TimeSliderProps } from './controls/time-slider/TimeSlider';
 export { TimeSlider } from './controls/time-slider/TimeSlider';
+export type { ToastProps } from './controls/toast/Toast';
+export { Toast } from './controls/toast/Toast';
 export type { ViewBarProps } from './controls/view-bar/ViewBar';
 export { ViewBar } from './controls/view-bar/ViewBar';
 export { ZoomControls } from './controls/zoom-controls/ZoomControls';
