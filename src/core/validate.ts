@@ -1,4 +1,5 @@
 import { isIsoDate } from './dates';
+import { EDGE_SEPARATOR } from './geometry';
 import type { PeriodData, PointKind, PointStatus } from './types';
 
 export type Validation = { ok: true; data: PeriodData } | { ok: false; errors: string[] };
@@ -21,6 +22,7 @@ function pointErrors(point: unknown, where: string): string[] {
   if (!isRecord(point)) return [`${where} must be an object.`];
   const errors: string[] = [];
   if (!isNonEmptyString(point.id)) errors.push(`${where}.id must be a non-empty string.`);
+  else if (point.id.includes(EDGE_SEPARATOR)) errors.push(`${where}.id may not contain "${EDGE_SEPARATOR}".`);
   if (typeof point.title !== 'string') errors.push(`${where}.title must be a string.`);
   if (typeof point.date !== 'string' || !isIsoDate(point.date))
     errors.push(`${where}.date must be a valid YYYY-MM-DD date.`);

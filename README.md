@@ -100,7 +100,7 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are stacked by `lane` (lowest first), otherwise in list order.
 
-**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` must point to an existing point and connections never form a circle: the data is rejected with a message otherwise.
+**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` must point to an existing point and connections never form a circle: the data is rejected with a message otherwise. Point ids may not contain `->`, it separates the ids in the id of a line.
 
 **`PeriodMap`** is a hashmap from period key to `PeriodData`. Typically it holds only the view you show, and you load the next one when the user changes the view.
 
@@ -171,11 +171,11 @@ Update your data in these callbacks and pass the new objects back in. The data i
 | `animate`      | `true`     | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                      |
 | `locale`       | browser    | Language of the dates under the points, such as `de`.                                                                                                                                                                   |
 | `formatDate`   | —          | Writes the date under a point yourself. Wins over `locale`.                                                                                                                                                             |
-| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit), only while the pointer is over the map or the focus is inside it.                                                                                                                                                                                      |
+| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit), only while the pointer is over the map or the focus is inside it.                                                                                                                      |
 
 ### Camera
 
-Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about three quarters of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code.
+Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about three quarters of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code. With React, put a `ref` on `<PathWorld>` to get the handle (it is `null` until the map exists).
 
 ### Dates and language
 
@@ -217,14 +217,14 @@ Open (future) connections stay thin and dotted. While a point is dragged, thin r
 
 Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
-| Control           | Folder              | What it does                                                                                                                                                                                                                                                                                                  |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                  |
-| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                   |
-| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                                                                                                                                                     |
-| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                                                                                                                                             |
+| Control           | Folder              | What it does                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                                                                                                                      |
+| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                                                                                                                       |
+| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                                                                                                                                                                                                                                                         |
+| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                                                                                                                                                                                                                                                 |
 | `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, connect (when you pass `onConnect`), delete. `checkInCount` shows the check-ins of the path under the name. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. Placed below the point by default, above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
-| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                     |
+| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                         |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
 
@@ -283,7 +283,7 @@ Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/archi
 
 ## Not in this version
 
-The first prototype had a few things that are not part of the library yet: a tool to connect existing points, a toolbar for undo and redo, panels for paths, rules and JSON, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
+The first prototype had a few things that are not part of the library yet: a toolbar for undo and redo, panels for paths, rules and JSON, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
 
 Controls are provided for React only. The map itself works with any framework.
 

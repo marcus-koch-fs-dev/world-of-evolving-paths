@@ -52,6 +52,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
   };
   const boundary = createBoundaryChecks(reportError);
   const model = createWorldModel(reportError);
+  let background = boundary.backgroundOf(initialOptions);
 
   const bounds = (): Bounds | null => contentBounds(model.world()?.points ?? []);
 
@@ -139,7 +140,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
 
   const unsubscribeCamera = camera.subscribe((next) => {
     renderer.setCamera(next);
-    viewport.render(next, options.background ?? {});
+    viewport.render(next, background ?? {});
   });
 
   const resizeObserver = new ResizeObserver(() => {
@@ -194,14 +195,17 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       previous.formatDate !== next.formatDate;
     if (changed || lookChanged) rebuildScene();
     if (changed) notifyWorld();
-    if (!sameBackground(previous.background, next.background)) viewport.render(camera.get(), next.background ?? {});
+    if (!sameBackground(previous.background, next.background)) {
+      background = boundary.backgroundOf(next);
+      viewport.render(camera.get(), background ?? {});
+    }
     applyFraming();
   };
 
   renderer.mount(viewport.host).catch((error: unknown) => {
     reportError([`The graphics could not be started: ${error instanceof Error ? error.message : String(error)}`]);
   });
-  viewport.render(camera.get(), initialOptions.background ?? {});
+  viewport.render(camera.get(), background ?? {});
   update(initialOptions);
   window.addEventListener('keydown', onKey);
 
