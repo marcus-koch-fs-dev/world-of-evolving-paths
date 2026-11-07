@@ -11,7 +11,7 @@ import { CameraController } from './camera/CameraController';
 import { Viewport } from './dom/Viewport';
 import { PointDragger } from './interaction/PointDragger';
 import { PointerController } from './interaction/PointerController';
-import type { CameraListener, PathWorldHandle, PathWorldOptions } from './options';
+import type { BackgroundOptions, CameraListener, PathWorldHandle, PathWorldOptions } from './options';
 import { PixiRenderer } from './render/PixiRenderer';
 import { WorldModel } from './state/WorldModel';
 
@@ -23,6 +23,14 @@ const ERROR_PREFIX = 'World of Evolving Paths:';
 type Framing = 'fit' | 'center' | null;
 
 const rounded = (position: Position): Position => ({ x: Math.round(position.x), y: Math.round(position.y) });
+
+function sameBackground(a: BackgroundOptions | undefined, b: BackgroundOptions | undefined): boolean {
+  if (a === b) return true;
+  const left = a ?? {};
+  const right = b ?? {};
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)]) as Set<keyof BackgroundOptions>;
+  return [...keys].every((key) => left[key] === right[key]);
+}
 
 /**
  * Wires the map together: world model, renderer, camera and pointer handling.
@@ -73,6 +81,7 @@ export class PathWorldEngine implements PathWorldHandle {
     this.resizeObserver.observe(this.viewport.root);
     window.addEventListener('keydown', this.onKey);
     void this.renderer.mount(this.viewport.host);
+    this.viewport.render(this.camera.get(), options.background ?? {});
     this.update(options);
   }
 
@@ -81,17 +90,25 @@ export class PathWorldEngine implements PathWorldHandle {
   }
 
   update(options: PathWorldOptions): void {
+    const previous = this.options;
     this.options = options;
-    const { viewChanged } = this.model.configure({
+    const { changed, viewChanged } = this.model.configure({
       periods: options.periods,
       view: options.view,
       seed: options.seed ?? DEFAULT_SEED,
       today: options.today ?? todayLocal(),
     });
     if (viewChanged) this.framing = this.framedOnce ? 'center' : 'fit';
-    this.rebuildScene();
-    this.viewport.render(this.camera.get(), options.background ?? {});
+    if (changed || (previous.wavy === true) !== (options.wavy === true)) this.rebuildScene();
+    if (!sameBackground(previous.background, options.background)) {
+      this.viewport.render(this.camera.get(), options.background ?? {});
+    }
     this.applyFraming();
+  }
+
+  positionOf(id: string): Position | null {
+    const point = this.model.world()?.points.find((candidate) => candidate.id === id);
+    return point ? { x: point.x, y: point.y } : null;
   }
 
   zoomBy(factor: number): void {

@@ -74,6 +74,8 @@ export type PathWorldHandle = {
   /** Puts the content in the middle. The zoom stays. */
   center(): void;
   getCamera(): Camera;
+  /** Where a point is right now, or null if it is not in the current view. */
+  positionOf(id: string): Position | null;
   /** Calls the listener on every camera change. Returns a function that stops listening. */
   subscribeCamera(listener: CameraListener): () => void;
   /** Element that follows the camera. Controls placed here move and scale with the world. */
