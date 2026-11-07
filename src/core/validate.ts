@@ -69,12 +69,42 @@ function duplicates(ids: string[]): string[] {
   return [...repeated];
 }
 
+/** The ids of points that lie on a circle of connections. A path only runs forward. */
+function circleIds(points: { id: string; next: string[] }[]): string[] {
+  const nextOf = new Map(points.map((point) => [point.id, point.next]));
+  const finished = new Set<string>();
+  const found = new Set<string>();
+  const visit = (id: string, trail: readonly string[]): void => {
+    if (trail.includes(id)) {
+      found.add(id);
+      return;
+    }
+    if (finished.has(id)) return;
+    (nextOf.get(id) ?? []).forEach((nextId) => {
+      visit(nextId, [...trail, id]);
+    });
+    finished.add(id);
+  };
+  points.forEach((point) => {
+    visit(point.id, []);
+  });
+  return [...found];
+}
+
 function referenceErrors(data: PeriodData): string[] {
   const pathIds = data.paths.map((path) => path.id);
-  const pointIds = data.paths.flatMap((path) => path.points.map((point) => point.id));
+  const points = data.paths.flatMap((path) => path.points);
+  const known = new Set(points.map((point) => point.id));
+  const unknownLinks = points.flatMap((point) =>
+    point.next
+      .filter((id) => !known.has(id))
+      .map((id) => `Point "${point.id}" links to "${id}", which does not exist.`),
+  );
   return [
     ...duplicates(pathIds).map((id) => `Path id "${id}" is used twice.`),
-    ...duplicates(pointIds).map((id) => `Point id "${id}" is used twice.`),
+    ...duplicates(points.map((point) => point.id)).map((id) => `Point id "${id}" is used twice.`),
+    ...unknownLinks,
+    ...circleIds(points).map((id) => `Point "${id}" is on a circle of connections. A path only runs forward.`),
   ];
 }
 

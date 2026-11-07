@@ -26,6 +26,20 @@ describe('Period data validation', () => {
     });
   });
 
+  describe('when the connections are wrong', () => {
+    it('rejects a link to a point that does not exist', () => {
+      const data = editPoint(makePeriodData(), 'c1', { next: ['ghost'] });
+
+      expect(errorsFor(data)).toContain('Point "c1" links to "ghost", which does not exist.');
+    });
+
+    it('rejects a circle of connections', () => {
+      const circle = editPoint(editPoint(makePeriodData(), 'c1', { next: ['c2'] }), 'c2', { next: ['c1'] });
+
+      expect(errorsFor(circle).some((message) => message.includes('circle'))).toBe(true);
+    });
+  });
+
   describe('when a point is wrong', () => {
     it('names the point and the date problem', () => {
       const data = editPoint(makePeriodData(), 'c1', { date: '2026-02-30' });

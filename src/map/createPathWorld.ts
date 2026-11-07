@@ -149,8 +149,20 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
   });
   resizeObserver.observe(viewport.root);
 
+  // The keys belong to this map only while the pointer is over it or the focus is inside it
+  let pointerInside = false;
+  const onEnter = () => {
+    pointerInside = true;
+  };
+  const onLeave = () => {
+    pointerInside = false;
+  };
+  viewport.root.addEventListener('pointerenter', onEnter);
+  viewport.root.addEventListener('pointerleave', onLeave);
+  const isActive = () => pointerInside || viewport.root.contains(document.activeElement);
+
   const onKey = (event: KeyboardEvent) => {
-    const shortcut = shortcutFor(event, options.shortcuts !== false);
+    const shortcut = shortcutFor(event, options.shortcuts !== false && isActive());
     const content = bounds();
     if (!shortcut || !content) return;
     if (shortcut === 'center') camera.center(content);
@@ -220,6 +232,8 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       if (destroyed) return;
       destroyed = true;
       window.removeEventListener('keydown', onKey);
+      viewport.root.removeEventListener('pointerenter', onEnter);
+      viewport.root.removeEventListener('pointerleave', onLeave);
       resizeObserver.disconnect();
       unsubscribeCamera();
       pointer.destroy();

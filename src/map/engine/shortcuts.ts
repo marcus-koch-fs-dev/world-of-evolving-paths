@@ -1,4 +1,4 @@
-const TEXT_INPUT = 'input, textarea, select';
+const TEXT_INPUT = 'input, textarea, select, [contenteditable]';
 
 export type Shortcut = 'center' | 'fit';
 
