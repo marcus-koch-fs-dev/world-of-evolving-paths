@@ -229,7 +229,7 @@ export class PathWorldEngine implements PathWorldHandle {
   }
 
   private canDrag(): boolean {
-    return this.options.editable !== false && this.options.dotsLocked !== true;
+    return this.options.editable !== false && this.options.pointsLocked !== true;
   }
 
   private hover(id: string | null): void {

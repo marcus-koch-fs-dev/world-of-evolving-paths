@@ -1,5 +1,7 @@
-export { createPathWorld } from './createPathWorld';
+﻿export { createPathWorld } from './createPathWorld';
+export { BACKGROUND_DEFAULTS } from './dom/backgroundCss';
 export type {
+  BackgroundImage,
   BackgroundOptions,
   BackgroundPattern,
   CameraListener,

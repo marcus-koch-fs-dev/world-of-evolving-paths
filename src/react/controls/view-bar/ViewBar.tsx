@@ -1,4 +1,5 @@
-import { VIEW_LEVELS, type ViewLevel } from '../../../core';
+﻿import { VIEW_LEVELS, type ViewLevel } from '../../../core';
+import { LevelSwitch } from './LevelSwitch';
 import './viewBar.css';
 
 export type ViewBarProps = {
@@ -20,6 +21,8 @@ export type ViewBarProps = {
   onPageChange?: (page: number) => void;
   /** Shows a button that asks for another generated layout. */
   onReroll?: () => void;
+  /** One dropdown for the level instead of one button per level. Saves room in a narrow bar. */
+  compact?: boolean;
 };
 
 /** Switches between levels, moves through periods and pages. It holds no state: the app decides what each button does. */
@@ -30,27 +33,13 @@ export function ViewBar(props: ViewBarProps) {
 
   return (
     <nav className="pw-view-bar" aria-label="View">
-      <div className="pw-view-group">
-        {props.freeLabel && (
-          <button
-            type="button"
-            className={`pw-button${level === null ? ' is-active' : ''}`}
-            onClick={() => onLevelChange(null)}
-          >
-            {props.freeLabel}
-          </button>
-        )}
-        {levels.map((option) => (
-          <button
-            key={option.level}
-            type="button"
-            className={`pw-button${level === option.level ? ' is-active' : ''}`}
-            onClick={() => onLevelChange(option.level)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <LevelSwitch
+        levels={levels}
+        level={level}
+        freeLabel={props.freeLabel}
+        compact={props.compact}
+        onChange={onLevelChange}
+      />
 
       {level !== null && (
         <div className="pw-view-group">

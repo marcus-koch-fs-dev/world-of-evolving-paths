@@ -31,6 +31,10 @@ export type PointMenuProps = {
   importanceRange?: [number, number];
   /** Colors offered for paths. Default: `PATH_PALETTE`. */
   colors?: readonly string[];
+  /** Colors the user chose before, newest first. Shown as slots next to the palette. */
+  customColors?: readonly string[];
+  /** A custom color was confirmed. Remember it in your app and pass it back in `customColors`. */
+  onCustomColor?: (color: string) => void;
   /** Tiles to leave out. */
   hide?: readonly TileId[];
 };
@@ -60,7 +64,15 @@ function PointMenuBody(props: PointMenuProps) {
     status: <StatusPanel status={point.status} canComplete={props.canComplete ?? true} onUpdate={props.onUpdate} />,
     next: <NextPointPanel colors={colors} onAddNext={props.onAddNext} onDone={close} />,
     kind: <KindPanel kind={point.kind} branches={point.next.length >= 2} onUpdate={props.onUpdate} />,
-    color: <ColorPanel colors={colors} value={path.color} onPick={props.onPathColor} />,
+    color: (
+      <ColorPanel
+        colors={colors}
+        value={path.color}
+        onPick={props.onPathColor}
+        customColors={props.customColors}
+        onCustomColor={props.onCustomColor}
+      />
+    ),
     rename: <RenamePanel title={point.title} onRename={(title) => props.onUpdate({ title })} onDone={close} />,
     details: (
       <DetailsPanel

@@ -158,17 +158,17 @@ Update your data in these callbacks and pass the new objects back in. Until you 
 
 ### Options
 
-| Option       | Default    | Meaning                                                                                                                             |
-| ------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `periods`    | —          | The `PeriodMap`.                                                                                                                    |
-| `view`       | —          | Key of the period to show.                                                                                                          |
-| `today`      | local date | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                 |
-| `seed`       | `1`        | Changes the generated layout.                                                                                                       |
-| `editable`   | `true`     | Allow moving and adding points.                                                                                                     |
-| `dotsLocked` | `false`    | Points cannot be dragged.                                                                                                           |
-| `wavy`       | `false`    | A slight wave on the lines.                                                                                                         |
-| `background` | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }` |
-| `shortcuts`  | `true`     | Keys `M` (center) and `E` (fit).                                                                                                    |
+| Option         | Default    | Meaning                                                                                                                             |
+| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `periods`      | —          | The `PeriodMap`.                                                                                                                    |
+| `view`         | —          | Key of the period to show.                                                                                                          |
+| `today`        | local date | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                 |
+| `seed`         | `1`        | Changes the generated layout.                                                                                                       |
+| `editable`     | `true`     | Allow moving and adding points.                                                                                                     |
+| `pointsLocked` | `false`    | Points cannot be dragged.                                                                                                           |
+| `wavy`         | `false`    | A slight wave on the lines.                                                                                                         |
+| `background`   | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }` |
+| `shortcuts`    | `true`     | Keys `M` (center) and `E` (fit).                                                                                                    |
 
 ### Camera
 

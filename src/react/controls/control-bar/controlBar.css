@@ -1,0 +1,35 @@
+﻿.pw-control-bar {
+  position: absolute;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--pw-line);
+  border-radius: 12px;
+  background: var(--pw-panel);
+}
+
+.pw-placement-top {
+  top: 12px;
+  left: 12px;
+  right: 12px;
+}
+
+.pw-placement-left {
+  top: 68px;
+  left: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.pw-placement-bottom-left {
+  left: 12px;
+  bottom: 16px;
+}
+
+.pw-placement-bottom-right {
+  right: 16px;
+  bottom: 16px;
+}

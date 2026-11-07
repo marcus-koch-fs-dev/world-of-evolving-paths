@@ -3,6 +3,9 @@ import type { PeriodMap, Position } from '../core/types';
 
 export type BackgroundPattern = 'none' | 'hex' | 'dots' | 'stars';
 
+/** An image behind the paths, placed in world units so it moves and scales with the map. */
+export type BackgroundImage = { src: string; x: number; y: number; width: number; height: number };
+
 export type BackgroundOptions = {
   /** Plain color (default) or a gradient from `base` to `color2`. */
   fill?: 'solid' | 'gradient';
@@ -21,6 +24,7 @@ export type BackgroundOptions = {
   intensity?: number;
   /** Size of the pattern, 0.5 to 2. */
   scale?: number;
+  image?: BackgroundImage;
 };
 
 export type PointMoveEvent = {
@@ -55,7 +59,7 @@ export type PathWorldOptions = PathWorldEvents & {
   /** Allow moving and adding points. Default true. */
   editable?: boolean;
   /** Points cannot be dragged. Default false. */
-  dotsLocked?: boolean;
+  pointsLocked?: boolean;
   /** Slight wave on the lines. Default false. */
   wavy?: boolean;
   /** Moving parts: flowing dashes, pulses, glow. Default on, but off when the user prefers reduced motion. */

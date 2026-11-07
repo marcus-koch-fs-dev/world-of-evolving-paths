@@ -1,3 +1,7 @@
+﻿export type { BackgroundPanelProps } from './controls/background-panel/BackgroundPanel';
+export { BackgroundPanel } from './controls/background-panel/BackgroundPanel';
+export type { ControlBarPlacement, ControlBarProps } from './controls/control-bar/ControlBar';
+export { ControlBar } from './controls/control-bar/ControlBar';
 export type { PointMenuProps } from './controls/point-menu/PointMenu';
 export { PointMenu } from './controls/point-menu/PointMenu';
 export type { NextPointInput, PointPatch, TileId } from './controls/point-menu/types';

@@ -5,6 +5,17 @@ export const DEFAULT_BASE = '#0e0f0c';
 export const DEFAULT_PATTERN_COLOR = '#edefe6';
 export const DEFAULT_COLOR2 = '#1d3a4a';
 
+/** What each background option is when it is left out. */
+export const BACKGROUND_DEFAULTS = {
+  base: DEFAULT_BASE,
+  color: DEFAULT_PATTERN_COLOR,
+  color2: DEFAULT_COLOR2,
+  angle: 180,
+  mid: 50,
+  intensity: 0.5,
+  scale: 1,
+} as const;
+
 export type BackgroundCss = {
   backgroundColor: string;
   backgroundImage: string;
@@ -141,9 +152,9 @@ export function backgroundCss(options: BackgroundOptions, camera: Camera): Backg
   const base = options.base ?? DEFAULT_BASE;
   const layers = patternLayers(options.pattern ?? 'none', camera, options);
   if (options.fill === 'gradient') {
-    const color2 = options.color2 ?? DEFAULT_COLOR2;
-    const angle = options.angle ?? 180;
-    const mid = options.mid ?? 50;
+    const color2 = options.color2 ?? BACKGROUND_DEFAULTS.color2;
+    const angle = options.angle ?? BACKGROUND_DEFAULTS.angle;
+    const mid = options.mid ?? BACKGROUND_DEFAULTS.mid;
     layers.push({
       image: `linear-gradient(${angle}deg, ${base} 0%, color-mix(in srgb, ${base}, ${color2}) ${mid}%, ${color2} 100%)`,
       size: 'auto',

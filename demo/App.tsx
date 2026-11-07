@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from 'react';
+﻿import { useMemo, useReducer, useState } from 'react';
 import { type BackgroundOptions, type PeriodMap, todayLocal } from 'world-of-evolving-paths';
 import { PathWorld, PointMenu, ViewBar, ZoomControls } from 'world-of-evolving-paths/react';
 import { buildPeriodData } from './app-logic/periodData';
@@ -18,7 +18,7 @@ export function App() {
   const navigation = useViewNavigation(today);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [wavy, setWavy] = useState(false);
-  const [dotsLocked, setDotsLocked] = useState(false);
+  const [pointsLocked, setPointsLocked] = useState(false);
 
   const view = navigation.level === null ? FREE_VIEW : navigation.period.key;
   const tileKey = `${view}:p${navigation.page}`;
@@ -48,7 +48,7 @@ export function App() {
         today={today}
         seed={state.seeds[tileKey] ?? DEFAULT_SEED}
         wavy={wavy}
-        dotsLocked={dotsLocked}
+        pointsLocked={pointsLocked}
         background={BACKGROUND}
         onSelect={setSelectedId}
         onPointMove={({ positions }) => dispatch({ type: 'move', viewKey: tileKey, positions })}
@@ -92,7 +92,12 @@ export function App() {
           />
         )}
       </PathWorld>
-      <DemoToolbar wavy={wavy} dotsLocked={dotsLocked} onWavyChange={setWavy} onDotsLockedChange={setDotsLocked} />
+      <DemoToolbar
+        wavy={wavy}
+        pointsLocked={pointsLocked}
+        onWavyChange={setWavy}
+        onPointsLockedChange={setPointsLocked}
+      />
     </div>
   );
 }

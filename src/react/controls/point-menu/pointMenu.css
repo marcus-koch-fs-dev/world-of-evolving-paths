@@ -1,4 +1,4 @@
-/* The menu lives on the map overlay, which is scaled by the zoom. The inverse zoom keeps it the same size. */
+﻿/* The menu lives on the map overlay, which is scaled by the zoom. The inverse zoom keeps it the same size. */
 .pw-point-menu {
   position: absolute;
   z-index: 6;
@@ -189,4 +189,10 @@
 
 .pw-error {
   color: var(--pw-danger);
+}
+
+.pw-menu-sub .pw-swatch.is-empty {
+  display: inline-block;
+  border: 1px dashed var(--pw-line);
+  background: none;
 }

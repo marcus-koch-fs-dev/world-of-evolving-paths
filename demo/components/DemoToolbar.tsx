@@ -1,12 +1,12 @@
-type Props = {
+﻿type Props = {
   wavy: boolean;
-  dotsLocked: boolean;
+  pointsLocked: boolean;
   onWavyChange: (wavy: boolean) => void;
-  onDotsLockedChange: (locked: boolean) => void;
+  onPointsLockedChange: (locked: boolean) => void;
 };
 
 /** The demo's own switches. They are not part of the library: the app decides what to offer. */
-export function DemoToolbar({ wavy, dotsLocked, onWavyChange, onDotsLockedChange }: Props) {
+export function DemoToolbar({ wavy, pointsLocked, onWavyChange, onPointsLockedChange }: Props) {
   return (
     <div className="demo-toolbar">
       <strong>World of Evolving Paths</strong>
@@ -15,7 +15,11 @@ export function DemoToolbar({ wavy, dotsLocked, onWavyChange, onDotsLockedChange
         Wave
       </label>
       <label>
-        <input type="checkbox" checked={dotsLocked} onChange={(event) => onDotsLockedChange(event.target.checked)} />
+        <input
+          type="checkbox"
+          checked={pointsLocked}
+          onChange={(event) => onPointsLockedChange(event.target.checked)}
+        />
         Lock points
       </label>
       <span className="demo-hint">

@@ -1,14 +1,7 @@
-.pw-zoom-controls {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
+﻿.pw-zoom-controls {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px;
-  border: 1px solid var(--pw-line);
-  border-radius: 10px;
-  background: var(--pw-panel);
 }
 
 .pw-zoom-value {
