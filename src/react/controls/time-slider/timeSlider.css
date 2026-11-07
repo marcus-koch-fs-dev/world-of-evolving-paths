@@ -13,3 +13,16 @@
   text-align: center;
   color: var(--pw-muted);
 }
+
+.pw-speeds {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pw-speeds .pw-button {
+  min-width: 36px;
+  padding: 0 6px;
+}

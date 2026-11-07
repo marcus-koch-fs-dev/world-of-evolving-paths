@@ -217,14 +217,14 @@ Open (future) connections stay thin and dotted. While a point is dragged, thin r
 
 Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
-| Control           | Folder              | What it does                                                                                                                                                                         |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                         |
-| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                          |
-| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                            |
-| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                    |
-| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, delete. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. |
-| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                            |
+| Control           | Folder              | What it does                                                                                                                                                                                                                                                                                                  |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ZoomControls`    | `zoom-controls/`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                  |
+| `ViewBar`         | `view-bar/`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                   |
+| `ControlBar`      | `control-bar/`      | Puts controls at a place on the map: `top` (one row), `left` (for panels), `bottom-left`, `bottom-right`.                                                                                                                                                                                                     |
+| `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness, size and an image. Holds no state.                                                                                                                                                                                                             |
+| `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, delete. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. Placed below the point by default, above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
+| `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                     |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
 
@@ -232,7 +232,7 @@ The color slots of `PointMenu` are filled by you: it reports a confirmed color w
 
 They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
 
-`useTimePlayback` moves the day of a `TimeSlider` forward while it plays. Moving through time only changes `today`, so the points keep their places. Statuses and strengths as of that day are your app's to work out, the demo shows how.
+`useTimePlayback` moves the day of a `TimeSlider` forward while it plays. `playbackPlan(days, durationMs)` works out the pace so that any range takes the same time, and the slider can show speed buttons (`speeds`, `speed`, `onSpeedChange`). Moving through time only changes `today`, so the points keep their places. Statuses and strengths as of that day are your app's to work out, the demo shows how.
 
 Import `world-of-evolving-paths/style.css` once for the map and the controls. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...).
 

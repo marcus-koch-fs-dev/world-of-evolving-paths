@@ -15,6 +15,7 @@ import {
   ControlBar,
   PathWorld,
   PointMenu,
+  playbackPlan,
   TimeSlider,
   Toast,
   useTimePlayback,
@@ -36,6 +37,9 @@ import { useViewNavigation } from './hooks/useViewNavigation';
 const FREE_VIEW = 'free';
 const NO_PINS = {};
 const DEFAULT_BACKGROUND: BackgroundOptions = { pattern: 'stars', intensity: 0.5 };
+// Playing through any range takes about this long at normal speed
+const PLAY_DURATION_MS = 24000;
+const PLAY_SPEEDS = [0.5, 1, 2];
 
 /** Moving through time: the day, whether it plays, and the view it belongs to. It ends when the view changes. */
 type TimeTravel = { view: string; day: number; playing: boolean };
@@ -57,6 +61,7 @@ export function App() {
   const [animate, setAnimate] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [speed, setSpeed] = useState(1);
   const [travel, setTravel] = useState<TimeTravel | null>(null);
   const [background, setBackground] = useStoredState<BackgroundOptions>('wep-demo:background', DEFAULT_BACKGROUND);
   const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
@@ -94,10 +99,13 @@ export function App() {
     return { start: Math.min(...days), end: Math.max(...days) };
   }, [navigation.level, navigation.period, state.points]);
 
+  const plan = playbackPlan(range.end - range.start, PLAY_DURATION_MS / speed);
   useTimePlayback({
     playing,
     day: travelDay ?? toDay(today),
     end: range.end,
+    intervalMs: plan.intervalMs,
+    stepDays: plan.stepDays,
     onDayChange: (day) => setTravel({ view, day, playing: true }),
     onEnd: () => setTravel((current) => (current ? { ...current, playing: false } : current)),
   });
@@ -199,6 +207,9 @@ export function App() {
             day={travelDay ?? Math.min(range.end, Math.max(range.start, toDay(today)))}
             locale={locale}
             playing={playing}
+            speed={speed}
+            speeds={PLAY_SPEEDS}
+            onSpeedChange={setSpeed}
             onDayChange={(day) => setTravel({ view, day, playing: false })}
             onPlayingChange={(next) =>
               setTravel({ view, day: playbackStartDay(travelDay, range.start, range.end), playing: next })

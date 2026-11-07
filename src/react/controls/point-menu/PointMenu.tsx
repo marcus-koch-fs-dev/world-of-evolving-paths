@@ -11,11 +11,11 @@ import { KindPanel } from './panels/KindPanel';
 import { NextPointPanel } from './panels/NextPointPanel';
 import { RenamePanel } from './panels/RenamePanel';
 import { STATUS_LABELS, StatusPanel } from './panels/StatusPanel';
+import { anchorFor, type MenuPlacement, resolvePlacement } from './placement';
 import './pointMenu.css';
 import { TILES } from './tiles';
 import type { NextPointInput, PointPatch, TileId } from './types';
 
-const OFFSET_FROM_POINT = 40; // world units to the right of the point
 const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
 
 export type PointMenuProps = {
@@ -38,6 +38,8 @@ export type PointMenuProps = {
   onCustomColor?: (color: string) => void;
   /** Tiles to leave out. */
   hide?: readonly TileId[];
+  /** Where the menu sits next to the point. Default uto: below, or above when there is no room below. */
+  placement?: MenuPlacement;
 };
 
 /**
@@ -60,6 +62,9 @@ function PointMenuBody(props: PointMenuProps) {
   const colors = props.colors ?? PATH_PALETTE;
   const tiles = TILES.filter((tile) => !props.hide?.includes(tile.id));
   const close = () => setOpen(null);
+  const camera = handle.getCamera();
+  const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
+  const placement = resolvePlacement(props.placement ?? 'auto', position.y * camera.zoom + camera.y, room);
 
   const panels: Record<TileId, React.ReactNode> = {
     status: <StatusPanel status={point.status} canComplete={props.canComplete ?? true} onUpdate={props.onUpdate} />,
@@ -86,7 +91,7 @@ function PointMenuBody(props: PointMenuProps) {
   };
 
   return createPortal(
-    <div className="pw-point-menu" data-pw-ui style={{ left: position.x + OFFSET_FROM_POINT, top: position.y }}>
+    <div className={`pw-point-menu pw-menu-${placement}`} data-pw-ui style={anchorFor(placement, position)}>
       <div className="pw-menu-grid">
         <div className="pw-menu-title">
           <strong>{point.title}</strong>
