@@ -18,7 +18,8 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react.js"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "scripts": {
     "dev": "vite",

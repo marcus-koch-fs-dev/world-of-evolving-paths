@@ -10,6 +10,7 @@ export default defineConfig({
     lib: {
       entry: { index: fromRoot('./src/index.ts'), react: fromRoot('./src/react/index.ts') },
       formats: ['es'],
+      cssFileName: 'style',
     },
     rollupOptions: { external: ['pixi.js', 'react', 'react-dom', 'react/jsx-runtime'] },
     emptyOutDir: true,

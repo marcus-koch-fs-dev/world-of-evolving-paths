@@ -17,6 +17,7 @@ export class PixiRenderer {
   private destroyed = false;
   private scene: Scene | null = null;
   private camera: Camera = { x: 0, y: 0, zoom: 1 };
+  private size = { width: 1, height: 1 };
   private lastTick = now();
   private keepTicking = false;
 
@@ -49,12 +50,16 @@ export class PixiRenderer {
     app.ticker.maxFPS = MAX_FPS;
     app.ticker.add(() => this.tick());
     this.applyCamera();
+    // The size may have changed while Pixi was starting
+    this.resize(host.clientWidth || this.size.width, host.clientHeight || this.size.height);
     if (this.scene) this.setScene(this.scene);
   }
 
+  /** Sets the canvas size. A size given before Pixi has started is applied once it has. */
   resize(width: number, height: number): void {
+    this.size = { width: Math.max(1, width), height: Math.max(1, height) };
     if (!this.app) return;
-    this.app.renderer.resize(width, height);
+    this.app.renderer.resize(this.size.width, this.size.height);
     this.app.render();
   }
 
