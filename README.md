@@ -29,18 +29,16 @@ const period = periodOf('week', '2026-11-04');
 
 const periods: PeriodMap = {
   [period.key]: {
-    paths: [{ id: 'combat', name: 'Combat', color: '#ff3b3b' }],
-    points: [
+    paths: [
       {
-        id: 'a',
-        pathId: 'combat',
-        date: '2026-11-02',
-        title: 'Sword basics',
-        kind: 'start',
-        status: 'done',
-        next: ['b'],
+        id: 'combat',
+        name: 'Combat',
+        color: '#ff3b3b',
+        points: [
+          { id: 'a', date: '2026-11-02', title: 'Sword basics', kind: 'start', status: 'done', next: ['b'] },
+          { id: 'b', date: '2026-11-05', title: 'Parry', kind: 'milestone', status: 'current', next: [] },
+        ],
       },
-      { id: 'b', pathId: 'combat', date: '2026-11-05', title: 'Parry', kind: 'milestone', status: 'current', next: [] },
     ],
   },
 };
@@ -90,7 +88,6 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 | Field        | Type                                              | Meaning                                                                            |
 | ------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `id`         | `string`                                          | Unique within the view.                                                            |
-| `pathId`     | `string`                                          | The path the point belongs to.                                                     |
 | `date`       | `string`                                          | ISO date `YYYY-MM-DD`. Decides the rough horizontal position.                      |
 | `title`      | `string`                                          | Shown under the point.                                                             |
 | `kind`       | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when two or more points follow), otherwise ●.        |
@@ -109,8 +106,8 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 ```ts
 const periods: PeriodMap = {
-  'week:2026-11-02': { paths, points }, // the points of that week
-  'month:2026-11-01': { paths, points }, // other points: only the more important ones
+  'week:2026-11-02': { paths }, // the paths of that week, each with its points
+  'month:2026-11-01': { paths }, // other points: only the more important ones
 };
 ```
 
