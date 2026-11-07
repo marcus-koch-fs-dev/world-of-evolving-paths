@@ -240,7 +240,7 @@ Import `world-of-evolving-paths/style.css` once for the map and the controls. Co
 
 - Pass a **new object for every period that changed** and keep unchanged ones as they are. The map compares periods by reference and recomputes only when one changed. Mutating an object in place is not seen.
 - Camera movement and hover never touch React state. Zooming does not re-render your tree.
-- Only changed lines and points are redrawn. Rendering stops when nothing animates, and `animate` can turn the moving parts off.
+- Only changed lines and points are redrawn. The map keeps drawing at up to 40 frames per second while something moves on its own (today markers, flowing dashes, the glow). Set `animate: false` to stop that; the map is then only redrawn when something changes. Users who prefer reduced motion get that by default.
 - Keep `background` and other object options stable between renders (define them once). They are compared field by field.
 
 ## The demo

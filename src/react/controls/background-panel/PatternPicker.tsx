@@ -9,6 +9,7 @@ const PATTERNS: { pattern: BackgroundPattern; label: string }[] = [
 
 type Props = { value: BackgroundPattern; onChange: (pattern: BackgroundPattern) => void };
 
+/** Buttons to choose the pattern of the background. */
 export function PatternPicker({ value, onChange }: Props) {
   return (
     <div className="pw-segments">

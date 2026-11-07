@@ -189,4 +189,16 @@ describe('Pointer controller', () => {
       expect(camera.get().zoom).toBeCloseTo(2);
     });
   });
+
+  describe('when the view is replaced during a drag', () => {
+    it('forgets the drag, so releasing reports nothing', () => {
+      const { fire, hooks, controller } = setup({ pointAt: onPoint });
+      fire('pointerdown', { clientX: 100, clientY: 100 });
+
+      controller.cancel();
+      fire('pointerup', { clientX: 100, clientY: 100 });
+
+      expect(hooks.onDragEnd).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -10,6 +10,7 @@ type Props = {
   onDone: () => void;
 };
 
+/** Panel to create the point that follows, optionally on a new path. */
 export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(defaultDate);

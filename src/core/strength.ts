@@ -21,7 +21,7 @@ export type StrengthRule = {
   minActiveDays: readonly number[];
 };
 
-/** A highway takes a real habit: 70 active days in 12 weeks, so almost daily for about ten weeks. */
+// A highway takes a real habit: 70 active days in 12 weeks, so almost daily for about ten weeks.
 export const STRENGTH_RULE: StrengthRule = { weeks: 12, minActiveDays: [0, 6, 18, 40, 70] };
 
 const DAYS_PER_WEEK = 7;

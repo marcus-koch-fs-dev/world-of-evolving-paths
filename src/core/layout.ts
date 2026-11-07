@@ -167,6 +167,34 @@ export function placeWorld(layout: PeriodLayout, today: string): PlacedWorld {
   return { today, paths: layout.paths, points };
 }
 
+/**
+ * Everything the layout depends on, as text: the paths and lanes, and for each point its id, date, kind, links,
+ * importance and pin. Two data objects with the same signature get the same layout, whatever else differs
+ * (titles, statuses, strengths).
+ */
+export function layoutSignature(data: PeriodData): string {
+  return JSON.stringify(
+    data.paths.map((path) => [
+      path.id,
+      path.lane ?? null,
+      path.points.map((point) => [
+        point.id,
+        point.date,
+        point.kind,
+        point.next,
+        point.importance ?? null,
+        point.x ?? null,
+        point.y ?? null,
+      ]),
+    ]),
+  );
+}
+
+/** The layout of earlier data for new data with the same signature: new details on the points, same positions. */
+export function reuseLayout(data: PeriodData, previous: PeriodLayout): PeriodLayout {
+  return { ...flattenPeriod(data), positions: previous.positions };
+}
+
 /** Lays a view out and places it in one go. */
 export function placePeriod(data: PeriodData, view: string, today: string, seed: number): PlacedWorld {
   return placeWorld(layoutPeriod(data, view, seed), today);

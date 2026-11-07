@@ -2,7 +2,7 @@ import type { PlacedPoint, PlacedWorld } from '../types';
 
 export const DEFAULT_PATH_COLOR = '#d4f25a';
 
-/** Colors given to new paths, in this order. */
+// Colors given to new paths, in this order.
 export const PATH_PALETTE = [
   '#ff3b3b',
   '#ff8a1c',

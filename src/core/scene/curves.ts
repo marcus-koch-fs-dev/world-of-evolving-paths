@@ -43,6 +43,7 @@ export function sampleEdge(from: Position, to: Position, seed?: string): Positio
   });
 }
 
+/** Total length of a polyline. */
 export function polylineLength(points: Position[]): number {
   let sum = 0;
   for (let i = 1; i < points.length; i++)

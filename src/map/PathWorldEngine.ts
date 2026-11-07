@@ -1,6 +1,7 @@
 import type { Bounds, Camera } from '../core/camera';
 import { layoutOf, nearestFree } from '../core/collision';
 import { isIsoDate, todayLocal } from '../core/dates';
+import { isValidLocale } from '../core/format';
 import { contentBounds } from '../core/geometry';
 import { dateAtX } from '../core/layout';
 import { buildScene } from '../core/scene/buildScene';
@@ -56,6 +57,7 @@ export class PathWorldEngine implements PathWorldHandle {
   private worldVersion = 0;
   private destroyed = false;
   private reportedToday: string | null = null;
+  private reportedLocale: string | null = null;
   private readonly worldListeners = new Set<() => void>();
 
   constructor(
@@ -107,7 +109,7 @@ export class PathWorldEngine implements PathWorldHandle {
   update(options: PathWorldOptions): void {
     const previous = this.options;
     this.options = options;
-    const { changed, viewChanged, layoutChanged } = this.model.configure({
+    const { changed, viewChanged, dataChanged } = this.model.configure({
       periods: options.periods,
       view: options.view,
       seed: options.seed ?? DEFAULT_SEED,
@@ -119,7 +121,8 @@ export class PathWorldEngine implements PathWorldHandle {
       this.hovered = null;
       this.dragging = null;
       this.dragger.cancel();
-    } else if (layoutChanged) {
+      this.pointer.cancel();
+    } else if (dataChanged) {
       this.dragger.acknowledge();
     }
     const lookChanged =
@@ -198,6 +201,19 @@ export class PathWorldEngine implements PathWorldHandle {
     return todayLocal();
   }
 
+  /** The language for dates. One that the browser does not know is reported once and the browser's own is used. */
+  private localeOf(options: PathWorldOptions): string | undefined {
+    const given = options.locale;
+    if (given === undefined || isValidLocale(given)) return given;
+    if (this.reportedLocale !== given) {
+      this.reportedLocale = given;
+      this.reportError([
+        `locale must be a language tag such as "de" or "en-GB", got "${given}". The browser's language is used instead.`,
+      ]);
+    }
+    return undefined;
+  }
+
   private bounds(): Bounds | null {
     return contentBounds(this.model.world()?.points ?? []);
   }
@@ -220,7 +236,7 @@ export class PathWorldEngine implements PathWorldHandle {
           wave: this.options.wavy === true,
           hovered: this.hovered,
           dragging: this.dragging,
-          locale: this.options.locale,
+          locale: this.localeOf(this.options),
           formatDate: this.options.formatDate,
         })
       : EMPTY_SCENE;

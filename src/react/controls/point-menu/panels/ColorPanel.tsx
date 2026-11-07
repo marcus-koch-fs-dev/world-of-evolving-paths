@@ -14,6 +14,7 @@ type Props = {
   onCustomColor?: (color: string) => void;
 };
 
+/** Panel to choose the color of a path, with slots for the user's own colors. */
 export function ColorPanel({
   colors,
   value,

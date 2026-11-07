@@ -14,6 +14,7 @@ type Props = {
   onUpdate: (patch: PointPatch) => void;
 };
 
+/** Panel to choose the kind of a point: start, point, fork or goal. */
 export function KindPanel({ kind, branches, onUpdate }: Props) {
   return (
     <>

@@ -2,7 +2,7 @@ import { toDay } from './dates';
 
 const DAY_MS = 86400000;
 const DEFAULT_WEEK_PREFIX = 'CW';
-/** Short word for "calendar week" by language. Other languages use CW. */
+// Short word for "calendar week" by language. Other languages use CW.
 const WEEK_PREFIX: Record<string, string> = { de: 'KW' };
 
 const formatters = new Map<string, Intl.DateTimeFormat>();
@@ -43,4 +43,13 @@ export function formatPointDate(iso: string, today: string, locale?: string): st
 export function weekPrefix(locale?: string): string {
   const language = (locale ?? '').split('-')[0].toLowerCase();
   return WEEK_PREFIX[language] ?? DEFAULT_WEEK_PREFIX;
+}
+
+/** Is this a language tag the browser understands, such as `de` or `en-GB`? `de_DE` and `xx-` are not. */
+export function isValidLocale(locale: string): boolean {
+  try {
+    return Intl.getCanonicalLocales(locale).length > 0;
+  } catch {
+    return false;
+  }
 }

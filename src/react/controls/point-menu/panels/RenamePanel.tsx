@@ -6,6 +6,7 @@ type Props = {
   onDone: () => void;
 };
 
+/** Panel to change the name of a point. */
 export function RenamePanel({ title, onRename, onDone }: Props) {
   const [text, setText] = useState(title);
   const [error, setError] = useState<string | null>(null);

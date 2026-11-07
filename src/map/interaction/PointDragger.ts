@@ -42,6 +42,7 @@ export class PointDragger {
 
   end(id: string): void {
     const { model } = this.deps;
+    if (!model.world()?.points.some((point) => point.id === id)) return;
     const target = model.positionOf(id);
     if (Math.hypot(target.x - this.startPosition.x, target.y - this.startPosition.y) < MOVED_THRESHOLD) {
       model.clearOverride(id);

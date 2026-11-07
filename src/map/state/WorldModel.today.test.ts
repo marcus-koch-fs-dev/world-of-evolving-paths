@@ -15,7 +15,7 @@ describe('World model and today', () => {
 
       const result = model.configure({ periods, view, seed: 1, today: '2026-11-06' });
 
-      expect(result).toEqual({ changed: true, viewChanged: false, layoutChanged: false });
+      expect(result).toEqual({ changed: true, viewChanged: false, dataChanged: false, layoutChanged: false });
       expect(model.positionOf('c2')).toEqual(before);
       expect(model.world()?.today).toBe('2026-11-06');
     });

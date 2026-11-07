@@ -53,6 +53,13 @@ export class PointerController {
     for (const remove of this.cleanup) remove();
   }
 
+  /** Forgets a press or drag in progress, without telling the hooks, for when the view underneath was replaced. */
+  cancel(): void {
+    this.drag = null;
+    this.pan = null;
+    this.fingers.clear();
+  }
+
   private listen<K extends keyof HTMLElementEventMap>(
     type: K,
     handler: (event: HTMLElementEventMap[K]) => void,

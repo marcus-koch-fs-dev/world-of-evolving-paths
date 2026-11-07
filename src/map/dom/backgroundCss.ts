@@ -5,7 +5,7 @@ export const DEFAULT_BASE = '#0e0f0c';
 export const DEFAULT_PATTERN_COLOR = '#edefe6';
 export const DEFAULT_COLOR2 = '#1d3a4a';
 
-/** What each background option is when it is left out. */
+// What each background option is when it is left out.
 export const BACKGROUND_DEFAULTS = {
   base: DEFAULT_BASE,
   color: DEFAULT_PATTERN_COLOR,

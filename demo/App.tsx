@@ -2,6 +2,7 @@ import { useMemo, useReducer, useState } from 'react';
 import {
   type BackgroundOptions,
   fromDay,
+  isValidLocale,
   type PeriodMap,
   periodLabel,
   toDay,
@@ -25,6 +26,7 @@ import { DEFAULT_LEVELS } from './app-logic/levels';
 import { buildPeriodData } from './app-logic/periodData';
 import { canComplete } from './app-logic/rules';
 import { DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
+import { playbackStartDay } from './app-logic/timeTravel';
 import { type DemoMode, ModeToggle } from './components/ModeToggle';
 import { SettingsPanel } from './components/SettingsPanel';
 import { createHabits } from './data/habits';
@@ -43,6 +45,7 @@ function createInitialState(today: string) {
   return initialState(habits.paths, habits.points, habits.checkIns);
 }
 
+/** The demo app: holds all data and state and wires the map and its controls to it. */
 export function App() {
   const today = useMemo(() => todayLocal(), []);
   const [state, dispatch] = useReducer(reduce, today, createInitialState);
@@ -58,7 +61,8 @@ export function App() {
   const [background, setBackground] = useStoredState<BackgroundOptions>('wep-demo:background', DEFAULT_BACKGROUND);
   const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
   const [levels, setLevels] = useStoredState<ViewLevel[]>('wep-demo:levels', DEFAULT_LEVELS);
-  const [locale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || 'en-GB');
+  const [storedLocale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || 'en-GB');
+  const locale = isValidLocale(storedLocale) ? storedLocale : 'en-GB';
   const editing = mode === 'edit';
 
   const view = navigation.level === null ? FREE_VIEW : navigation.period.key;
@@ -98,7 +102,9 @@ export function App() {
     onEnd: () => setTravel((current) => (current ? { ...current, playing: false } : current)),
   });
 
-  const selected = state.points.find((point) => point.id === selectedId);
+  // A point that is not in the current view is not selected, so its menu and check-in button do not linger
+  const visibleIds = new Set(result.data.paths.flatMap((path) => path.points.map((point) => point.id)));
+  const selected = state.points.find((point) => point.id === selectedId && visibleIds.has(point.id));
   const selectedPath = state.paths.find((path) => path.id === selected?.pathId);
   const offeredLevels = VIEW_LEVELS.filter((option) => levels.includes(option.level));
 
@@ -195,7 +201,7 @@ export function App() {
             playing={playing}
             onDayChange={(day) => setTravel({ view, day, playing: false })}
             onPlayingChange={(next) =>
-              setTravel({ view, day: travelDay === null ? range.start : travelDay, playing: next })
+              setTravel({ view, day: playbackStartDay(travelDay, range.start, range.end), playing: next })
             }
             onReset={travelDay === null ? undefined : () => setTravel(null)}
           />

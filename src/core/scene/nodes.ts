@@ -12,7 +12,7 @@ const OPEN_DASH: Dash = [4, 3];
 const ABANDONED_DASH: Dash = [1.5, 3];
 const ABANDONED_SHAPE_ALPHA = 0.5;
 const ABANDONED_ALPHA = 0.4;
-/** Outline thickness by the strength tier of the path that arrives at a point. Points not reached yet use the first. */
+// Outline thickness by the strength tier of the path that arrives at a point. Points not reached yet use the first.
 const OUTLINE_BY_TIER = [2.5, 3.5, 4.5, 6, 8];
 const DRAG_SCALE = 1.15;
 const HOVER_SCALE = 1.12;

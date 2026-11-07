@@ -1,5 +1,6 @@
 type ColorFieldProps = { label: string; value: string; onChange: (color: string) => void };
 
+/** A labelled color input. */
 export function ColorField({ label, value, onChange }: ColorFieldProps) {
   return (
     <label className="pw-field">
@@ -18,6 +19,7 @@ type RangeFieldProps = {
   onChange: (value: number) => void;
 };
 
+/** A labelled slider for a number. */
 export function RangeField({ label, value, min, max, step, onChange }: RangeFieldProps) {
   return (
     <label className="pw-field">

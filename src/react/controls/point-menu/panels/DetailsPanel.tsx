@@ -9,6 +9,7 @@ type Props = {
   onUpdate: (patch: PointPatch) => void;
 };
 
+/** Panel for date, importance and note of a point. */
 export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
   const [min, max] = importanceRange;
   // The note is sent when the field loses focus, not on every key, so the app is not asked to relayout while typing

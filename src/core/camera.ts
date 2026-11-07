@@ -7,9 +7,9 @@ export type Bounds = { minX: number; minY: number; maxX: number; maxY: number };
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 3;
 
-/** Fitting fills this share of the viewport, so the content keeps a frame around it. */
+// Fitting fills this share of the viewport, so the content keeps a frame around it.
 const FIT_FILL = 0.6;
-/** A lone point or a tiny group is not blown up beyond this zoom when fitting. */
+// A lone point or a tiny group is not blown up beyond this zoom when fitting.
 const MAX_FIT_ZOOM = 1.25;
 
 /** Keeps a zoom factor inside the allowed range. */
@@ -17,6 +17,7 @@ export function clampZoom(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 }
 
+/** The world position under a screen position. */
 export function screenToWorld(camera: Camera, screenX: number, screenY: number): Position {
   return { x: (screenX - camera.x) / camera.zoom, y: (screenY - camera.y) / camera.zoom };
 }

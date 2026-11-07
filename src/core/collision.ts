@@ -35,7 +35,7 @@ export function layoutOf(points: PlacedPoint[]): Layout {
   };
 }
 
-/** Bodies by id. Kept per layout and rebuilt only when a body was added, so a search does not rebuild it for every spot. */
+// Bodies by id. Kept per layout and rebuilt only when a body was added, so a search does not rebuild it for every spot.
 const indexes = new WeakMap<Layout, { size: number; byId: Map<string, Body> }>();
 
 function indexOf(layout: Layout): Map<string, Body> {

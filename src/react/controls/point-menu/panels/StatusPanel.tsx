@@ -14,6 +14,7 @@ type Props = {
   onUpdate: (patch: PointPatch) => void;
 };
 
+/** Panel to complete, reopen or abandon a point. */
 export function StatusPanel({ status, canComplete, onUpdate }: Props) {
   return (
     <>

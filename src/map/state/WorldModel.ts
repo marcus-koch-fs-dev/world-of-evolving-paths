@@ -1,13 +1,26 @@
-import { layoutPeriod, type PeriodLayout, placeWorld } from '../../core/layout';
+import { layoutPeriod, layoutSignature, type PeriodLayout, placeWorld, reuseLayout } from '../../core/layout';
 import type { PeriodData, PeriodMap, PlacedWorld, Position } from '../../core/types';
 import { validatePeriodData } from '../../core/validate';
 
 type Config = { periods: PeriodMap; view: string; seed: number; today: string };
 
+type Changes = {
+  /** Anything changed: data, view, seed or today. */
+  changed: boolean;
+  viewChanged: boolean;
+  /** The app passed new data. */
+  dataChanged: boolean;
+  /** The points have to be laid out again. */
+  layoutChanged: boolean;
+};
+
+const NOTHING: Changes = { changed: false, viewChanged: false, dataChanged: false, layoutChanged: false };
+
 /**
- * The world to draw, derived from the options. The layout is recomputed only when the period object, the view or
- * the seed changed. A new `today` alone reuses it, so moving through time is cheap.
- * Positions set while dragging live in `overrides` until the app passes a new period object.
+ * The world to draw, derived from the options. The points are laid out again only when something the layout depends
+ * on changed (see `layoutSignature`), the view or the seed. New titles, statuses or strengths, or a new `today`,
+ * reuse the layout, so moving through time is cheap even when the app builds new objects for every step.
+ * Positions set while dragging live in `overrides` until the app passes new data.
  */
 export class WorldModel {
   private rawData: PeriodData | undefined;
@@ -15,6 +28,7 @@ export class WorldModel {
   private view: string | null = null;
   private seed = Number.NaN;
   private today = '';
+  private signature = '';
   private layout: PeriodLayout | null = null;
   private base: PlacedWorld | null = null;
   private composed: PlacedWorld | null = null;
@@ -22,30 +36,28 @@ export class WorldModel {
 
   constructor(private readonly onError: (errors: string[]) => void) {}
 
-  /** Applies the options. Returns what changed: anything, a new view, or the layout of the points. */
-  configure({ periods, view, seed, today }: Config): {
-    changed: boolean;
-    viewChanged: boolean;
-    layoutChanged: boolean;
-  } {
+  /** Applies the options and says what changed. */
+  configure({ periods, view, seed, today }: Config): Changes {
     const raw = periods[view];
     const dataChanged = raw !== this.rawData;
     const viewChanged = view !== this.view;
-    const layoutChanged = dataChanged || viewChanged || seed !== this.seed;
-    if (!layoutChanged && today === this.today) return { changed: false, viewChanged: false, layoutChanged: false };
+    const seedChanged = seed !== this.seed;
+    if (!dataChanged && !viewChanged && !seedChanged && today === this.today) return NOTHING;
 
+    if (dataChanged) this.validate(raw);
+    if (dataChanged || viewChanged || seedChanged) this.overrides.clear();
+    const signature = this.data ? layoutSignature(this.data) : '';
+    const layoutChanged = viewChanged || seedChanged || signature !== this.signature;
+    this.rawData = raw;
+    this.view = view;
+    this.seed = seed;
     this.today = today;
-    if (layoutChanged) {
-      if (dataChanged) this.validate(raw);
-      this.overrides.clear();
-      this.rawData = raw;
-      this.view = view;
-      this.seed = seed;
-      this.layout = this.data ? layoutPeriod(this.data, view, seed) : null;
-    }
+    this.signature = signature;
+    if (layoutChanged) this.layout = this.data ? layoutPeriod(this.data, view, seed) : null;
+    else if (dataChanged && this.data && this.layout) this.layout = reuseLayout(this.data, this.layout);
     this.base = this.layout ? placeWorld(this.layout, today) : null;
     this.composed = null;
-    return { changed: true, viewChanged, layoutChanged };
+    return { changed: true, viewChanged, dataChanged, layoutChanged };
   }
   /** The valid data of the current view, or null. */
   periodData(): PeriodData | null {

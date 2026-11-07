@@ -11,7 +11,7 @@ export {
   toDay,
   todayLocal,
 } from './dates';
-export { formatMonthYearLong, formatNumericDate, weekPrefix } from './format';
+export { formatMonthYearLong, formatNumericDate, isValidLocale, weekPrefix } from './format';
 export { PATH_PALETTE } from './scene/paths';
 export type { StrengthRule, Tier } from './strength';
 export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength';

@@ -130,4 +130,15 @@ describe('Point dragger', () => {
       expect(onMoved.mock.calls[0][0]).toBe('c2');
     });
   });
+
+  describe('when the point is not in the view any more', () => {
+    it('ignores the release', () => {
+      const { dragger, onMoved } = setup();
+      dragger.start('c2');
+
+      dragger.end('gone');
+
+      expect(onMoved).not.toHaveBeenCalled();
+    });
+  });
 });

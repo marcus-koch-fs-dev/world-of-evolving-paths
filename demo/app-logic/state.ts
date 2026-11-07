@@ -26,6 +26,7 @@ export type DemoAction =
 
 export const DEFAULT_SEED = 1;
 
+/** The state the demo starts with. */
 export function initialState(paths: PathInfo[], points: DemoPoint[], checkIns: CheckIn[] = []): DemoState {
   return { paths, points, checkIns, pins: {}, seeds: {}, nextId: 1 };
 }

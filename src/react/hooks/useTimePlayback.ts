@@ -17,6 +17,12 @@ type Options = {
   stepDays?: number;
 };
 
+/** One step of playback: the next day, never past the end, and whether the end is reached. */
+export function stepPlayback(day: number, end: number, stepDays: number): { day: number; finished: boolean } {
+  const next = Math.min(end, day + stepDays);
+  return { day: next, finished: next >= end };
+}
+
 /** Moves the day forward while `playing` is true, one step per interval, and stops at `end`. */
 export function useTimePlayback({
   playing,
@@ -34,9 +40,9 @@ export function useTimePlayback({
     if (!playing) return;
     const timer = setInterval(() => {
       const { day: current, end: last, onDayChange: change, onEnd: finish, stepDays: step } = latest.current;
-      const next = Math.min(last, current + step);
-      change(next);
-      if (next >= last) finish();
+      const next = stepPlayback(current, last, step);
+      change(next.day);
+      if (next.finished) finish();
     }, intervalMs);
     return () => clearInterval(timer);
   }, [playing, intervalMs]);
