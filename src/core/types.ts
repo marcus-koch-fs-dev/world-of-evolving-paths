@@ -5,7 +5,6 @@ export type Position = { x: number; y: number };
 
 export type PathPoint = {
   id: string;
-  pathId: string;
   /** ISO date, `YYYY-MM-DD`. */
   date: string;
   title: string;
@@ -13,7 +12,7 @@ export type PathPoint = {
   status: PointStatus;
   /** Ids of the points this point leads to. Two or more make it a fork. */
   next: string[];
-  /** 1 (default) to 5. Bigger points keep more distance. */
+  /** 1 (default) to 5. Bigger points are drawn larger and keep more distance. */
   importance?: number;
   note?: string;
   /** Strength tier of the segment leading to this point, 0 to 4. See `TIERS`. */
@@ -23,28 +22,31 @@ export type PathPoint = {
   y?: number;
 };
 
-export type Path = {
+/** How a path looks, without its points. */
+export type PathInfo = {
   id: string;
   name: string;
-  /** `#rrggbb` */
+  /** `#rrggbb`. A path keeps one color. */
   color: string;
   /** Paths are stacked by `lane`, lowest first. Defaults to the order in the list. */
   lane?: number;
 };
 
-/** Everything the library needs to draw one period (one view). */
-export type PeriodData = {
-  paths: Path[];
-  points: PathPoint[];
-};
+export type Path = PathInfo & { points: PathPoint[] };
+
+/** Everything the library needs to draw one period (one view): its paths, each with its points. */
+export type PeriodData = { paths: Path[] };
 
 /** Period key → period data. The key is made by `periodOf(...).key`. */
 export type PeriodMap = Record<string, PeriodData>;
 
-export type PlacedPoint = Omit<PathPoint, 'x' | 'y'> & Position;
+/** A point together with the path it belongs to, as the layout and the scene work with it. */
+export type FlatPoint = PathPoint & { pathId: string };
+
+export type PlacedPoint = Omit<FlatPoint, 'x' | 'y'> & Position;
 
 export type PlacedWorld = {
   today: string;
-  paths: Path[];
+  paths: PathInfo[];
   points: PlacedPoint[];
 };

@@ -1,13 +1,14 @@
-import type { Period } from './calendar';
+﻿import type { Period } from './calendar';
 import { periodFromKey } from './calendar';
 import { type Layout, nearestFree } from './collision';
 import { fromDay, toDay } from './dates';
+import { flattenPeriod } from './flatten';
 import { pick } from './random';
-import type { Path, PathPoint, PeriodData, PlacedPoint, PlacedWorld, Position } from './types';
+import type { FlatPoint, PathInfo, PeriodData, PlacedPoint, PlacedWorld, Position } from './types';
 
 export type LayoutInput = {
-  paths: Path[];
-  points: PathPoint[];
+  paths: PathInfo[];
+  points: FlatPoint[];
   /** The calendar span the points are spread over. Without it the span of the points themselves is used. */
   period: Period | null;
   seed: number;
@@ -26,15 +27,15 @@ const DRIFT_DIVISOR = 600;
 const START_SCATTER = 60;
 
 /** Does a point extend its path or push it sideways? The one place for this rule. */
-export function spreadOf(point: Pick<PathPoint, 'kind' | 'next'>): 'extend' | 'widen' {
+export function spreadOf(point: Pick<FlatPoint, 'kind' | 'next'>): 'extend' | 'widen' {
   return point.kind === 'crossroad' || point.next.length >= 2 ? 'widen' : 'extend';
 }
 
-function hasPin(point: PathPoint): point is PathPoint & Position {
+function hasPin(point: FlatPoint): point is FlatPoint & Position {
   return point.x !== undefined && point.y !== undefined;
 }
 
-function compareByDate(a: PathPoint, b: PathPoint): number {
+function compareByDate(a: FlatPoint, b: FlatPoint): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   return a.id < b.id ? -1 : 1;
 }
@@ -48,7 +49,7 @@ function spanOf(input: LayoutInput): { start: number; end: number } {
 }
 
 /** Width of a tile: grows with the busiest path. */
-export function tileWidth(points: PathPoint[]): number {
+export function tileWidth(points: FlatPoint[]): number {
   const perPath = new Map<string, number>();
   for (const point of points) perPath.set(point.pathId, (perPath.get(point.pathId) ?? 0) + 1);
   return Math.max(MIN_WIDTH, Math.max(0, ...perPath.values()) * SPACING);
@@ -94,7 +95,7 @@ export function generateLayout(input: LayoutInput): LayoutResult {
 
   const positions: Record<string, Position> = {};
   const layout: Layout = { bodies: [], links: [] };
-  const place = (point: PathPoint, at: Position) => {
+  const place = (point: FlatPoint, at: Position) => {
     positions[point.id] = at;
     layout.bodies.push({ id: point.id, x: at.x, y: at.y, kind: point.kind, importance: point.importance });
   };
@@ -145,17 +146,18 @@ export function generateLayout(input: LayoutInput): LayoutResult {
  */
 export function placePeriod(data: PeriodData, view: string, today: string, seed: number): PlacedWorld {
   const period = periodFromKey(view);
-  const { positions } = generateLayout({ paths: data.paths, points: data.points, period, seed });
-  const points: PlacedPoint[] = data.points.map((point) => {
+  const flat = flattenPeriod(data);
+  const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period, seed });
+  const points: PlacedPoint[] = flat.points.map((point) => {
     const { x: _x, y: _y, ...rest } = point;
     return { ...rest, ...positions[point.id], next: point.next.filter((id) => positions[id]) };
   });
-  return { today, paths: data.paths, points };
+  return { today, paths: flat.paths, points };
 }
 
 /** ISO date for a horizontal position in a view, for a point added by clicking there. */
 export function dateAtX(x: number, data: PeriodData, view: string, today: string): string {
   const period = periodFromKey(view);
   if (!period) return today;
-  return fromDay(dayAtX(x, period, tileWidth(data.points)));
+  return fromDay(dayAtX(x, period, tileWidth(flattenPeriod(data).points)));
 }

@@ -1,5 +1,5 @@
-import {
-  type Path,
+﻿import {
+  type PathInfo,
   type PathPoint,
   type Period,
   type PeriodData,
@@ -8,6 +8,7 @@ import {
   toDay,
 } from 'world-of-evolving-paths';
 import { FREE_VIEW_MIN_IMPORTANCE, LEVEL_SETTINGS } from './levels';
+import type { DemoPoint } from './types';
 
 const MIN_IMPORTANCE_OF_ENDS = 3;
 
@@ -32,9 +33,9 @@ export function pagesOf(pathIds: string[], pageSize: number): string[][] {
  * The points of a view: inside the period and important enough. A connection runs across hidden points
  * to the next visible one, and only points the view shows are linked.
  */
-export function visiblePoints(all: PathPoint[], period: Period | null, minImportance: number): PathPoint[] {
+export function visiblePoints(all: DemoPoint[], period: Period | null, minImportance: number): DemoPoint[] {
   const byId = new Map(all.map((point) => [point.id, point]));
-  const isShown = (point: PathPoint) => {
+  const isShown = (point: DemoPoint) => {
     const day = toDay(point.date);
     const inPeriod = period === null || (day >= period.start && day <= period.end);
     return inPeriod && importanceOf(point) >= minImportance;
@@ -60,7 +61,7 @@ export function visiblePoints(all: PathPoint[], period: Period | null, minImport
 }
 
 /** Strength tier of every reached point, counted over all points of its path, also the hidden ones. */
-export function withStrength(visible: PathPoint[], all: PathPoint[]): PathPoint[] {
+export function withStrength(visible: DemoPoint[], all: DemoPoint[]): DemoPoint[] {
   const reachedDays = new Map<string, number[]>();
   for (const point of all) {
     if (point.status !== 'done' && point.status !== 'current') continue;
@@ -74,8 +75,8 @@ export function withStrength(visible: PathPoint[], all: PathPoint[]): PathPoint[
 }
 
 export type ViewRequest = {
-  paths: Path[];
-  points: PathPoint[];
+  paths: PathInfo[];
+  points: DemoPoint[];
   /** The period to show, or null for the free view with everything. */
   period: Period | null;
   page: number;
@@ -99,15 +100,18 @@ export function buildPeriodData({ paths, points, period, page, pins }: ViewReque
   const onPage = new Set(pages[current] ?? []);
   const onPagePoints = shown.filter((point) => onPage.has(point.pathId));
   const ids = new Set(onPagePoints.map((point) => point.id));
-  return {
-    data: {
-      paths: usedPaths.filter((path) => onPage.has(path.id)),
-      points: onPagePoints.map((point) => ({
+  const nest = (path: PathInfo) => ({
+    ...path,
+    points: onPagePoints
+      .filter((point) => point.pathId === path.id)
+      .map(({ pathId: _pathId, ...point }) => ({
         ...point,
         next: point.next.filter((id) => ids.has(id)),
         ...pins[point.id],
       })),
-    },
+  });
+  return {
+    data: { paths: usedPaths.filter((path) => onPage.has(path.id)).map(nest) },
     pages: Math.max(1, pages.length),
     page: current,
   };

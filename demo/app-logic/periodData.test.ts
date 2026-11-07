@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { type PathPoint, periodOf } from 'world-of-evolving-paths';
+﻿import { describe, expect, it } from 'vitest';
+import { periodOf } from 'world-of-evolving-paths';
 import { makePath, makePoint } from '../../tests/fixtures';
 import { buildPeriodData, importanceOf, pagesOf, visiblePoints, withStrength } from './periodData';
+import type { DemoPoint } from './types';
 
 const week = periodOf('week', '2026-11-04');
 
@@ -24,7 +25,7 @@ describe('Period data for the demo', () => {
   });
 
   describe('when choosing the points of a view', () => {
-    const chain: PathPoint[] = [
+    const chain: DemoPoint[] = [
       makePoint({ id: 'a', date: '2026-11-02', importance: 2, next: ['b'] }),
       makePoint({ id: 'b', date: '2026-11-03', importance: 1, next: ['c'] }),
       makePoint({ id: 'c', date: '2026-11-05', importance: 2, next: ['d'] }),
@@ -118,7 +119,10 @@ describe('Period data for the demo', () => {
     it('pins points at the positions the user chose', () => {
       const result = buildPeriodData({ paths, points, period: week, page: 0, pins: { a1: { x: 5, y: 6 } } });
 
-      expect(result.data.points.find((point) => point.id === 'a1')).toMatchObject({ x: 5, y: 6 });
+      expect(result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1')).toMatchObject({
+        x: 5,
+        y: 6,
+      });
     });
   });
 });

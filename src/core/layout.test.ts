@@ -1,16 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import { makePath, makePeriodData, makePoint } from '../../tests/fixtures';
+﻿import { describe, expect, it } from 'vitest';
+import { editPoint, makePath, makePeriodData, makePoint } from '../../tests/fixtures';
 import { periodOf } from './calendar';
 import { collisionRadius } from './collision';
 import { toDay } from './dates';
+import { flattenPeriod } from './flatten';
 import { dateAtX, dayAtX, generateLayout, placePeriod, tileWidth } from './layout';
 
 const week = periodOf('week', '2026-11-04');
 const WEEK_KEY = week.key;
 
 function layoutOf(seed: number) {
-  const data = makePeriodData();
-  return generateLayout({ paths: data.paths, points: data.points, period: week, seed });
+  const flat = flattenPeriod(makePeriodData());
+  return generateLayout({ paths: flat.paths, points: flat.points, period: week, seed });
 }
 
 describe('Layout', () => {
@@ -24,18 +25,17 @@ describe('Layout', () => {
     });
 
     it('places every point', () => {
-      const data = makePeriodData();
+      const flat = flattenPeriod(makePeriodData());
 
       const { positions } = layoutOf(1);
 
-      expect(Object.keys(positions).sort()).toEqual(data.points.map((point) => point.id).sort());
+      expect(Object.keys(positions).sort()).toEqual(flat.points.map((point) => point.id).sort());
     });
 
     it('keeps radius plus radius between all points', () => {
-      const data = makePeriodData();
       const { positions } = layoutOf(1);
 
-      const ids = data.points.map((point) => point.id);
+      const ids = flattenPeriod(makePeriodData()).points.map((point) => point.id);
       for (const a of ids) {
         for (const b of ids.filter((id) => id > a)) {
           const distance = Math.hypot(positions[a].x - positions[b].x, positions[a].y - positions[b].y);
@@ -63,10 +63,9 @@ describe('Layout', () => {
 
   describe('when a point is pinned', () => {
     it('stays exactly where it is', () => {
-      const data = makePeriodData();
-      data.points[1] = { ...data.points[1], x: 1234, y: -567 };
+      const flat = flattenPeriod(editPoint(makePeriodData(), 'c2', { x: 1234, y: -567 }));
 
-      const { positions } = generateLayout({ paths: data.paths, points: data.points, period: week, seed: 1 });
+      const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period: week, seed: 1 });
 
       expect(positions.c2).toEqual({ x: 1234, y: -567 });
     });
@@ -100,8 +99,7 @@ describe('Layout', () => {
 
   describe('when placing a period', () => {
     it('drops links to points that do not exist', () => {
-      const data = makePeriodData();
-      data.points[2] = { ...data.points[2], next: ['ghost'] };
+      const data = editPoint(makePeriodData(), 'c3', { next: ['ghost'] });
 
       const world = placePeriod(data, WEEK_KEY, '2026-11-07', 1);
 

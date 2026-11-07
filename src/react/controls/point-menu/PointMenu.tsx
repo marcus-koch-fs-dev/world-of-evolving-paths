@@ -1,6 +1,6 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PATH_PALETTE, type Path, type PathPoint } from '../../../core';
+import { PATH_PALETTE, type PathInfo, type PathPoint } from '../../../core';
 import { useWorldVersion } from '../../hooks/useWorldVersion';
 import { usePathWorldHandle } from '../../PathWorldContext';
 import { ColorPanel } from './panels/ColorPanel';
@@ -20,7 +20,7 @@ const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
 export type PointMenuProps = {
   point: PathPoint;
   /** The path the point belongs to. Its color is shown on the color tile. */
-  path: Path;
+  path: PathInfo;
   onUpdate: (patch: PointPatch) => void;
   /** Called to add a point after this one. Return an error message to show, or null when it worked. */
   onAddNext: (input: NextPointInput) => string | null;

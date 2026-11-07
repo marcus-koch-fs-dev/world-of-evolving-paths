@@ -15,24 +15,12 @@ type UnknownRecord = Record<string, unknown>;
 const isRecord = (value: unknown): value is UnknownRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value !== '';
 
-function pathErrors(path: unknown, index: number): string[] {
-  const where = `paths[${index}]`;
-  if (!isRecord(path)) return [`${where} must be an object.`];
-  const errors: string[] = [];
-  if (typeof path.id !== 'string' || path.id === '') errors.push(`${where}.id must be a non-empty string.`);
-  if (typeof path.name !== 'string') errors.push(`${where}.name must be a string.`);
-  if (typeof path.color !== 'string' || !COLOR.test(path.color)) errors.push(`${where}.color must look like #rrggbb.`);
-  if (path.lane !== undefined && !isFiniteNumber(path.lane)) errors.push(`${where}.lane must be a number.`);
-  return errors;
-}
-
-function pointErrors(point: unknown, index: number): string[] {
-  const where = `points[${index}]`;
+function pointErrors(point: unknown, where: string): string[] {
   if (!isRecord(point)) return [`${where} must be an object.`];
   const errors: string[] = [];
-  if (typeof point.id !== 'string' || point.id === '') errors.push(`${where}.id must be a non-empty string.`);
-  if (typeof point.pathId !== 'string') errors.push(`${where}.pathId must be a string.`);
+  if (!isNonEmptyString(point.id)) errors.push(`${where}.id must be a non-empty string.`);
   if (typeof point.title !== 'string') errors.push(`${where}.title must be a string.`);
   if (typeof point.date !== 'string' || !isIsoDate(point.date))
     errors.push(`${where}.date must be a valid YYYY-MM-DD date.`);
@@ -50,9 +38,9 @@ function pointErrors(point: unknown, index: number): string[] {
   }
   if (
     point.strength !== undefined &&
-    !(isFiniteNumber(point.strength) && point.strength >= 0 && point.strength <= MAX_STRENGTH)
+    !(Number.isInteger(point.strength) && (point.strength as number) >= 0 && (point.strength as number) <= MAX_STRENGTH)
   ) {
-    errors.push(`${where}.strength must be a number from 0 to ${MAX_STRENGTH}.`);
+    errors.push(`${where}.strength must be a whole number from 0 to ${MAX_STRENGTH}.`);
   }
   if ((point.x === undefined) !== (point.y === undefined)) errors.push(`${where} needs both x and y, or neither.`);
   if (point.x !== undefined && !(isFiniteNumber(point.x) && isFiniteNumber(point.y)))
@@ -60,26 +48,39 @@ function pointErrors(point: unknown, index: number): string[] {
   return errors;
 }
 
-function referenceErrors(data: PeriodData): string[] {
+function pathErrors(path: unknown, index: number): string[] {
+  const where = `paths[${index}]`;
+  if (!isRecord(path)) return [`${where} must be an object.`];
   const errors: string[] = [];
-  const pathIds = new Set(data.paths.map((path) => path.id));
-  const pointIds = new Set<string>();
-  for (const point of data.points) {
-    if (pointIds.has(point.id)) errors.push(`Point id "${point.id}" is used twice.`);
-    pointIds.add(point.id);
-    if (!pathIds.has(point.pathId)) errors.push(`Point "${point.id}" refers to unknown path "${point.pathId}".`);
-  }
-  const duplicatePaths = data.paths.length - pathIds.size;
-  if (duplicatePaths > 0) errors.push('Path ids must be unique.');
-  return errors;
+  if (!isNonEmptyString(path.id)) errors.push(`${where}.id must be a non-empty string.`);
+  if (typeof path.name !== 'string') errors.push(`${where}.name must be a string.`);
+  if (typeof path.color !== 'string' || !COLOR.test(path.color)) errors.push(`${where}.color must look like #rrggbb.`);
+  if (path.lane !== undefined && !isFiniteNumber(path.lane)) errors.push(`${where}.lane must be a number.`);
+  if (!Array.isArray(path.points)) return [...errors, `${where}.points must be a list.`];
+  return [...errors, ...path.points.flatMap((point, i) => pointErrors(point, `${where}.points[${i}]`))];
+}
+
+function duplicates(ids: string[]): string[] {
+  const seen = new Set<string>();
+  const repeated = new Set<string>();
+  for (const id of ids) (seen.has(id) ? repeated : seen).add(id);
+  return [...repeated];
+}
+
+function referenceErrors(data: PeriodData): string[] {
+  const pathIds = data.paths.map((path) => path.id);
+  const pointIds = data.paths.flatMap((path) => path.points.map((point) => point.id));
+  return [
+    ...duplicates(pathIds).map((id) => `Path id "${id}" is used twice.`),
+    ...duplicates(pointIds).map((id) => `Point id "${id}" is used twice.`),
+  ];
 }
 
 /** Checks the data an app passes in. Collects every problem, with a message that says where it is. */
 export function validatePeriodData(input: unknown): Validation {
-  if (!isRecord(input)) return { ok: false, errors: ['Period data must be an object with `paths` and `points`.'] };
+  if (!isRecord(input)) return { ok: false, errors: ['Period data must be an object with `paths`.'] };
   if (!Array.isArray(input.paths)) return { ok: false, errors: ['`paths` must be a list.'] };
-  if (!Array.isArray(input.points)) return { ok: false, errors: ['`points` must be a list.'] };
-  const errors = [...input.paths.flatMap(pathErrors), ...input.points.flatMap(pointErrors)];
+  const errors = input.paths.flatMap(pathErrors);
   if (errors.length > 0) return { ok: false, errors };
   const data = input as unknown as PeriodData;
   const references = referenceErrors(data);

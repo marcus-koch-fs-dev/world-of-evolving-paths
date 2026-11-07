@@ -16,6 +16,7 @@ export type { Tier } from './strength';
 export { STRENGTH_WEEKS, TIERS, tierAt, tierOf, weeklyRate } from './strength';
 export type {
   Path,
+  PathInfo,
   PathPoint,
   PeriodData,
   PeriodMap,

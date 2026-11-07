@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { makePeriodData } from '../../tests/fixtures';
+﻿import { describe, expect, it } from 'vitest';
+import { editPoint, makePeriodData } from '../../tests/fixtures';
 import { validatePeriodData } from './validate';
 
 function errorsFor(input: unknown): string[] {
@@ -19,29 +19,28 @@ describe('Period data validation', () => {
       expect(errorsFor('nope')[0]).toContain('must be an object');
     });
 
-    it('rejects missing points', () => {
-      expect(errorsFor({ paths: [] })[0]).toContain('`points` must be a list');
+    it('rejects a path without points', () => {
+      const path = { id: 'a', name: 'a', color: '#ffffff' };
+
+      expect(errorsFor({ paths: [path] })[0]).toContain('points must be a list');
     });
   });
 
   describe('when a point is wrong', () => {
     it('names the point and the date problem', () => {
-      const data = makePeriodData();
-      data.points[0] = { ...data.points[0], date: '2026-02-30' };
+      const data = editPoint(makePeriodData(), 'c1', { date: '2026-02-30' });
 
-      expect(errorsFor(data)).toContain('points[0].date must be a valid YYYY-MM-DD date.');
+      expect(errorsFor(data)).toContain('paths[0].points[0].date must be a valid YYYY-MM-DD date.');
     });
 
     it('rejects an importance outside 1 to 5', () => {
-      const data = makePeriodData();
-      data.points[0] = { ...data.points[0], importance: 9 };
+      const data = editPoint(makePeriodData(), 'c1', { importance: 9 });
 
       expect(errorsFor(data)[0]).toContain('importance');
     });
 
     it('rejects a pin with only one coordinate', () => {
-      const data = makePeriodData();
-      data.points[0] = { ...data.points[0], x: 10 };
+      const data = editPoint(makePeriodData(), 'c1', { x: 10 });
 
       expect(errorsFor(data)[0]).toContain('both x and y');
     });
@@ -49,17 +48,22 @@ describe('Period data validation', () => {
 
   describe('when ids do not fit together', () => {
     it('rejects a duplicate point id', () => {
-      const data = makePeriodData();
-      data.points[1] = { ...data.points[1], id: data.points[0].id };
+      const data = editPoint(makePeriodData(), 'c2', { id: 'c1' });
 
       expect(errorsFor(data)[0]).toContain('used twice');
     });
 
-    it('rejects a point on an unknown path', () => {
+    it('rejects a duplicate path id', () => {
       const data = makePeriodData();
-      data.points[0] = { ...data.points[0], pathId: 'nowhere' };
+      const twice = { paths: [...data.paths, { ...data.paths[0] }] };
 
-      expect(errorsFor(data)[0]).toContain('unknown path "nowhere"');
+      expect(errorsFor(twice).some((error) => error.includes('Path id'))).toBe(true);
+    });
+
+    it('rejects a strength that is not a whole number', () => {
+      const data = editPoint(makePeriodData(), 'c1', { strength: 2.5 });
+
+      expect(errorsFor(data)[0]).toContain('whole number');
     });
   });
 });

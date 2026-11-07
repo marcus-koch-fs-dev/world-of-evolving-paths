@@ -1,4 +1,5 @@
-﻿import { fromDay, type Path, type PathPoint, toDay } from 'world-of-evolving-paths';
+﻿import { fromDay, type PathInfo, type PathPoint, toDay } from 'world-of-evolving-paths';
+import type { DemoPoint } from '../app-logic/types';
 
 type Step = {
   id: string;
@@ -12,7 +13,7 @@ type Step = {
   alsoLeadsTo?: string[];
 };
 
-export const SKILL_PATHS: Path[] = [
+export const SKILL_PATHS: PathInfo[] = [
   { id: 'combat', name: 'Combat', color: '#ff3b3b', lane: 0 },
   { id: 'magic', name: 'Magic', color: '#3a86ff', lane: 1 },
   { id: 'crafting', name: 'Crafting', color: '#7ed957', lane: 2 },
@@ -90,7 +91,7 @@ function practiceSteps(prefix: string, label: string, every: number, count: numb
   }));
 }
 
-function toPoints(pathId: string, steps: Step[], today: number, chain = true): PathPoint[] {
+function toPoints(pathId: string, steps: Step[], today: number, chain = true): DemoPoint[] {
   const firstUpcoming = steps.findIndex((step) => step.offset >= 0);
   return steps.map((step, index) => {
     const next = chain && index < steps.length - 1 ? [steps[index + 1].id] : [];
@@ -118,7 +119,7 @@ function withSteps(chain: Step[], extra: Step[]): Step[] {
  * paths, and points that know which points they lead to.
  * Combat is practiced every day lately, so its path grows to a highway.
  */
-export function createSkillTree(todayIso: string): { paths: Path[]; points: PathPoint[] } {
+export function createSkillTree(todayIso: string): { paths: PathInfo[]; points: DemoPoint[] } {
   const today = toDay(todayIso);
   const points = [
     ...toPoints('combat', withSteps(COMBAT, practiceSteps('combat', 'Sparring', 1, 22)), today),

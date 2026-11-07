@@ -1,4 +1,4 @@
-# World of Evolving Paths
+﻿# World of Evolving Paths
 
 Paths with dates that grow stronger the more you walk them. A pannable, zoomable canvas for milestones, branches and goals, drawn with PixiJS. Think skill tree meets milestone calendar: the paths are not fixed, they evolve.
 
@@ -31,7 +31,15 @@ const periods: PeriodMap = {
   [period.key]: {
     paths: [{ id: 'combat', name: 'Combat', color: '#ff3b3b' }],
     points: [
-      { id: 'a', pathId: 'combat', date: '2026-11-02', title: 'Sword basics', kind: 'start', status: 'done', next: ['b'] },
+      {
+        id: 'a',
+        pathId: 'combat',
+        date: '2026-11-02',
+        title: 'Sword basics',
+        kind: 'start',
+        status: 'done',
+        next: ['b'],
+      },
       { id: 'b', pathId: 'combat', date: '2026-11-05', title: 'Parry', kind: 'milestone', status: 'current', next: [] },
     ],
   },
@@ -79,30 +87,30 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 **`PathPoint`** is one point on a path.
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `id` | `string` | Unique within the view. |
-| `pathId` | `string` | The path the point belongs to. |
-| `date` | `string` | ISO date `YYYY-MM-DD`. Decides the rough horizontal position. |
-| `title` | `string` | Shown under the point. |
-| `kind` | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when two or more points follow), otherwise ●. |
-| `status` | `'done' \| 'current' \| 'open' \| 'abandoned'` | Looks and animation. |
-| `next` | `string[]` | Ids of the points this one leads to. Draws the connections. |
-| `importance` | `number` (1–5, optional) | Bigger points keep more distance. |
-| `note` | `string` (optional) | Free text for your app. |
-| `strength` | `number` (0–4, optional) | Tier of the connection leading to this point. See [Path strength](#path-strength). |
-| `x`, `y` | `number` (optional) | Pins the point. Set both or neither. |
+| Field        | Type                                              | Meaning                                                                            |
+| ------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `id`         | `string`                                          | Unique within the view.                                                            |
+| `pathId`     | `string`                                          | The path the point belongs to.                                                     |
+| `date`       | `string`                                          | ISO date `YYYY-MM-DD`. Decides the rough horizontal position.                      |
+| `title`      | `string`                                          | Shown under the point.                                                             |
+| `kind`       | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when two or more points follow), otherwise ●.        |
+| `status`     | `'done' \| 'current' \| 'open' \| 'abandoned'`    | Looks and animation.                                                               |
+| `next`       | `string[]`                                        | Ids of the points this one leads to. Draws the connections.                        |
+| `importance` | `number` (1–5, optional)                          | Bigger points keep more distance.                                                  |
+| `note`       | `string` (optional)                               | Free text for your app.                                                            |
+| `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Path strength](#path-strength). |
+| `x`, `y`     | `number` (optional)                               | Pins the point. Set both or neither.                                               |
 
-**`Path`** is one graph: `{ id, name, color, lane? }`. `color` is `#rrggbb`. Paths are stacked by `lane` (lowest first), otherwise in list order.
+**`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are stacked by `lane` (lowest first), otherwise in list order.
 
-**`PeriodData`** is everything one view needs: `{ paths: Path[], points: PathPoint[] }`.
+**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge.
 
 **`PeriodMap`** is a hashmap from period key to `PeriodData`. Typically it holds only the view you show, and you load the next one when the user changes the view.
 
 ```ts
 const periods: PeriodMap = {
-  'week:2026-11-02': { paths, points },   // the points of that week
-  'month:2026-11-01': { paths, points },  // other points: only the more important ones
+  'week:2026-11-02': { paths, points }, // the points of that week
+  'month:2026-11-01': { paths, points }, // other points: only the more important ones
 };
 ```
 
@@ -115,11 +123,11 @@ A view is a period of a level: `day`, `week`, `month`, `halfYear` or `year`. Its
 ```ts
 import { periodOf, shiftPeriod, periodFromKey } from 'world-of-evolving-paths';
 
-const week = periodOf('week', '2026-11-04');        // key 'week:2026-11-02', label 'CW 45, 2 Nov – 8 Nov 2026'
+const week = periodOf('week', '2026-11-04'); // key 'week:2026-11-02', label 'CW 45, 2 Nov – 8 Nov 2026'
 const nextWeek = shiftPeriod(week, 1);
-const sameWeek = periodFromKey('week:2026-11-02');   // back from a key
+const sameWeek = periodFromKey('week:2026-11-02'); // back from a key
 
-periodOf('week', '2026-11-04', { weekStart: 4 });    // weeks that start on a Friday (0 = Monday ... 6 = Sunday)
+periodOf('week', '2026-11-04', { weekStart: 4 }); // weeks that start on a Friday (0 = Monday ... 6 = Sunday)
 ```
 
 The key decides the calendar span the points are spread over. Any other key (for example `'free'`) is a free view: the points are spread over the span of their own dates.
@@ -142,28 +150,28 @@ You give points without positions and the library lays them out:
 
 All events are options of `PathWorld` and `createPathWorld`.
 
-| Callback | When |
-| --- | --- |
-| `onSelect(id \| null)` | A point was clicked, or the empty area (`null`). |
-| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position. |
-| `onPointAdd({ x, y, date })` | The empty area was double-clicked. `date` is derived from the horizontal position. |
-| `onError(errors)` | The data of the current view is invalid. |
+| Callback                               | When                                                                               |
+| -------------------------------------- | ---------------------------------------------------------------------------------- |
+| `onSelect(id \| null)`                 | A point was clicked, or the empty area (`null`).                                   |
+| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                |
+| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. `date` is derived from the horizontal position. |
+| `onError(errors)`                      | The data of the current view is invalid.                                           |
 
 Update your data in these callbacks and pass the new objects back in. Until you do, the map shows the old state again (a dragged point returns).
 
 ### Options
 
-| Option | Default | Meaning |
-| --- | --- | --- |
-| `periods` | — | The `PeriodMap`. |
-| `view` | — | Key of the period to show. |
-| `today` | local date | Today as `YYYY-MM-DD`. Marks "today" on every path. |
-| `seed` | `1` | Changes the generated layout. |
-| `editable` | `true` | Allow moving and adding points. |
-| `dotsLocked` | `false` | Points cannot be dragged. |
-| `wavy` | `false` | A slight wave on the lines. |
-| `background` | black | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }` |
-| `shortcuts` | `true` | Keys `M` (center) and `E` (fit). |
+| Option       | Default    | Meaning                                                                                                                             |
+| ------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `periods`    | —          | The `PeriodMap`.                                                                                                                    |
+| `view`       | —          | Key of the period to show.                                                                                                          |
+| `today`      | local date | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                 |
+| `seed`       | `1`        | Changes the generated layout.                                                                                                       |
+| `editable`   | `true`     | Allow moving and adding points.                                                                                                     |
+| `dotsLocked` | `false`    | Points cannot be dragged.                                                                                                           |
+| `wavy`       | `false`    | A slight wave on the lines.                                                                                                         |
+| `background` | black      | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }` |
+| `shortcuts`  | `true`     | Keys `M` (center) and `E` (fit).                                                                                                    |
 
 ### Camera
 
@@ -181,13 +189,13 @@ const strength = tierAt(reachedDays, toDay(point.date));
 TIERS[strength]; // { name: 'Highway', width: 13, glow: 0.7, ... }
 ```
 
-| Tier | Name | From (reached points per week, 4-week average) | Look |
-| --- | --- | --- | --- |
-| 0 | Desire path | 0 | thin |
-| 1 | Path | 1 | wider |
-| 2 | Road | 2 | wider, soft glow |
-| 3 | Expressway | 3 | wide, glow |
-| 4 | Highway | 5 | widest, strong glow |
+| Tier | Name        | From (reached points per week, 4-week average) | Look                |
+| ---- | ----------- | ---------------------------------------------- | ------------------- |
+| 0    | Desire path | 0                                              | thin                |
+| 1    | Path        | 1                                              | wider               |
+| 2    | Road        | 2                                              | wider, soft glow    |
+| 3    | Expressway  | 3                                              | wide, glow          |
+| 4    | Highway     | 5                                              | widest, strong glow |
 
 Open (future) connections stay thin and dotted.
 
@@ -195,11 +203,11 @@ Open (future) connections stay thin and dotted.
 
 Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
-| Control | Folder | What it does |
-| --- | --- | --- |
-| `ZoomControls` | `zoom-controls/` | Zoom out, zoom in, center, fit. Place it inside `PathWorld`. |
-| `ViewBar` | `view-bar/` | Level buttons, previous/next period, today, pages, reroll. Holds no state. |
-| `PointMenu` | `point-menu/` | Tile menu at a selected point: status, next point, kind, path color, name, details, delete. Sits on the map and moves with it. |
+| Control        | Folder           | What it does                                                                                                                   |
+| -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `ZoomControls` | `zoom-controls/` | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                   |
+| `ViewBar`      | `view-bar/`      | Level buttons, previous/next period, today, pages, reroll. Holds no state.                                                     |
+| `PointMenu`    | `point-menu/`    | Tile menu at a selected point: status, next point, kind, path color, name, details, delete. Sits on the map and moves with it. |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`. They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
 
@@ -239,15 +247,15 @@ Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/archi
 
 ## Scripts
 
-| Script | What it does |
-| --- | --- |
-| `npm run dev` | Starts the demo. |
-| `npm test` | Runs the tests (Vitest). |
-| `npm run typecheck` | TypeScript, strict. |
-| `npm run lint` | Biome: lint, format check, import order. |
-| `npm run format` | Fixes what Biome can fix. |
-| `npm run build` | Builds the library into `dist/`. |
-| `npm run build:demo` | Builds the demo into `dist-demo/`. |
+| Script               | What it does                             |
+| -------------------- | ---------------------------------------- |
+| `npm run dev`        | Starts the demo.                         |
+| `npm test`           | Runs the tests (Vitest).                 |
+| `npm run typecheck`  | TypeScript, strict.                      |
+| `npm run lint`       | Biome: lint, format check, import order. |
+| `npm run format`     | Fixes what Biome can fix.                |
+| `npm run build`      | Builds the library into `dist/`.         |
+| `npm run build:demo` | Builds the demo into `dist-demo/`.       |
 
 ## Not in this version
 

@@ -1,10 +1,11 @@
-import { isIsoDate, type Path, type PathPoint, type Position } from 'world-of-evolving-paths';
+﻿import { isIsoDate, type PathInfo, type Position } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
+import type { DemoPoint } from './types';
 
 /** What the demo app keeps. The library keeps none of it. */
 export type DemoState = {
-  paths: Path[];
-  points: PathPoint[];
+  paths: PathInfo[];
+  points: DemoPoint[];
   /** Pinned positions per view key, then per point id. */
   pins: Record<string, Record<string, Position>>;
   /** Layout seed per view key. */
@@ -23,7 +24,7 @@ export type DemoAction =
 
 export const DEFAULT_SEED = 1;
 
-export function initialState(paths: Path[], points: PathPoint[]): DemoState {
+export function initialState(paths: PathInfo[], points: DemoPoint[]): DemoState {
   return { paths, points, pins: {}, seeds: {}, nextId: 1 };
 }
 
@@ -36,7 +37,7 @@ export function nextPointProblem(input: NextPointInput): string | null {
 
 function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>): DemoState {
   const id = `custom-${state.nextId}`;
-  const point: PathPoint = {
+  const point: DemoPoint = {
     id,
     pathId: action.pathId,
     date: action.date,
@@ -58,10 +59,10 @@ function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, {
   const from = state.points.find((point) => point.id === fromId);
   if (!from) return state;
   const id = `custom-${state.nextId}`;
-  const newPath: Path | null = input.newPath
+  const newPath: PathInfo | null = input.newPath
     ? { id: `custom-path-${state.nextId}`, name: input.title.trim(), color: input.color, lane: state.paths.length }
     : null;
-  const point: PathPoint = {
+  const point: DemoPoint = {
     id,
     pathId: newPath?.id ?? from.pathId,
     date: input.date,

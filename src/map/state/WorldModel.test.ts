@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { makePeriodData } from '../../../tests/fixtures';
+﻿import { describe, expect, it, vi } from 'vitest';
+import { editPoint, makePeriodData } from '../../../tests/fixtures';
 import { periodOf } from '../../core/calendar';
 import { WorldModel } from './WorldModel';
 
@@ -48,8 +48,7 @@ describe('World model', () => {
     it('reports the errors and shows nothing', () => {
       const onError = vi.fn();
       const model = new WorldModel(onError);
-      const broken = makePeriodData();
-      broken.points[0] = { ...broken.points[0], date: 'yesterday' };
+      const broken = editPoint(makePeriodData(), 'c1', { date: 'yesterday' });
 
       model.configure(config({ [view]: broken }));
 
