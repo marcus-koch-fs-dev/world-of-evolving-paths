@@ -12,7 +12,12 @@ Paths with dates that grow stronger the more you walk them. A pannable, zoomable
 
 ## The demo
 
-The demo in `demo/` (run it with `npm run dev`) uses the controls described below. It shows three habits over a year: reached connections are wide and lit, open ones are dotted, and the Today marker sits where each path stands.
+`demo/` is a complete example app: six everyday topics (training, reading, cooking, a game character, a side project, guitar) over two pages, with check-ins that make the paths stronger. Reached connections are wide and lit, open ones are dotted, and the Today marker sits where each path stands. It has an editor mode (everything on) and a map mode (read only, few controls). It holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions, using only the public API.
+
+```bash
+npm install
+npm run dev     # http://localhost:5173
+```
 
 ![The year view with three paths, a slim bar at the top and the time slider at the bottom](docs/demo-year.jpg)
 
@@ -24,7 +29,7 @@ A selected point gets its own menu with actions (next point, connect, delete) an
 
 ![The menu of a selected point](docs/demo-point-menu.jpg)
 
-Both bars can be dragged to the top or bottom edge, left, middle or right. The map can run left to right, right to left, top to bottom or bottom to top (`orientation`).
+Both bars can be dragged to the top or bottom edge, left, middle or right. The map can run left to right, right to left, top to bottom or bottom to top (`orientation`); the map tiles *Turn left* and *Turn right* turn it a quarter at a time.
 
 ## Install
 
@@ -192,7 +197,9 @@ Update your data in these callbacks and pass the new objects back in. The data i
 
 ### Camera
 
-Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about three quarters of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code. With React, put a `ref` on `<PathWorld>` to get the handle (it is `null` until the map exists).
+Mouse wheel and pinch zoom, drag to pan. When the view changes, the zoom stays and the content is centered. `handle.fit()` fits the content into about 60 % of the viewport, so a frame of empty space stays around it. `handle.center()` and `handle.zoomBy(factor)` do the same from code. With React, put a `ref` on `<PathWorld>` to get the handle (it is `null` until the map exists).
+
+`handle.getDirection()` tells which way time runs right now, also with `orientation: 'auto'`. `rotateDirection(direction, 'left' | 'right')` gives the direction after a quarter turn, so you can build your own turn buttons.
 
 ### Dates and language
 
@@ -243,6 +250,7 @@ Ready-made controls live in `src/react/controls/`, one folder per control with i
 | `SidePanel`       | `side-panel/`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                                     |
 | `BackgroundPanel` | `background-panel/` | Fill (plain or gradient with two colors), pattern, brightness and size. Holds no state.                                                                                                                                                                                                                                                                                                                           |
 | `PointMenu`       | `point-menu/`       | Tile menu at a selected point. Actions: next point, connect (when you pass `onConnect`), delete. `checkInCount` shows the check-ins of the path under the name. Properties: status, kind, name, path color (with slots for your own colors), details. Sits on the map and moves with it. Placed below the point by default, above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
+| `Toast`           | `toast/`            | A short message at the top of the map that slides in and goes away by itself (`durationMs`, default 6 s) or when closed. For hints and problems of your app. Holds no state.                                                                                                                                                                                                                                                                                                      |
 | `TimeSlider`      | `time-slider/`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                         |
 
 Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`, and so does `ControlBar`. The controls do not position themselves, so you decide what goes where: a bar with everything in the editor, only a zoom control on the published map.
@@ -262,25 +270,17 @@ Import `world-of-evolving-paths/style.css` once for the map and the controls. Co
 - Only changed lines and points are redrawn. The map keeps drawing at up to 40 frames per second while something moves on its own (today markers, flowing dashes, the glow). Set `animate: false` to stop that; the map is then only redrawn when something changes. Users who prefer reduced motion get that by default.
 - Keep `background` and other object options stable between renders (define them once). They are compared field by field.
 
-## The demo
-
-`demo/` is a complete example app: six everyday topics (training, reading, cooking, a game character, a side project, guitar) over two pages, with check-ins that make the paths stronger. It has an editor mode (everything on) and a map mode (read only, few controls). It shows what your app does with the library: it holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions. It uses only the public API.
-
-```bash
-npm install
-npm run dev     # http://localhost:5173
-```
-
 ## Project layout
 
 ```
 src/
   core/            Pure logic, no framework, no Pixi, no browser: dates, calendar, layout,
-                   collision, strength tiers, validation, scene model
-  map/             Framework-free map: Pixi renderer, camera, pointer handling, createPathWorld
+                   collision, strength tiers, validation, scene model, background CSS
+  map/             Framework-free map: createPathWorld wires small parts together:
+                   engine/ (orientation, framing, keyboard), interaction/ (pointer, gestures,
+                   dragging), render/ (Pixi layers), state/ (world model), camera/, dom/
   react/           React binding (PathWorld) and controls
-    controls/      One folder per control: zoom-controls, view-bar, control-bar,
-                   background-panel, point-menu
+    controls/      One folder per control (see the table above)
     hooks/         One job per hook
 demo/              The demo app (not published)
 tests/             Cross-cutting tests and fixtures
@@ -302,9 +302,7 @@ Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/archi
 
 ## Not in this version
 
-The first prototype had a few things that are not part of the library yet: a toolbar for undo and redo, panels for paths, rules and JSON, fog of war, and the cascade between week, month and year objects. Undo and the cascade belong in your app by design; the others may come back as controls.
-
-Controls are provided for React only. The map itself works with any framework.
+Undo and redo, and the cascade between week, month and year data, belong in your app by design. Controls are provided for React only; the map itself works with any framework.
 
 ### Good to know
 
