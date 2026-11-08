@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { periodOf, toDay, type ViewLevel, validatePeriodData } from 'world-of-evolving-paths';
-import { buildPeriodData } from '../app-logic/periodData';
+import { LEVEL_SETTINGS } from '../app-logic/levels';
+import { buildPeriodData, importanceOf } from '../app-logic/periodData';
 import { createHabits } from './habits';
 
 const TODAY = '2026-11-08';
@@ -66,16 +67,18 @@ describe('Demo habits', () => {
       expect(view.pages).toBeGreaterThanOrEqual(1);
     });
 
-    it('gives the year three pages with milestones only', () => {
+    it('gives the year three pages with only the milestones', () => {
       const { paths, points, checkIns } = createHabits(TODAY);
+      const minImportance = LEVEL_SETTINGS.year.minImportance;
 
       const year = buildPeriodData({ paths, points, checkIns, period: periodOf('year', TODAY), page: 0, pins: {} });
-      const week = buildPeriodData({ paths, points, checkIns, period: periodOf('week', TODAY), page: 0, pins: {} });
-      const count = (data: typeof year.data) => data.paths.flatMap((path) => path.points).length;
 
+      const shown = year.data.paths.flatMap((path) => path.points);
       expect(year.pages).toBe(3);
-      expect(count(year.data)).toBeGreaterThan(0);
-      expect(count(year.data)).toBeLessThan(count(week.data) + 30);
+      expect(shown.length).toBeGreaterThan(0);
+      shown.forEach((point) => {
+        expect(importanceOf(point)).toBeGreaterThanOrEqual(minImportance);
+      });
     });
   });
 

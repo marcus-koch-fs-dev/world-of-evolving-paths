@@ -29,7 +29,7 @@ jobs:
           cache: npm
       - run: npm ci
       # GitHub Pages serves the site under /<repository>/, so the demo needs that as its base path
-      - run: npm run build:demo -- --base=/world-of-evolving-paths/
+      - run: npm run build:demo -- --base=/${{ github.event.repository.name }}/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist-demo
