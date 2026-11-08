@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fromDay, periodOf, toDay } from 'world-of-evolving-paths';
 import { makePath, makePoint } from '../../tests/fixtures';
+import { LEVEL_SETTINGS } from './levels';
 import { buildPeriodData, importanceOf, pagesOf, visiblePoints, withStatusAsOf, withStrength } from './periodData';
 import type { CheckIn, DemoPoint } from './types';
 
@@ -156,9 +157,10 @@ describe('Period data for the demo', () => {
         pins: {},
       });
 
-      expect(first.pages).toBe(2);
-      expect(first.data.paths).toHaveLength(3);
-      expect(second.data.paths.map((path) => path.id)).toEqual(['d']);
+      const size = LEVEL_SETTINGS.week.graphsPerPage;
+      expect(first.pages).toBe(Math.ceil(4 / size));
+      expect(first.data.paths).toHaveLength(size);
+      expect(second.data.paths.map((path) => path.id)).toEqual(['a', 'b', 'c', 'd'].slice(size, size * 2));
     });
 
     it('keeps the page inside the range', () => {

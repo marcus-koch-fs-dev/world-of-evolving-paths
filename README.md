@@ -2,6 +2,10 @@
 
 Paths with dates that grow stronger the more you walk them. A pannable, zoomable canvas for milestones, branches and goals, drawn with PixiJS. Think skill tree meets milestone calendar: the paths are not fixed, they evolve.
 
+**[Live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/)** · [Open in StackBlitz](https://stackblitz.com/github/marcus-koch-fs-dev/world-of-evolving-paths?view=preview)
+
+![The year view with paths that grow from thin to wide, a slim bar at the top and the time slider at the bottom](docs/demo-year.jpg)
+
 - **A library, not an app.** It stores nothing and prepares no data. Your app hands it objects, it draws them and reports what the user does.
 - **Time-aware views.** Show a day, a week, a month, half a year or a year. Each view gets its own data, so a year view can show only the big milestones.
 - **Paths that evolve.** Reached connections get wider and start to glow the more often a path is walked: from a desire path to a highway.
@@ -9,27 +13,6 @@ Paths with dates that grow stronger the more you walk them. A pannable, zoomable
 - **Framework-free core.** The map works on any element. A React binding and ready-made controls are included.
 
 > Status: early (0.0.x). The API can still change.
-
-## The demo
-
-`demo/` is a complete example app: six everyday topics (training, reading, cooking, a game character, a side project, guitar) over two pages, with check-ins that make the paths stronger. Reached connections are wide and lit, open ones are dotted, and the Today marker sits where each path stands. It has an editor mode (everything on) and a map mode (read only, few controls). It holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions, using only the public API.
-
-```bash
-npm install
-npm run dev     # http://localhost:5173
-```
-
-![The year view with three paths, a slim bar at the top and the time slider at the bottom](docs/demo-year.jpg)
-
-The main bar stays slim: the period with its arrows, today, the page arrows and one button that opens the tile menu. Everything else is one step away. The menu stays open until you close it.
-
-![The tile menu with view, map, layout and mode tiles](docs/demo-menu.jpg)
-
-A selected point gets its own menu with actions (next point, connect, delete) and properties (status, kind, name, path color, details).
-
-![The menu of a selected point](docs/demo-point-menu.jpg)
-
-Both bars can be dragged to the top or bottom edge, left, middle or right. The map can run left to right, right to left, top to bottom or bottom to top (`orientation`); the map tiles _Turn left_ and _Turn right_ turn it a quarter at a time.
 
 ## Install
 
@@ -269,6 +252,17 @@ Import `world-of-evolving-paths/style.css` once for the map and the controls. Co
 - Camera movement and hover never touch React state. Zooming does not re-render your tree.
 - Only changed lines and points are redrawn. The map keeps drawing at up to 40 frames per second while something moves on its own (today markers, flowing dashes, the glow). Set `animate: false` to stop that; the map is then only redrawn when something changes. Users who prefer reduced motion get that by default.
 - Keep `background` and other object options stable between renders (define them once). They are compared field by field.
+
+## The demo
+
+[Try it live](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) or run it yourself. `demo/` is a complete example app: six everyday topics over one year, two paths per page, with check-ins that make the paths stronger. It has an editor mode (everything on) and a map mode (read only, few controls). It holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions, using only the public API.
+
+```bash
+npm install
+npm run dev     # http://localhost:5173
+```
+
+The main bar stays slim: the period with its arrows, today, the page arrows and one button that opens the tile menu. Everything else is one step away, for example zoom, the four directions of time (_Turn left_, _Turn right_) and the settings. A selected point gets its own menu with actions (next point, connect, delete) and properties (status, kind, name, path color, details). Both bars can be dragged to the top or bottom edge, left, middle or right.
 
 ## Project layout
 
