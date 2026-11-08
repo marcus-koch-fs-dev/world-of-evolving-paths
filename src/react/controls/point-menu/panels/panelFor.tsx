@@ -1,0 +1,60 @@
+import type { ReactNode } from 'react';
+import type { PointMenuProps } from '../PointMenu.js';
+import type { TileId } from '../types.js';
+import { ColorPanel } from './ColorPanel.js';
+import { DeletePanel } from './DeletePanel.js';
+import { DetailsPanel } from './DetailsPanel.js';
+import { KindPanel } from './KindPanel.js';
+import { NextPointPanel } from './NextPointPanel.js';
+import { RenamePanel } from './RenamePanel.js';
+import { StatusPanel } from './StatusPanel.js';
+
+const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
+
+/** The tiles that open a panel. The connect tile has none: it hands over to the app at once. */
+export type PanelId = Exclude<TileId, 'connect'>;
+
+type Context = {
+  menu: PointMenuProps;
+  /** Colors offered for paths. */
+  colors: readonly string[];
+  /** Closes the panel. */
+  close: () => void;
+};
+
+const PANELS: Record<PanelId, (context: Context) => ReactNode> = {
+  status: ({ menu }) => (
+    <StatusPanel status={menu.point.status} canComplete={menu.canComplete ?? true} onUpdate={menu.onUpdate} />
+  ),
+  next: ({ menu, colors, close }) => (
+    <NextPointPanel colors={colors} defaultDate={menu.point.date} onAddNext={menu.onAddNext} onDone={close} />
+  ),
+  kind: ({ menu }) => (
+    <KindPanel kind={menu.point.kind} branches={menu.point.next.length >= 2} onUpdate={menu.onUpdate} />
+  ),
+  color: ({ menu, colors }) => (
+    <ColorPanel
+      colors={colors}
+      value={menu.path.color}
+      onPick={menu.onPathColor}
+      customColors={menu.customColors}
+      onCustomColor={menu.onCustomColor}
+    />
+  ),
+  rename: ({ menu, close }) => (
+    <RenamePanel title={menu.point.title} onRename={(title) => menu.onUpdate({ title })} onDone={close} />
+  ),
+  details: ({ menu }) => (
+    <DetailsPanel
+      point={menu.point}
+      importanceRange={menu.importanceRange ?? DEFAULT_IMPORTANCE_RANGE}
+      onUpdate={menu.onUpdate}
+    />
+  ),
+  remove: ({ menu }) => <DeletePanel onDelete={menu.onDelete} />,
+};
+
+/** The panel a tile opens. */
+export function panelFor(id: PanelId, context: Context): ReactNode {
+  return PANELS[id](context);
+}
