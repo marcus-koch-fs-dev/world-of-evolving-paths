@@ -1,6 +1,7 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import type { NodeDraw } from '../../core/scene/types.js';
 import { shapePoints } from '../../core/shapes.js';
+import { RING_GAP, SHAPE_RADIUS, SYMBOL_UNITS } from '../../core/symbol.js';
 import type { TextPool } from './createTextPool.js';
 import { flat, strokeDashes } from './strokes.js';
 
@@ -101,7 +102,7 @@ function paintRing(slot: NodeSlot): void {
   }
   if (!slot.ring) return;
   slot.ring.clear();
-  slot.ring.circle(0, 0, node.size / 2 + 2).stroke({ width: 2, color: node.stroke });
+  slot.ring.circle(0, 0, (node.size * SHAPE_RADIUS) / SYMBOL_UNITS + RING_GAP).stroke({ width: 2, color: node.stroke });
 }
 
 function paintArrow(slot: NodeSlot, texts: TextPool): void {

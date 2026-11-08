@@ -1,11 +1,10 @@
 import { formatPointDate } from '../format.js';
 import { shapeOf } from '../shapes.js';
-import { symbolSize } from '../symbol.js';
+import { SHAPE_RADIUS, symbolSize } from '../symbol.js';
 import type { PlacedPoint, PlacedWorld } from '../types.js';
 import { pathColorOf } from './paths.js';
 import type { Dash, NodeDraw, SceneState } from './types.js';
 
-const SHAPE_RADIUS = 26;
 const DONE_FILL = '#23270f';
 const OPEN_FILL = '#1b1d17';
 const OPEN_DASH: Dash = [4, 3];

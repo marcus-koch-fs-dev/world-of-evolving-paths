@@ -1,8 +1,8 @@
+import { SYMBOL_UNITS } from '../../core/symbol.js';
 import { ARROW_LIFT, ARROW_X, type NodeSlot } from './paintNode.js';
-import { pulseRing } from './pulse.js';
+import { NODE_PULSE, pulseRing } from './pulse.js';
 import { approach, followShare, isApproaching } from './timing.js';
 
-const SYMBOL_UNITS = 72; // the shape radius is given in a symbol 72 units wide
 const SCALE_TAU = 60; // ms, how fast the size follows
 const ALPHA_TAU = 250; // ms, how fast the opacity follows
 const SCALE_STEP = 0.002;
@@ -33,7 +33,7 @@ export function followNode(slot: NodeSlot, deltaMs: number): boolean {
 export function tickNode(slot: NodeSlot, deltaMs: number, ringPhase: number, bob: number): boolean {
   const moving = followNode(slot, deltaMs);
   placeNode(slot);
-  if (slot.ring) pulseRing(slot.ring, ringPhase);
+  if (slot.ring) pulseRing(slot.ring, ringPhase, NODE_PULSE);
   if (slot.arrow) slot.arrow.position.set(ARROW_X, -slot.node.size / 2 - ARROW_LIFT - ARROW_BOB * bob);
   return moving;
 }
