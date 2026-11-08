@@ -1,9 +1,10 @@
 import type { Period } from './calendar.js';
 import { periodFromKey } from './calendar.js';
 import { type Layout, nearestFree } from './collision.js';
-import { fromDay, toDay } from './dates.js';
+import { toDay } from './dates.js';
 import { flattenPeriod } from './flatten.js';
 import { pick } from './random.js';
+import { type Span, tileWidth, xOfDate } from './timeAxis.js';
 import type { FlatPoint, PathInfo, PeriodData, PlacedPoint, PlacedWorld, Position } from './types.js';
 
 export type LayoutInput = {
@@ -17,9 +18,6 @@ export type LayoutInput = {
 export type LayoutResult = { positions: Record<string, Position>; width: number };
 
 const LANE_GAP = 200; // distance between two lanes
-const SPACING = 200; // room per point along a path
-const MIN_WIDTH = 2200; // no tile gets narrower than this
-const EDGE_PADDING = 60;
 const WOBBLE = 70; // how far a point may stray from the drift in y
 const WIDEN = 240; // how far the branches of a fork go apart
 const MAX_DRIFT = 0.35;
@@ -41,27 +39,89 @@ function compareByDate(a: FlatPoint, b: FlatPoint): number {
 }
 
 /** First and last day of what the points are spread over. */
-function spanOf(input: LayoutInput): { start: number; end: number } {
+function spanOf(input: LayoutInput): Span {
   if (input.period) return input.period;
   const days = input.points.map((point) => toDay(point.date));
   if (days.length === 0) return { start: 0, end: 0 };
   return { start: Math.min(...days), end: Math.max(...days) };
 }
 
-/** Width of a tile: grows with the busiest path. */
-export function tileWidth(points: FlatPoint[]): number {
-  const perPath = points.reduce(
-    (counts, point) => counts.set(point.pathId, (counts.get(point.pathId) ?? 0) + 1),
-    new Map<string, number>(),
-  );
-  return Math.max(MIN_WIDTH, Math.max(0, ...perPath.values()) * SPACING);
+/** The first point (in date order) that links to each point. */
+export function parentsOf(ordered: FlatPoint[], byId: ReadonlyMap<string, FlatPoint>): Map<string, string> {
+  return ordered
+    .flatMap((point) => point.next.filter((id) => byId.has(id)).map((id): [string, string] => [id, point.id]))
+    .reduce(
+      (parents, [id, parent]) => (parents.has(id) ? parents : parents.set(id, parent)),
+      new Map<string, string>(),
+    );
 }
 
-/** Day at a horizontal position, the inverse of how the layout spreads dates. */
-export function dayAtX(x: number, span: { start: number; end: number }, width: number): number {
-  const fraction = (x - EDGE_PADDING) / (width - 2 * EDGE_PADDING);
-  const days = span.end - span.start + 1;
-  return Math.min(span.end, Math.max(span.start, Math.round(span.start + fraction * days - 0.5)));
+/** The y position of every path's lane. Only the order counts, not the distance: empty lanes cost no room. */
+export function laneOffsets(paths: PathInfo[]): Map<string, number> {
+  const lanes = [...paths].sort((a, b) => (a.lane ?? 0) - (b.lane ?? 0));
+  return new Map(lanes.map((path, i) => [path.id, (i - (lanes.length - 1) / 2) * LANE_GAP]));
+}
+
+type TargetInput = {
+  point: FlatPoint;
+  x: number;
+  lane: number;
+  seed: number;
+  parent?: FlatPoint;
+  /** Where the parent was placed. */
+  parentAt?: Position;
+  byId: ReadonlyMap<string, FlatPoint>;
+};
+
+/**
+ * Where a point wants to be in y before the collision search. A start sits on its lane. A follower drifts with its
+ * lane away from the parent, and a fork pushes its branches apart.
+ */
+export function targetY({ point, x, lane, seed, parent, parentAt, byId }: TargetInput): number {
+  if (!parent || !parentAt) return lane + (pick(`${seed}|${point.id}|s`) - 0.5) * START_SCATTER;
+  const drift = Math.max(-MAX_DRIFT, Math.min(MAX_DRIFT, lane / DRIFT_DIVISOR));
+  const jitter = (pick(`${seed}|${point.id}|y`) - 0.5) * 2 * WOBBLE;
+  const y = parentAt.y + drift * (x - parentAt.x) + jitter;
+  if (spreadOf(parent) !== 'widen') return y;
+  const children = parent.next.filter((id) => byId.has(id));
+  return y + (children.indexOf(point.id) - (children.length - 1) / 2) * WIDEN;
+}
+
+/** The positions found so far, and the same points as bodies and links for the collision search. */
+function createPlacements() {
+  const positions: Record<string, Position> = Object.create(null); // no prototype: an id such as "__proto__" is a key
+  const layout: Layout = { bodies: [], links: [] };
+  return {
+    positions,
+    layout,
+    place(point: FlatPoint, at: Position) {
+      positions[point.id] = at;
+      layout.bodies.push({ id: point.id, x: at.x, y: at.y, kind: point.kind, importance: point.importance });
+    },
+    link(from: string, to: string) {
+      layout.links.push({ from, to });
+    },
+  };
+}
+
+type Placements = ReturnType<typeof createPlacements>;
+
+/** Pinned points go first, they stay where they are and the others make room. */
+function placePinned(
+  ordered: FlatPoint[],
+  parentOf: ReadonlyMap<string, string>,
+  byId: ReadonlyMap<string, FlatPoint>,
+  placements: Placements,
+): void {
+  const pinned = ordered.filter(hasPin);
+  pinned.forEach((point) => {
+    placements.place(point, { x: point.x, y: point.y });
+  });
+  pinned.forEach((point) => {
+    const parentId = parentOf.get(point.id);
+    const parent = parentId ? byId.get(parentId) : undefined;
+    if (parentId && parent && hasPin(parent)) placements.link(parentId, point.id);
+  });
 }
 
 /**
@@ -78,79 +138,35 @@ export function generateLayout(input: LayoutInput): LayoutResult {
   const byId = new Map(points.map((point) => [point.id, point]));
   const span = spanOf(input);
   const width = tileWidth(points);
-
-  // Only the order of the lanes counts, not the distance: empty lanes cost no room. The middle is y = 0.
-  const lanes = [...paths].sort((a, b) => (a.lane ?? 0) - (b.lane ?? 0));
-  const laneOf = new Map(lanes.map((path, i) => [path.id, (i - (lanes.length - 1) / 2) * LANE_GAP]));
-
-  const xOf = (iso: string) => {
-    const days = span.end - span.start + 1;
-    const fraction = Math.min(1, Math.max(0, (toDay(iso) - span.start + 0.5) / days));
-    return EDGE_PADDING + fraction * (width - 2 * EDGE_PADDING);
-  };
-
+  const laneOf = laneOffsets(paths);
   const ordered = [...points].sort(compareByDate);
-  const parentOf = new Map<string, string>();
-  ordered
-    .flatMap((point) => point.next.filter((id) => byId.has(id)).map((id): [string, string] => [id, point.id]))
-    .forEach(([id, parent]) => {
-      if (!parentOf.has(id)) parentOf.set(id, parent);
-    });
-
-  // No prototype, so a point id such as "constructor" or "__proto__" is just a key
-  const positions: Record<string, Position> = Object.create(null);
-  const layout: Layout = { bodies: [], links: [] };
-  const place = (point: FlatPoint, at: Position) => {
-    positions[point.id] = at;
-    layout.bodies.push({ id: point.id, x: at.x, y: at.y, kind: point.kind, importance: point.importance });
-  };
-
-  // Pinned points first: they stay, the others make room
-  const pinned = ordered.filter(hasPin);
-  pinned.forEach((point) => {
-    place(point, { x: point.x, y: point.y });
-  });
-  pinned.forEach((point) => {
-    const parentId = parentOf.get(point.id);
-    const parent = parentId ? byId.get(parentId) : undefined;
-    if (parentId && parent && hasPin(parent)) layout.links.push({ from: parentId, to: point.id });
-  });
-
+  const parentOf = parentsOf(ordered, byId);
+  const placements = createPlacements();
   const range = { minX: 0, maxX: width };
+
+  placePinned(ordered, parentOf, byId, placements);
   ordered
     .filter((point) => !hasPin(point))
     .forEach((point) => {
       const parentId = parentOf.get(point.id);
       const parent = parentId ? byId.get(parentId) : undefined;
-      const x = xOf(point.date);
-      const lane = laneOf.get(point.pathId) ?? 0;
-      const drift = Math.max(-MAX_DRIFT, Math.min(MAX_DRIFT, lane / DRIFT_DIVISOR));
-      const jitter = (pick(`${seed}|${point.id}|y`) - 0.5) * 2 * WOBBLE;
-      let y: number;
-      const parentAt = parent ? positions[parent.id] : undefined;
-      if (parent && parentAt) {
-        y = parentAt.y + drift * (x - parentAt.x) + jitter;
-        if (spreadOf(parent) === 'widen') {
-          const children = parent.next.filter((id) => byId.has(id));
-          y += (children.indexOf(point.id) - (children.length - 1) / 2) * WIDEN;
-        }
-      } else {
-        y = lane + (pick(`${seed}|${point.id}|s`) - 0.5) * START_SCATTER;
-      }
+      const parentAt = parent ? placements.positions[parent.id] : undefined;
+      const x = xOfDate(point.date, span, width);
+      const y = targetY({ point, x, lane: laneOf.get(point.pathId) ?? 0, seed, parent, parentAt, byId });
       // The line to the parent counts during the search: it may not touch another point
-      if (parentId && positions[parentId]) layout.links.push({ from: parentId, to: point.id });
-      const free = nearestFree(layout, point, { x, y }, range);
-      place(point, { x: Math.round(free.x), y: Math.round(free.y) });
+      if (parentId && parentAt) placements.link(parentId, point.id);
+      const free = nearestFree(placements.layout, point, { x, y }, range);
+      placements.place(point, { x: Math.round(free.x), y: Math.round(free.y) });
       point.next
         .filter((id) => {
           const child = byId.get(id);
           return child !== undefined && hasPin(child);
         })
         .forEach((id) => {
-          layout.links.push({ from: point.id, to: id });
+          placements.link(point.id, id);
         });
     });
-  return { positions, width };
+  return { positions: placements.positions, width };
 }
 
 /** The paths and points of a view together with where each point is. It does not depend on today. */
@@ -179,45 +195,7 @@ export function placeWorld(layout: PeriodLayout, today: string): PlacedWorld {
   return { today, paths: layout.paths, points };
 }
 
-/**
- * Everything the layout depends on, as text: the paths and lanes, and for each point its id, date, kind, links,
- * importance and pin. Two data objects with the same signature get the same layout, whatever else differs
- * (titles, statuses, strengths).
- */
-export function layoutSignature(data: PeriodData): string {
-  return JSON.stringify(
-    data.paths.map((path) => [
-      path.id,
-      path.lane ?? null,
-      path.points.map((point) => [
-        point.id,
-        point.date,
-        point.kind,
-        point.next,
-        point.importance ?? null,
-        point.x ?? null,
-        point.y ?? null,
-      ]),
-    ]),
-  );
-}
-
-/** The layout of earlier data for new data with the same signature: new details on the points, same positions. */
-export function reuseLayout(data: PeriodData, previous: PeriodLayout): PeriodLayout {
-  return { ...flattenPeriod(data), positions: previous.positions };
-}
-
 /** Lays a view out and places it in one go. */
 export function placePeriod(data: PeriodData, view: string, today: string, seed: number): PlacedWorld {
   return placeWorld(layoutPeriod(data, view, seed), today);
-}
-
-/**
- * ISO date for a horizontal position in a calendar view, for a point added by clicking there.
- * A view without data is as wide as the narrowest tile. A view that is not a calendar period gives today.
- */
-export function dateAtX(x: number, data: PeriodData | null, view: string, today: string): string {
-  const period = periodFromKey(view);
-  if (!period) return today;
-  return fromDay(dayAtX(x, period, tileWidth(data ? flattenPeriod(data).points : [])));
 }

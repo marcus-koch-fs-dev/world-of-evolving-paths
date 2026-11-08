@@ -1,6 +1,6 @@
+import { backgroundCss } from '../../core/background/backgroundCss.js';
 import type { Camera } from '../../core/camera.js';
 import type { BackgroundOptions } from '../options.js';
-import { backgroundCss } from './backgroundCss.js';
 
 const VIGNETTE = 'radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.45))';
 

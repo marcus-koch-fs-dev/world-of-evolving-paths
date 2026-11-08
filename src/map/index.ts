@@ -1,5 +1,5 @@
+export { BACKGROUND_DEFAULTS } from '../core/background/backgroundCss.js';
 export { createPathWorld } from './createPathWorld.js';
-export { BACKGROUND_DEFAULTS } from './dom/backgroundCss.js';
 export type {
   BackgroundOptions,
   BackgroundPattern,
