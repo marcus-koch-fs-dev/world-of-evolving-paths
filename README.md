@@ -262,7 +262,7 @@ npm install
 npm run dev     # http://localhost:5173
 ```
 
-The main bar stays slim: the period with its arrows, today, the page arrows and one button that opens the tile menu. Everything else is one step away, for example zoom, the four directions of time (_Turn left_, _Turn right_) and the settings. A selected point gets its own menu with actions (next point, connect, delete) and properties (status, kind, name, path color, details). Both bars can be dragged to the top or bottom edge, left, middle or right.
+The main bar stays slim: the period with its arrows, today, the page arrows, undo and redo (also Ctrl+Z and Ctrl+Y) and one button that opens the tile menu. Everything else is one step away, for example zoom, the four directions of time (_Turn left_, _Turn right_) and the settings. A selected point gets its own menu with actions (next point, connect, delete) and properties (status, kind, name, path color, details). Both bars can be dragged to the top or bottom edge, left, middle or right.
 
 ## Project layout
 
@@ -296,7 +296,7 @@ Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/archi
 
 ## Not in this version
 
-Undo and redo, and the cascade between week, month and year data, belong in your app by design. Controls are provided for React only; the map itself works with any framework.
+Undo and redo, and the cascade between week, month and year data, belong in your app by design, because the library never changes your data. The demo shows one way to do undo and redo (`demo/app-logic/history.ts`). Controls are provided for React only; the map itself works with any framework.
 
 ### Good to know
 

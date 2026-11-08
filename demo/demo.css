@@ -67,3 +67,8 @@ body,
   color: inherit;
   font: inherit;
 }
+
+.demo-undo-redo {
+  display: flex;
+  gap: 4px;
+}

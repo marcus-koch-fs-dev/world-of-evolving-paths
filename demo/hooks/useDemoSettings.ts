@@ -7,7 +7,15 @@ import { useStoredState } from './useStoredState';
 /** Where the user docked the two bars. */
 export type Docks = { main: DockSlot; time: DockSlot };
 const DEFAULT_DOCKS: Docks = { main: 'top-left', time: 'bottom-left' };
-const DEFAULT_BACKGROUND: BackgroundOptions = { pattern: 'stars', intensity: 0.5 };
+// A soft gradient from purple to blue with a few stars, so the map does not look dark and heavy
+const DEFAULT_BACKGROUND: BackgroundOptions = {
+  fill: 'gradient',
+  base: '#3a1f6b',
+  color2: '#1f5a9e',
+  angle: 150,
+  pattern: 'stars',
+  intensity: 0.5,
+};
 const FALLBACK_LOCALE = 'en-GB';
 
 /** The settings the user can change in the settings panel. */

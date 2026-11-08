@@ -3,6 +3,7 @@ import { ControlBar, type DockSlot, ViewBar } from 'world-of-evolving-paths/reac
 import type { DemoMode } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import { MainMenu } from './MainMenu';
+import { UndoRedo, type UndoRedoProps } from './UndoRedo';
 
 type Props = {
   dock: DockSlot;
@@ -19,6 +20,8 @@ type Props = {
   onModeChange: (mode: DemoMode) => void;
   settingsOpen: boolean;
   onSettingsToggle: () => void;
+  /** The undo and redo buttons. Left out where nothing can be changed. */
+  undoRedo?: UndoRedoProps;
 };
 
 /** The main bar: where in time the map is, and the menu with everything else. */
@@ -35,6 +38,7 @@ export function TopBar({
   onModeChange,
   settingsOpen,
   onSettingsToggle,
+  undoRedo,
 }: Props) {
   return (
     <ControlBar dock={dock} onDockChange={onDockChange}>
@@ -50,6 +54,7 @@ export function TopBar({
         pages={navigation.level === null ? 0 : paging.pages}
         onPageChange={navigation.setPage}
       />
+      {undoRedo && <UndoRedo {...undoRedo} />}
       <MainMenu
         levels={levels}
         level={navigation.level}

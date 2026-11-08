@@ -1,10 +1,12 @@
-import { useMemo, useReducer, useState } from 'react';
+import { useCallback, useMemo, useReducer, useState } from 'react';
 import { toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import { BackgroundPanel, ControlBar, PathWorld, PointMenu, SidePanel, Toast } from 'world-of-evolving-paths/react';
 import { rememberColor } from './app-logic/customColors';
+import { canRedo, canUndo } from './app-logic/history';
 import type { DemoMode } from './app-logic/menuGroups';
 import { canComplete } from './app-logic/rules';
-import { customPointId, DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
+import { customPointId, DEFAULT_SEED, initialState, nextPointProblem } from './app-logic/state';
+import { createStateHistory, historyReduce } from './app-logic/stateHistory';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
@@ -12,6 +14,7 @@ import { createHabits } from './data/habits';
 import { useConnectMode } from './hooks/useConnectMode';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoView } from './hooks/useDemoView';
+import { useUndoShortcuts } from './hooks/useUndoShortcuts';
 import { useViewNavigation } from './hooks/useViewNavigation';
 
 // On a phone the bars start collapsed, so they leave room for the map
@@ -25,7 +28,8 @@ function createInitialState(today: string) {
 /** The demo app: holds all data and state and wires the map and its controls to it. */
 export function App() {
   const today = useMemo(() => todayLocal(), []);
-  const [state, dispatch] = useReducer(reduce, today, createInitialState);
+  const [history, dispatch] = useReducer(historyReduce, today, (day) => createStateHistory(createInitialState(day)));
+  const state = history.present;
   const navigation = useViewNavigation(today);
   const settings = useDemoSettings();
   const { values, docks } = settings;
@@ -36,6 +40,10 @@ export function App() {
   // The settings slide in from the side the menu bar is not on
   const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
   const editing = mode === 'edit';
+  const onUndo = useCallback(() => dispatch({ type: 'undo' }), []);
+  const onRedo = useCallback(() => dispatch({ type: 'redo' }), []);
+  const undoRedo = { canUndo: canUndo(history), canRedo: canRedo(history), onUndo, onRedo };
+  useUndoShortcuts({ enabled: editing, undo: onUndo, redo: onRedo });
 
   const { period, view, tileKey, range, travel, result, periods } = useDemoView(state, navigation, today);
 
@@ -104,6 +112,7 @@ export function App() {
           onModeChange={setMode}
           settingsOpen={settingsOpen}
           onSettingsToggle={() => setSettingsOpen((open) => !open)}
+          undoRedo={editing ? undoRedo : undefined}
         />
 
         {editing && settingsOpen && (

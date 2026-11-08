@@ -9,6 +9,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  # Some actions still run on Node 20. This makes GitHub run them on Node 24.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
   pages: write

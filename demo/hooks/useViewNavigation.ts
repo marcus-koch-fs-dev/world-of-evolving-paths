@@ -3,9 +3,12 @@ import { fromDay, type Period, periodOf, shiftPeriod, toDay, type ViewLevel } fr
 
 type View = { level: ViewLevel | null; period: Period };
 
+// The demo opens on the year, where the whole story of the paths is visible. A single week looks nearly empty.
+const START_LEVEL: ViewLevel = 'year';
+
 /** Which view is shown: the free view or a level, the period within it, and the page. */
 export function useViewNavigation(today: string) {
-  const [view, setView] = useState<View>(() => ({ level: 'week', period: periodOf('week', today) }));
+  const [view, setView] = useState<View>(() => ({ level: START_LEVEL, period: periodOf(START_LEVEL, today) }));
   const [page, setPage] = useState(0);
 
   /** Switching level keeps today if it lies in the shown period, otherwise the start of that period. */
