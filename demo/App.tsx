@@ -1,25 +1,21 @@
 import { useMemo, useReducer, useState } from 'react';
-import { fromDay, type PeriodMap, toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
+import { toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import { BackgroundPanel, ControlBar, PathWorld, PointMenu, SidePanel, Toast } from 'world-of-evolving-paths/react';
 import { rememberColor } from './app-logic/customColors';
 import type { DemoMode } from './app-logic/menuGroups';
-import { buildPeriodData } from './app-logic/periodData';
 import { canComplete } from './app-logic/rules';
 import { customPointId, DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
-import { viewRange } from './app-logic/timeTravel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
 import { createHabits } from './data/habits';
 import { useConnectMode } from './hooks/useConnectMode';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
-import { useTimeTravel } from './hooks/useTimeTravel';
+import { useDemoView } from './hooks/useDemoView';
 import { useViewNavigation } from './hooks/useViewNavigation';
 
-const FREE_VIEW = 'free';
 // On a phone the bars start collapsed, so they leave room for the map
 const SMALL_SCREEN = window.matchMedia('(max-width: 600px)').matches;
-const NO_PINS = {};
 
 function createInitialState(today: string) {
   const habits = createHabits(today);
@@ -41,36 +37,7 @@ export function App() {
   const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
   const editing = mode === 'edit';
 
-  const period = navigation.level === null ? null : navigation.period;
-  const view = period ? period.key : FREE_VIEW;
-  const tileKey = `${view}:p${navigation.page}`;
-  const pins = state.pins[tileKey] ?? NO_PINS;
-
-  const range = useMemo(
-    () =>
-      viewRange(
-        period,
-        state.points.map((point) => point.date),
-        today,
-      ),
-    [period, state.points, today],
-  );
-  const travel = useTimeTravel({ view, today, range });
-
-  const result = useMemo(
-    () =>
-      buildPeriodData({
-        paths: state.paths,
-        points: state.points,
-        checkIns: state.checkIns,
-        asOf: travel.day === null ? undefined : fromDay(travel.day),
-        period,
-        page: navigation.page,
-        pins,
-      }),
-    [state.paths, state.points, state.checkIns, travel.day, period, navigation.page, pins],
-  );
-  const periods = useMemo<PeriodMap>(() => ({ [view]: result.data }), [view, result.data]);
+  const { period, view, tileKey, range, travel, result, periods } = useDemoView(state, navigation, today);
 
   // A point that is not in the current view is not selected, so its menu and check-in button do not linger
   const visibleIds = new Set(result.data.paths.flatMap((path) => path.points.map((point) => point.id)));

@@ -1,4 +1,5 @@
 import { type KeyboardEvent, useState } from 'react';
+import { nameError } from './nextPointError.js';
 
 type Props = {
   title: string;
@@ -12,7 +13,8 @@ export function RenamePanel({ title, onRename, onDone }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
-    if (!text.trim()) return setError('The name is missing.');
+    const problem = nameError(text);
+    if (problem) return setError(problem);
     onRename(text.trim());
     onDone();
   };

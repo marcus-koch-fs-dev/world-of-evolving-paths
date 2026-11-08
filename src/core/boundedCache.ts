@@ -1,5 +1,5 @@
 export type BoundedCache<V> = {
-  /** The value for a key. It is made once; when the cache is full the oldest value is dropped. */
+  /** The value for a key. It is made once; when the cache is full the value used least recently is dropped. */
   get(key: string, make: () => V): V;
   size(): number;
 };
@@ -10,7 +10,12 @@ export function createBoundedCache<V>(limit: number): BoundedCache<V> {
   return {
     get(key, make) {
       const known = entries.get(key);
-      if (known !== undefined) return known;
+      if (known !== undefined) {
+        // Used again: it moves to the end, so what is dropped is the entry that was not used for the longest time
+        entries.delete(key);
+        entries.set(key, known);
+        return known;
+      }
       const value = make();
       entries.set(key, value);
       if (entries.size > limit) entries.delete(entries.keys().next().value as string);

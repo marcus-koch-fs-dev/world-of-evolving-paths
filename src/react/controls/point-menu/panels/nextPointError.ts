@@ -1,6 +1,12 @@
+/** The message to show when a name is empty or only spaces, or null when it is fine. */
+export function nameError(title: string): string | null {
+  return title.trim() ? null : 'The name is missing.';
+}
+
 /** The message to show when the input for a next point is not complete, or null when it is fine. */
 export function nextPointError(title: string, date: string): string | null {
-  if (!title.trim()) return 'The name is missing.';
+  const missingName = nameError(title);
+  if (missingName) return missingName;
   if (!date) return 'The date is missing. Every point needs a date.';
   return null;
 }

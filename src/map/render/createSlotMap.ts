@@ -1,5 +1,6 @@
 export type SlotMap<Item extends { id: string }, Slot> = {
-  values(): Slot[];
+  /** The slots in the order of the last sync. The same array comes back until the next sync. */
+  values(): readonly Slot[];
   /** Updates the slot of every item, creating it on first sight, and removes the slots whose item is gone. */
   sync(items: Item[], update: (slot: Slot, item: Item) => void): void;
 };
@@ -15,9 +16,11 @@ export function createSlotMap<Item extends { id: string }, Slot>({
   destroy,
 }: Hooks<Item, Slot>): SlotMap<Item, Slot> {
   const slots = new Map<string, Slot>();
+  // Layers ask for the slots several times per frame, so the list is made once per sync
+  let list: readonly Slot[] = [];
 
   return {
-    values: () => [...slots.values()],
+    values: () => list,
 
     sync(items, update) {
       const seen = new Set(items.map((item) => item.id));
@@ -31,6 +34,7 @@ export function createSlotMap<Item extends { id: string }, Slot>({
         slots.set(item.id, slot);
         update(slot, item);
       });
+      list = [...slots.values()];
     },
   };
 }

@@ -39,3 +39,15 @@ describe('Ring of the Today marker', () => {
     });
   });
 });
+
+describe('Ring when the line comes from another path', () => {
+  describe('when the marker sits on the point where the line starts', () => {
+    it('finds that point through the ends of the line', () => {
+      const other = { id: 'b', x: 400, y: 0, kind: 'milestone', importance: 1 } as PlacedPoint;
+
+      const ring = ringAt({ x: 400, y: 0 }, [point, other]);
+
+      expect(ring.onPoint).toBe(true);
+    });
+  });
+});
