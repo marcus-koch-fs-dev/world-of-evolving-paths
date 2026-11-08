@@ -132,6 +132,7 @@ export function App() {
           locale={values.locale}
           levels={offeredLevels}
           onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey })}
+          onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
           onModeChange={setMode}
           settingsOpen={settingsOpen}

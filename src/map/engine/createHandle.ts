@@ -43,6 +43,7 @@ export function createHandle({
     subscribeCamera: (listener) => camera.subscribe(listener),
     subscribeWorld: signal.subscribe,
     getWorldVersion: signal.version,
+    getDirection: orientation.direction,
     destroy,
   };
 }

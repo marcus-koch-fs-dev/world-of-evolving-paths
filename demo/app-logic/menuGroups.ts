@@ -26,6 +26,8 @@ export type MenuActions = {
   zoomBy: (factor: number) => void;
   fit: () => void;
   center: () => void;
+  /** Turns the direction of time a quarter to the left or to the right. */
+  rotate: (turn: 'left' | 'right') => void;
 };
 
 const viewGroup = ({ levels, level }: MenuState, actions: MenuActions): PanelGroup => ({
@@ -56,6 +58,20 @@ const mapGroup = ({ zoom }: MenuState, actions: MenuActions): PanelGroup => ({
       title: 'Put the content in the middle (key M)',
       glyph: '◎',
       onClick: actions.center,
+    },
+    {
+      id: 'rotate-left',
+      label: 'Turn left',
+      title: 'Turn the direction of time a quarter to the left',
+      glyph: '↺',
+      onClick: () => actions.rotate('left'),
+    },
+    {
+      id: 'rotate-right',
+      label: 'Turn right',
+      title: 'Turn the direction of time a quarter to the right',
+      glyph: '↻',
+      onClick: () => actions.rotate('right'),
     },
   ],
 });

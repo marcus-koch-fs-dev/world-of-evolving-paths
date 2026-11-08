@@ -1,4 +1,4 @@
-import type { ViewLevel } from 'world-of-evolving-paths';
+import { type Orientation, rotateDirection, type ViewLevel } from 'world-of-evolving-paths';
 import { TilePanel, useCameraZoom, usePathWorldHandle } from 'world-of-evolving-paths/react';
 import { type DemoMode, menuGroups } from '../app-logic/menuGroups';
 
@@ -7,6 +7,7 @@ type Props = {
   level: ViewLevel | null;
   onLevelChange: (level: ViewLevel | null) => void;
   onReroll: () => void;
+  onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onModeChange: (mode: DemoMode) => void;
   settingsOpen: boolean;
@@ -28,6 +29,7 @@ export function MainMenu(props: Props) {
       zoomBy: handle.zoomBy,
       fit: handle.fit,
       center: handle.center,
+      rotate: (turn) => props.onOrientationChange(rotateDirection(handle.getDirection(), turn)),
     },
   );
 

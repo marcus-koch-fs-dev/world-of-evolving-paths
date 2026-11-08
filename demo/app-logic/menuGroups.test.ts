@@ -20,6 +20,7 @@ const createActions = (): MenuActions => ({
   zoomBy: vi.fn(),
   fit: vi.fn(),
   center: vi.fn(),
+  rotate: vi.fn(),
 });
 
 const tileIds = (groupId: string, current: MenuState) =>
@@ -66,6 +67,21 @@ describe('Menu groups', () => {
       expect(groups[1].label).toBe('Map · 50 %');
       expect(actions.zoomBy).toHaveBeenCalledWith(ZOOM_STEP);
       expect(actions.changeLevel).toHaveBeenCalledWith('month');
+    });
+  });
+});
+
+describe('Rotate tiles', () => {
+  describe('when a rotate tile is clicked', () => {
+    it('turns the direction to its side', () => {
+      const actions = createActions();
+      const mapTiles = menuGroups(state, actions).find((group) => group.id === 'map')?.tiles ?? [];
+
+      mapTiles.find((tile) => tile.id === 'rotate-left')?.onClick();
+      mapTiles.find((tile) => tile.id === 'rotate-right')?.onClick();
+
+      expect(actions.rotate).toHaveBeenNthCalledWith(1, 'left');
+      expect(actions.rotate).toHaveBeenNthCalledWith(2, 'right');
     });
   });
 });

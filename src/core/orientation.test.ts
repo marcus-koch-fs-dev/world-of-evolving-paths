@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Direction, TURNS } from './orientation.js';
+import { type Direction, rotateDirection, TURNS } from './orientation.js';
 
 const DIRECTIONS = Object.keys(TURNS) as Direction[];
 
@@ -30,5 +30,31 @@ describe('Directions of time', () => {
 
   it('keeps the other properties of the position', () => {
     expect(TURNS.vertical.toScreen({ x: 1, y: 2, radius: 9 })).toEqual({ x: 2, y: 1, radius: 9 });
+  });
+});
+
+describe('Rotating the direction of time', () => {
+  describe('when turning right four times', () => {
+    it('visits every direction and comes back to the start', () => {
+      const first = rotateDirection('horizontal', 'right');
+      const second = rotateDirection(first, 'right');
+      const third = rotateDirection(second, 'right');
+      const fourth = rotateDirection(third, 'right');
+
+      expect([first, second, third, fourth]).toEqual([
+        'vertical',
+        'horizontal-inverted',
+        'vertical-inverted',
+        'horizontal',
+      ]);
+    });
+  });
+
+  describe('when turning left', () => {
+    it.each(DIRECTIONS)('undoes a turn to the right from %s', (direction) => {
+      const turned = rotateDirection(direction, 'right');
+
+      expect(rotateDirection(turned, 'left')).toBe(direction);
+    });
   });
 });

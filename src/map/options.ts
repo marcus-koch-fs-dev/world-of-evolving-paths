@@ -77,6 +77,8 @@ export type PathWorldHandle = {
   subscribeCamera(listener: CameraListener): () => void;
   /** Calls the listener when points were laid out again or moved. Returns a function that stops listening. */
   subscribeWorld(listener: () => void): () => void;
+  /** The direction time runs on the screen right now. With `orientation: 'auto'` this is the one that was chosen. */
+  getDirection(): Direction;
   /** Increases whenever the points were laid out again or moved. */
   getWorldVersion(): number;
   /** Element that follows the camera. Controls placed here move and scale with the world. */

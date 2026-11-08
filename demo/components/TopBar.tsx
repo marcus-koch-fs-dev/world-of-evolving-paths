@@ -1,4 +1,4 @@
-import { periodLabel, type ViewLevel } from 'world-of-evolving-paths';
+import { type Orientation, periodLabel, type ViewLevel } from 'world-of-evolving-paths';
 import { ControlBar, type DockSlot, ViewBar } from 'world-of-evolving-paths/react';
 import type { DemoMode } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
@@ -14,6 +14,7 @@ type Props = {
   /** The levels the view bar offers. */
   levels: readonly { level: ViewLevel; label: string }[];
   onReroll: () => void;
+  onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onModeChange: (mode: DemoMode) => void;
   settingsOpen: boolean;
@@ -29,6 +30,7 @@ export function TopBar({
   locale,
   levels,
   onReroll,
+  onOrientationChange,
   mode,
   onModeChange,
   settingsOpen,
@@ -53,6 +55,7 @@ export function TopBar({
         level={navigation.level}
         onLevelChange={navigation.chooseLevel}
         onReroll={onReroll}
+        onOrientationChange={onOrientationChange}
         mode={mode}
         onModeChange={onModeChange}
         settingsOpen={settingsOpen}
