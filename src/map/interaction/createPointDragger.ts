@@ -1,7 +1,8 @@
 import { layoutOf, settle } from '../../core/collision.js';
 import type { PlacedPoint, PointKind, Position } from '../../core/types.js';
 import type { WorldModel } from '../state/createWorldModel.js';
-import { springBack } from './springBack.js';
+import { createAnswerWatch } from './createAnswerWatch.js';
+import { createSpringRunner } from './createSpringRunner.js';
 
 const MOVED_THRESHOLD = 4; // a drag shorter than this counts as a click
 const IGNORED_AFTER_MS = 80; // the app has this long to answer a move with new data
@@ -24,9 +25,6 @@ export type PointDragger = {
   cancel(): void;
 };
 
-type Spring = { stop: () => void; id: string; destination: Position; reportsMove: boolean };
-type Reported = { id: string; original: Position; rest: Position; timer: ReturnType<typeof setTimeout> };
-
 /** Where a released point comes to rest: at the target if there is room, otherwise the first free spot on the way back. */
 export function destinationFor(points: PlacedPoint[], id: string, start: Position, target: Position): Position {
   const self = points.find((point) => point.id === id);
@@ -43,65 +41,51 @@ const isClick = (start: Position, end: Position) => Math.hypot(end.x - start.x, 
  */
 export function createPointDragger({ model, onChange, onMoved }: Dependencies): PointDragger {
   let startPosition: Position = { x: 0, y: 0 };
-  let spring: Spring | null = null;
-  let reported: Reported | null = null;
+  const springs = createSpringRunner();
+  const watch = createAnswerWatch(IGNORED_AFTER_MS, (ignored) => {
+    // The app ignored the move: the point goes back to where it was
+    springTo(ignored.id, ignored.rest, ignored.original, false);
+  });
 
   const move = (id: string, position: Position) => {
     model.setOverride(id, position);
     onChange();
   };
 
-  const acknowledge = () => {
-    if (!reported) return;
-    clearTimeout(reported.timer);
-    reported = null;
+  /** Tells the app where the point rests and waits for its answer. */
+  const report = (id: string, position: Position) => {
+    // Armed before the callback runs, so an answer that comes back at once is still noticed
+    watch.expect({ id, original: startPosition, rest: position });
+    onMoved(id, position);
   };
 
-  const animate = (id: string, from: Position, to: Position, reportsMove: boolean) => {
-    const stop = springBack(
+  const springTo = (id: string, from: Position, to: Position, reportsMove: boolean) => {
+    springs.run({
+      id,
       from,
       to,
-      (position) => move(id, position),
-      () => {
-        spring = null;
-        if (reportsMove) report(id, to);
-        else {
-          model.clearOverride(id);
-          onChange();
-        }
+      reportsMove,
+      onFrame: (position) => move(id, position),
+      onArrive() {
+        if (reportsMove) return report(id, to);
+        model.clearOverride(id);
+        onChange();
       },
-    );
-    spring = { stop, id, destination: to, reportsMove };
+    });
   };
-
-  /** The app ignored the move: the point goes back to where it was. */
-  const revert = () => {
-    const ignored = reported;
-    reported = null;
-    if (ignored) animate(ignored.id, ignored.rest, ignored.original, false);
-  };
-
-  function report(id: string, position: Position) {
-    acknowledge();
-    // Armed before the callback runs, so an answer that comes back at once is still noticed
-    reported = { id, original: startPosition, rest: position, timer: setTimeout(revert, IGNORED_AFTER_MS) };
-    onMoved(id, position);
-  }
 
   /** A running spring ends at once: the point jumps to where it was heading and the move is reported. */
   const finishSpring = () => {
-    const running = spring;
-    if (!running) return;
-    running.stop();
-    spring = null;
-    move(running.id, running.destination);
-    if (running.reportsMove) report(running.id, running.destination);
+    const finished = springs.finish();
+    if (!finished) return;
+    move(finished.id, finished.destination);
+    if (finished.reportsMove) report(finished.id, finished.destination);
   };
 
   return {
     start(id) {
       finishSpring();
-      acknowledge();
+      watch.acknowledge();
       startPosition = model.positionOf(id);
     },
 
@@ -118,15 +102,14 @@ export function createPointDragger({ model, onChange, onMoved }: Dependencies): 
       }
       const destination = destinationFor(world.points, id, startPosition, target);
       if (destination === target) report(id, target);
-      else animate(id, target, destination, true);
+      else springTo(id, target, destination, true);
     },
 
-    acknowledge,
+    acknowledge: watch.acknowledge,
 
     cancel() {
-      spring?.stop();
-      spring = null;
-      acknowledge();
+      springs.cancel();
+      watch.acknowledge();
     },
   };
 }

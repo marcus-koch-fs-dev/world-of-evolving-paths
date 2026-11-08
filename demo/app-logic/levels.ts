@@ -1,4 +1,4 @@
-import type { ViewLevel } from 'world-of-evolving-paths';
+import { VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
 
 // The free view shows everything that is at least this important.
 export const FREE_VIEW_MIN_IMPORTANCE = 2;
@@ -15,3 +15,13 @@ export const LEVEL_SETTINGS: Record<ViewLevel, { minImportance: number; graphsPe
 
 // The levels the demo offers at first. The user can switch the others on in the settings.
 export const DEFAULT_LEVELS: ViewLevel[] = ['week', 'month', 'halfYear', 'year'];
+
+/**
+ * The levels after one was switched on or off. They keep the order of the view bar, and there is always at least one:
+ * switching off the last one changes nothing.
+ */
+export function toggledLevels(levels: readonly ViewLevel[], level: ViewLevel, on: boolean): ViewLevel[] {
+  const wanted = on ? [...levels, level] : levels.filter((existing) => existing !== level);
+  const ordered = VIEW_LEVELS.map((option) => option.level).filter((candidate) => wanted.includes(candidate));
+  return ordered.length > 0 ? ordered : [...levels];
+}

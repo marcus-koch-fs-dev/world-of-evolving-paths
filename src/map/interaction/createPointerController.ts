@@ -1,9 +1,10 @@
-import { pinchStep, screenToWorld } from '../../core/camera.js';
+import { screenToWorld } from '../../core/camera.js';
 import type { Position } from '../../core/types.js';
 import type { CameraController } from '../camera/createCameraController.js';
+import { createFingers } from './gestures/createFingers.js';
+import { type ClientPoint, createPan } from './gestures/createPan.js';
+import { wheelFactor } from './gestures/wheel.js';
 
-const CLICK_TOLERANCE = 4; // pixels a press may move and still count as a click
-const WHEEL_SENSITIVITY = 0.0015;
 const UI_SELECTOR = '[data-pw-ui]';
 const PRIMARY_BUTTON = 0;
 
@@ -27,8 +28,6 @@ export type PointerController = {
 };
 
 type Drag = { id: string; offset: Position };
-type Pan = { startX: number; startY: number };
-type ClientPoint = { clientX: number; clientY: number };
 
 /** Does the event come from something marked `data-pw-ui`, such as a menu on the map? */
 export function isUiEvent(event: Event): boolean {
@@ -45,6 +44,7 @@ export function positionInElement(element: HTMLElement, event: ClientPoint): Pos
 /**
  * Turns pointer events on the viewport into camera movement and hooks: wheel zoom, drag to pan,
  * two fingers to pinch, press a point to drag it. Elements marked `data-pw-ui` are left alone.
+ * The gestures themselves live in `gestures/`; this decides which one a press starts.
  */
 export function createPointerController(
   element: HTMLElement,
@@ -52,8 +52,8 @@ export function createPointerController(
   hooks: PointerHooks,
   nodePosition: (id: string) => Position,
 ): PointerController {
-  const fingers = new Map<number, Position>();
-  let pan: Pan | null = null;
+  const fingers = createFingers(camera);
+  const pan = createPan(camera);
   let drag: Drag | null = null;
   let moved = false;
   const cleanup: (() => void)[] = [];
@@ -72,25 +72,10 @@ export function createPointerController(
 
   /** A finger that is left continues to pan from where it is, without a jump. Pan positions are client coordinates. */
   const continueWithRemainingFinger = () => {
-    const rest = [...fingers.values()];
-    if (rest.length !== 1) {
-      pan = null;
-      return;
-    }
+    const rest = fingers.onlyOne();
+    if (!rest) return pan.stop();
     const rect = element.getBoundingClientRect();
-    pan = { startX: rest[0].x + rect.left, startY: rest[0].y + rect.top };
-  };
-
-  /** Follows the fingers on screen. With exactly two, zooms and moves like a pinch and returns true. */
-  const pinch = (event: PointerEvent): boolean => {
-    const before = [...fingers.values()];
-    if (fingers.has(event.pointerId)) fingers.set(event.pointerId, screen(event));
-    if (before.length !== 2) return false;
-    const step = pinchStep(before as [Position, Position], [...fingers.values()] as [Position, Position]);
-    moved = true;
-    camera.zoomAtPoint(step.px, step.py, step.factor);
-    camera.moveBy(step.dx, step.dy);
-    return true;
+    pan.start({ x: rest.x + rect.left, y: rest.y + rect.top });
   };
 
   const dragTo = (event: PointerEvent, active: Drag) => {
@@ -99,30 +84,20 @@ export function createPointerController(
     hooks.onDragMove(active.id, { x: at.x - active.offset.x, y: at.y - active.offset.y });
   };
 
-  const panTo = (event: PointerEvent, active: Pan) => {
-    const dx = event.clientX - active.startX;
-    const dy = event.clientY - active.startY;
-    if (Math.abs(dx) + Math.abs(dy) > CLICK_TOLERANCE) moved = true;
-    if (!moved) return;
-    camera.moveBy(dx, dy);
-    active.startX = event.clientX;
-    active.startY = event.clientY;
-  };
-
   const onWheel = (event: WheelEvent) => {
     if (isUiEvent(event)) return;
     event.preventDefault();
     const at = screen(event);
-    camera.zoomAtPoint(at.x, at.y, Math.exp(-event.deltaY * WHEEL_SENSITIVITY));
+    camera.zoomAtPoint(at.x, at.y, wheelFactor(event.deltaY));
   };
 
   const onDown = (event: PointerEvent) => {
     if (isUiEvent(event) || (event.pointerType === 'mouse' && event.button !== PRIMARY_BUTTON)) return;
     moved = false;
     element.setPointerCapture(event.pointerId);
-    fingers.set(event.pointerId, screen(event));
-    if (fingers.size >= 2) {
-      pan = null;
+    fingers.add(event.pointerId, screen(event));
+    if (fingers.count() >= 2) {
+      pan.stop();
       endDrag();
       return;
     }
@@ -133,20 +108,26 @@ export function createPointerController(
       drag = { id, offset: { x: at.x - position.x, y: at.y - position.y } };
       return;
     }
-    if (id === null) pan = { startX: event.clientX, startY: event.clientY };
+    if (id === null) pan.start({ x: event.clientX, y: event.clientY });
   };
 
   const onMove = (event: PointerEvent) => {
-    if (pinch(event)) return;
+    if (fingers.moveTo(event.pointerId, screen(event))) {
+      moved = true;
+      return;
+    }
     if (drag) return dragTo(event, drag);
-    if (pan) return panTo(event, pan);
+    if (pan.isActive()) {
+      moved = pan.moveTo(event, moved);
+      return;
+    }
     if (event.buttons === 0) hooks.onHover(hooks.pointAt(world(event)));
   };
 
   const onUp = (event: PointerEvent) => {
     // A release whose press did not start on the map (for example in a menu field) is none of our business
     if (!fingers.has(event.pointerId)) return;
-    fingers.delete(event.pointerId);
+    fingers.release(event.pointerId);
     const released = drag;
     drag = null;
     continueWithRemainingFinger();
@@ -159,7 +140,7 @@ export function createPointerController(
 
   /** A cancelled gesture ends a drag the normal way but is never a click. */
   const onCancel = (event: PointerEvent) => {
-    fingers.delete(event.pointerId);
+    fingers.release(event.pointerId);
     endDrag();
     continueWithRemainingFinger();
   };
@@ -195,7 +176,7 @@ export function createPointerController(
     },
     cancel() {
       drag = null;
-      pan = null;
+      pan.stop();
       fingers.clear();
     },
   };

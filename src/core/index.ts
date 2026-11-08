@@ -12,6 +12,8 @@ export {
   todayLocal,
 } from './dates.js';
 export { formatMonthYearLong, formatNumericDate, isValidLocale, weekPrefix } from './format.js';
+export type { Direction } from './orientation.js';
+export { rotateDirection } from './orientation.js';
 export { PATH_PALETTE } from './scene/paths.js';
 export type { StrengthRule, Tier } from './strength.js';
 export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength.js';

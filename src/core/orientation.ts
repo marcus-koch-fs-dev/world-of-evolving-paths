@@ -29,3 +29,20 @@ export const TURNS: Record<Direction, Turns> = {
     toLayout: (position) => ({ ...position, x: -position.y, y: position.x }),
   },
 };
+
+// A quarter turn to the right: left to right becomes top to bottom, then right to left, then bottom to top
+const RIGHT_OF: Record<Direction, Direction> = {
+  horizontal: 'vertical',
+  vertical: 'horizontal-inverted',
+  'horizontal-inverted': 'vertical-inverted',
+  'vertical-inverted': 'horizontal',
+};
+const LEFT_OF = Object.fromEntries(Object.entries(RIGHT_OF).map(([from, to]) => [to, from])) as Record<
+  Direction,
+  Direction
+>;
+
+/** The direction after a quarter turn: to the right (clockwise) or to the left. */
+export function rotateDirection(direction: Direction, turn: 'right' | 'left'): Direction {
+  return (turn === 'right' ? RIGHT_OF : LEFT_OF)[direction];
+}

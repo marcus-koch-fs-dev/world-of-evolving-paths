@@ -1,6 +1,7 @@
 import { type KeyboardEvent, useState } from 'react';
 import type { NextPointInput } from '../types.js';
 import { ColorSwatches } from './ColorSwatches.js';
+import { isBeforeFollowed, nextPointError } from './nextPointError.js';
 
 type Props = {
   colors: readonly string[];
@@ -18,11 +19,11 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
   const [color, setColor] = useState(colors[0] ?? '#ffffff');
   const [error, setError] = useState<string | null>(null);
 
-  const earlier = date !== '' && date < defaultDate;
+  const earlier = isBeforeFollowed(date, defaultDate);
 
   const submit = () => {
-    if (!title.trim()) return setError('The name is missing.');
-    if (!date) return setError('The date is missing. Every point needs a date.');
+    const missing = nextPointError(title, date);
+    if (missing) return setError(missing);
     const problem = onAddNext({ title: title.trim(), date, newPath, color });
     if (problem) return setError(problem);
     onDone();

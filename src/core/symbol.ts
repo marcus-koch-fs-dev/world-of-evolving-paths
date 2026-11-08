@@ -9,3 +9,16 @@ export function symbolSize(point: { kind: PointKind; importance?: number }): num
   const base = point.kind === 'goal' ? GOAL_SIZE : POINT_SIZE;
   return base * (1 + ((point.importance ?? 1) - 1) * SIZE_PER_IMPORTANCE);
 }
+
+/** The symbol box is this wide in symbol units; the shape inside is drawn in these units. */
+export const SYMBOL_UNITS = 72;
+/** Radius of the drawn shape in symbol units. The shape is smaller than the box so its outline fits. */
+export const SHAPE_RADIUS = 26;
+
+/** Radius of the drawn shape of a point in world units: what you see as the circle, not the whole box. */
+export function shapeRadiusOf(point: { kind: PointKind; importance?: number }): number {
+  return (SHAPE_RADIUS / SYMBOL_UNITS) * symbolSize(point);
+}
+
+/** How far outside the drawn shape the pulsing rings start, for points and for the "Today" marker alike. */
+export const RING_GAP = 6;

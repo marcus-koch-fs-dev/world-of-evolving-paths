@@ -1,6 +1,9 @@
-import { layoutPeriod, layoutSignature, type PeriodLayout, placeWorld, reuseLayout } from '../../core/layout.js';
+import { layoutPeriod, type PeriodLayout, placeWorld } from '../../core/layout.js';
+import { layoutSignature, reuseLayout } from '../../core/layoutCache.js';
 import type { PeriodData, PeriodMap, PlacedWorld, Position } from '../../core/types.js';
 import { validatePeriodData } from '../../core/validate.js';
+import { anyChange, type ConfigSnapshot, configDelta, EMPTY_SNAPSHOT, needsLayout } from './configDelta.js';
+import { createOverrides, positionIn } from './createOverrides.js';
 
 type Config = { periods: PeriodMap; view: string; seed: number; today: string };
 
@@ -28,86 +31,50 @@ export type WorldModel = {
 
 const NOTHING: Changes = { changed: false, viewChanged: false, dataChanged: false, layoutChanged: false };
 
-/** The world with some points moved to other positions. */
-export function withOverrides(world: PlacedWorld, overrides: ReadonlyMap<string, Position>): PlacedWorld {
-  if (overrides.size === 0) return world;
-  return { ...world, points: world.points.map((point) => ({ ...point, ...overrides.get(point.id) })) };
-}
-
-/** Where a point is in a world. A point that is not there is at the origin. */
-export function positionIn(world: PlacedWorld | null, id: string): Position {
-  const point = world?.points.find((candidate) => candidate.id === id);
-  return point ? { x: point.x, y: point.y } : { x: 0, y: 0 };
-}
-
 /**
  * The world to draw, derived from the options. The points are laid out again only when something the layout depends
  * on changed (see `layoutSignature`), the view or the seed. New titles, statuses or strengths, or a new `today`,
  * reuse the layout, so moving through time is cheap even when the app builds new objects for every step.
- * Positions set while dragging live in `overrides` until the app passes new data.
+ * Positions set while dragging live in the overrides until the app passes new data.
  */
 export function createWorldModel(onError: (errors: string[]) => void): WorldModel {
-  let rawData: PeriodData | undefined;
+  const overrides = createOverrides();
+  let snapshot: ConfigSnapshot = EMPTY_SNAPSHOT;
   let data: PeriodData | null = null;
-  let view: string | null = null;
-  let seed = Number.NaN;
-  let today = '';
-  let signature = '';
   let layout: PeriodLayout | null = null;
   let base: PlacedWorld | null = null;
-  let composed: PlacedWorld | null = null;
-  const overrides = new Map<string, Position>();
 
-  const validate = (raw: PeriodData | undefined) => {
-    data = null;
-    if (raw === undefined) return;
+  const validate = (raw: PeriodData | undefined): PeriodData | null => {
+    if (raw === undefined) return null;
     const result = validatePeriodData(raw);
-    if (result.ok) data = result.data;
-    else onError(result.errors);
+    if (result.ok) return result.data;
+    onError(result.errors);
+    return null;
   };
 
-  const world = (): PlacedWorld | null => {
-    if (!base || overrides.size === 0) return base;
-    composed ??= withOverrides(base, overrides);
-    return composed;
-  };
+  const world = () => overrides.apply(base);
 
   return {
     configure(config) {
       const raw = config.periods[config.view];
-      const dataChanged = raw !== rawData;
-      const viewChanged = config.view !== view;
-      const seedChanged = config.seed !== seed;
-      if (!dataChanged && !viewChanged && !seedChanged && config.today === today) return NOTHING;
+      const delta = configDelta(snapshot, { ...config, raw });
+      if (!anyChange(delta)) return NOTHING;
 
-      if (dataChanged) validate(raw);
-      if (dataChanged || viewChanged || seedChanged) overrides.clear();
-      const nextSignature = data ? layoutSignature(data) : '';
-      const layoutChanged = viewChanged || seedChanged || nextSignature !== signature;
-      rawData = raw;
-      view = config.view;
-      seed = config.seed;
-      today = config.today;
-      signature = nextSignature;
+      if (delta.dataChanged) data = validate(raw);
+      if (delta.dataChanged || delta.viewChanged || delta.seedChanged) overrides.clearAll();
+      const signature = data ? layoutSignature(data) : '';
+      const layoutChanged = needsLayout(delta, signature !== snapshot.signature);
+      snapshot = { raw, view: config.view, seed: config.seed, today: config.today, signature };
       if (layoutChanged) layout = data ? layoutPeriod(data, config.view, config.seed) : null;
-      else if (dataChanged && data && layout) layout = reuseLayout(data, layout);
+      else if (delta.dataChanged && data && layout) layout = reuseLayout(data, layout);
       base = layout ? placeWorld(layout, config.today) : null;
-      composed = null;
-      return { changed: true, viewChanged, dataChanged, layoutChanged };
+      return { changed: true, viewChanged: delta.viewChanged, dataChanged: delta.dataChanged, layoutChanged };
     },
 
     periodData: () => data,
     world,
     positionOf: (id) => positionIn(world(), id),
-
-    setOverride(id, position) {
-      overrides.set(id, position);
-      composed = null;
-    },
-
-    clearOverride(id) {
-      overrides.delete(id);
-      composed = null;
-    },
+    setOverride: overrides.set,
+    clearOverride: overrides.clear,
   };
 }

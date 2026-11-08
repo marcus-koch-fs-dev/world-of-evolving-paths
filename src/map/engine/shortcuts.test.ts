@@ -1,15 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { shortcutFor } from './shortcuts.js';
 
-class FakeElement {
-  constructor(private readonly insideTextField: boolean) {}
-  closest() {
-    return this.insideTextField ? this : null;
-  }
-}
+// Stands in for the DOM's `Element`, so `instanceof Element` works without a browser
+function FakeElement() {}
+
+const createTarget = (insideTextField: boolean) =>
+  Object.assign(Object.create(FakeElement.prototype), { closest: () => (insideTextField ? {} : null) });
 
 const press = (key: string, extra: Partial<KeyboardEvent> = {}, insideTextField = false) =>
-  ({ key, target: new FakeElement(insideTextField), ...extra }) as unknown as KeyboardEvent;
+  ({ key, target: createTarget(insideTextField), ...extra }) as unknown as KeyboardEvent;
 
 describe('Keyboard shortcuts', () => {
   beforeEach(() => {

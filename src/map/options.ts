@@ -1,31 +1,12 @@
+import type { BackgroundOptions, BackgroundPattern } from '../core/background/types.js';
 import type { Camera } from '../core/camera.js';
 import type { Direction } from '../core/orientation.js';
 import type { PeriodMap, Position } from '../core/types.js';
 
-export type BackgroundPattern = 'none' | 'hex' | 'dots' | 'stars';
+export type { BackgroundOptions, BackgroundPattern };
 
 // Which way time runs on the screen. `auto` is vertical while the map is taller than wide, otherwise horizontal.
 export type Orientation = Direction | 'auto';
-
-export type BackgroundOptions = {
-  /** Plain color (default) or a gradient from `base` to `color2`. */
-  fill?: 'solid' | 'gradient';
-  pattern?: BackgroundPattern;
-  /** Base color `#rrggbb`. */
-  base?: string;
-  /** Color of the pattern. */
-  color?: string;
-  /** Second color of the gradient. */
-  color2?: string;
-  /** Direction of the gradient in degrees. */
-  angle?: number;
-  /** Position of the gradient's middle in percent. */
-  mid?: number;
-  /** Brightness of the pattern, 0 to 1. */
-  intensity?: number;
-  /** Size of the pattern, 0.5 to 2. */
-  scale?: number;
-};
 
 export type PointMoveEvent = {
   id: string;
@@ -96,6 +77,8 @@ export type PathWorldHandle = {
   subscribeCamera(listener: CameraListener): () => void;
   /** Calls the listener when points were laid out again or moved. Returns a function that stops listening. */
   subscribeWorld(listener: () => void): () => void;
+  /** The direction time runs on the screen right now. With `orientation: 'auto'` this is the one that was chosen. */
+  getDirection(): Direction;
   /** Increases whenever the points were laid out again or moved. */
   getWorldVersion(): number;
   /** Element that follows the camera. Controls placed here move and scale with the world. */

@@ -11,14 +11,16 @@ A TypeScript library for date-based, evolving paths on a pannable, zoomable canv
 
 ## Git
 
+- Create the branch before the first edit. Never work directly on `main`, not even for small changes.
 - One branch per feature: `feature-<short-topic>`. Merge into `main` with `git merge --no-ff`, never squash or rebase.
-- Run `/code-review` on the feature branch before merging.
+- Before merging: `/code-review`, fix the findings, then run all tests. While bugs are still being found, run focused checks only.
 
 ## Stack
 
 - TypeScript (strict), PixiJS, Vite, React only in the React adapter.
 - Biome for lint, format and imports. Vitest for tests.
 - No new dependencies without asking.
+- Node.js 24 (`engines >=24`, CI and Docker on `node:24`).
 
 ## Architecture
 
@@ -41,8 +43,12 @@ The library never touches `localStorage` or stores data. A test enforces the lay
 ## Code style
 
 - **Functional approach: no classes of our own.** State lives in factory functions with closures (`createX`). Put the logic into small, separate, exported functions that take the state they need as parameters, so only what is used gets loaded. Classes from other libraries, such as Pixi's, are fine.
+- **Single responsibility for factories, modules and hooks, too.** A `createX` factory, a module or a hook does one job. A main factory only wires smaller ones together. Split when a factory grows past about 8 inner functions or 120 lines, or when it holds two unrelated pieces of state. Pure parts (diffs, calculations) become separate, tested functions. Apply this while writing, not in a later cleanup.
 - **Modern JavaScript only (ES2023).** Write it this way from the first line, not in a later cleanup. `const` by default, `let` only when a value really changes, never `var`. Destructuring, spread, optional chaining, `??`, template strings, arrow functions, `async`/`await` instead of `.then`, `.at(-1)` instead of `[length - 1]`, `includes` instead of `indexOf`.
 - **No `for` or `while` loops.** Use array methods (`map`, `filter`, `find`, `findLast`, `some`, `every`, `flatMap`, `reduce`, `forEach`). State from step to step goes into `reduce` or a small recursive function.
+- **No mutable state at module level.** A cache or counter lives inside a factory, or has a size limit.
+- **One pattern, one helper.** When the same pattern shows up a second time (slot sync, easing, random numbers), it becomes a shared, tested function.
+- A component with many props takes one settings object and a single `onChange(patch)` instead of a prop and a callback per value.
 - **No n² work for simple tasks.** Before iterating inside an iteration, look for a better algorithm (Map lookup, grouping, sorting).
 - Relative imports in `src/` end in `.js` (`./geometry.js`, `./map/index.js`), so the published types resolve under `node16`. Check with `npx tsc -p tsconfig.build.json --noEmit --module node16 --moduleResolution node16`.
 - No `any`. Type data and state explicitly.

@@ -4,19 +4,12 @@ import { PATH_PALETTE, type PathInfo, type PathPoint } from '../../../core/index
 import { useWorldVersion } from '../../hooks/useWorldVersion.js';
 import { usePathWorldHandle } from '../../PathWorldContext.js';
 import { MenuTiles } from './MenuTiles.js';
-import { ColorPanel } from './panels/ColorPanel.js';
-import { DeletePanel } from './panels/DeletePanel.js';
-import { DetailsPanel } from './panels/DetailsPanel.js';
-import { KindPanel } from './panels/KindPanel.js';
-import { NextPointPanel } from './panels/NextPointPanel.js';
-import { RenamePanel } from './panels/RenamePanel.js';
-import { STATUS_LABELS, StatusPanel } from './panels/StatusPanel.js';
+import { type PanelId, panelFor } from './panels/panelFor.js';
+import { STATUS_LABELS } from './panels/StatusPanel.js';
 import { anchorFor, type MenuPlacement, resolvePlacement } from './placement.js';
 import './pointMenu.css';
-import { TILES } from './tiles.js';
+import { TILES, visibleTiles } from './tiles.js';
 import type { NextPointInput, PointPatch, TileId } from './types.js';
-
-const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
 
 export type PointMenuProps = {
   point: PathPoint;
@@ -38,7 +31,7 @@ export type PointMenuProps = {
   onCustomColor?: (color: string) => void;
   /** Tiles to leave out. */
   hide?: readonly TileId[];
-  /** Where the menu sits next to the point. Default uto: below, or above when there is no room below. */
+  /** Where the menu sits next to the point. Default auto: below, or above when there is no room below. */
   placement?: MenuPlacement;
   /** The connect tile shows when this is given. Clicking it calls it; the app then waits for the user to pick the point to connect to. */
   onConnect?: () => void;
@@ -47,9 +40,6 @@ export type PointMenuProps = {
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
 };
-
-/** The tiles that open a panel. The connect tile has none: it hands over to the app at once. */
-type PanelId = Exclude<TileId, 'connect'>;
 
 const checkInLabel = (count: number) => `${count} check-in${count === 1 ? '' : 's'}`;
 
@@ -70,37 +60,16 @@ function PointMenuBody(props: PointMenuProps) {
   if (!position) return null;
 
   const { point, path } = props;
-  const colors = props.colors ?? PATH_PALETTE;
-  const tiles = TILES.filter(
-    (tile) => !props.hide?.includes(tile.id) && (tile.id !== 'connect' || props.onConnect !== undefined),
-  );
+  const tiles = visibleTiles(TILES, props.hide, props.onConnect !== undefined);
   const close = () => setOpen(null);
   const camera = handle.getCamera();
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
   const placement = resolvePlacement(props.placement ?? 'auto', position.y * camera.zoom + camera.y, room);
 
-  const panels: Record<PanelId, React.ReactNode> = {
-    status: <StatusPanel status={point.status} canComplete={props.canComplete ?? true} onUpdate={props.onUpdate} />,
-    next: <NextPointPanel colors={colors} defaultDate={point.date} onAddNext={props.onAddNext} onDone={close} />,
-    kind: <KindPanel kind={point.kind} branches={point.next.length >= 2} onUpdate={props.onUpdate} />,
-    color: (
-      <ColorPanel
-        colors={colors}
-        value={path.color}
-        onPick={props.onPathColor}
-        customColors={props.customColors}
-        onCustomColor={props.onCustomColor}
-      />
-    ),
-    rename: <RenamePanel title={point.title} onRename={(title) => props.onUpdate({ title })} onDone={close} />,
-    details: (
-      <DetailsPanel
-        point={point}
-        importanceRange={props.importanceRange ?? DEFAULT_IMPORTANCE_RANGE}
-        onUpdate={props.onUpdate}
-      />
-    ),
-    remove: <DeletePanel onDelete={props.onDelete} />,
+  const toggle = (id: TileId) => {
+    if (id !== 'connect') return setOpen((current) => (current === id ? null : id));
+    close();
+    props.onConnect?.();
   };
 
   return createPortal(
@@ -119,17 +88,14 @@ function PointMenuBody(props: PointMenuProps) {
           open={open}
           pathColor={path.color}
           connecting={props.connecting === true}
-          onToggle={(id) => {
-            if (id === 'connect') {
-              close();
-              props.onConnect?.();
-              return;
-            }
-            setOpen((current) => (current === id ? null : id));
-          }}
+          onToggle={toggle}
         />
       </div>
-      {open && <div className="pw-menu-sub">{panels[open]}</div>}
+      {open && (
+        <div className="pw-menu-sub">
+          {panelFor(open, { menu: props, colors: props.colors ?? PATH_PALETTE, close })}
+        </div>
+      )}
     </div>,
     handle.overlay,
   );

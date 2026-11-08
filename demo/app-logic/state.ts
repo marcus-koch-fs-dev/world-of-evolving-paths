@@ -39,13 +39,20 @@ export function nextPointProblem(input: NextPointInput): string | null {
   return null;
 }
 
-/** Does following the connections from `startId` lead to `targetId`? */
-function leadsTo(points: DemoPoint[], startId: string, targetId: string, seen = new Set<string>()): boolean {
+/** The id of a point the user adds. One place for the format, so the app can predict it. */
+export const customPointId = (nextId: number) => `custom-${nextId}`;
+
+/** Does following the connections from `startId` lead to `targetId`? `nextOf` maps each id to the ids it links to. */
+function leadsTo(
+  nextOf: ReadonlyMap<string, readonly string[]>,
+  startId: string,
+  targetId: string,
+  seen = new Set<string>(),
+): boolean {
   if (startId === targetId) return true;
   if (seen.has(startId)) return false;
   seen.add(startId);
-  const next = points.find((point) => point.id === startId)?.next ?? [];
-  return next.some((id) => leadsTo(points, id, targetId, seen));
+  return (nextOf.get(startId) ?? []).some((id) => leadsTo(nextOf, id, targetId, seen));
 }
 
 /** The message to show when two points cannot be connected, or null when they can. */
@@ -53,7 +60,8 @@ export function connectProblem(points: DemoPoint[], fromId: string, toId: string
   const from = points.find((point) => point.id === fromId);
   if (!from || fromId === toId) return 'Pick another point to connect to.';
   if (from.next.includes(toId)) return 'These points are already connected.';
-  if (leadsTo(points, toId, fromId)) return 'That would make a circle. A path only runs forward.';
+  if (leadsTo(new Map(points.map((point) => [point.id, point.next])), toId, fromId))
+    return 'That would make a circle. A path only runs forward.';
   return null;
 }
 
@@ -66,7 +74,7 @@ function connectPoints(state: DemoState, fromId: string, toId: string): DemoStat
 }
 
 function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>): DemoState {
-  const id = `custom-${state.nextId}`;
+  const id = customPointId(state.nextId);
   const point: DemoPoint = {
     id,
     pathId: action.pathId,
@@ -88,7 +96,7 @@ function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>
 function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, { type: 'addNext' }>): DemoState {
   const from = state.points.find((point) => point.id === fromId);
   if (!from) return state;
-  const id = `custom-${state.nextId}`;
+  const id = customPointId(state.nextId);
   const newPath: PathInfo | null = input.newPath
     ? { id: `custom-path-${state.nextId}`, name: input.title.trim(), color: input.color, lane: state.paths.length }
     : null;

@@ -44,7 +44,15 @@ export type NodeDraw = {
   date: string;
 };
 
-export type HereDraw = { id: string; x: number; y: number };
+export type HereDraw = {
+  id: string;
+  x: number;
+  y: number;
+  /** Radius of the pulsing ring. Small in free space; as big as the symbol when the marker rests on a point. */
+  radius: number;
+  /** The marker rests on a point, so its ring starts at the edge of that point's symbol. */
+  onPoint: boolean;
+};
 
 /** A thin circle that shows how much room a point keeps around it. */
 export type RingDraw = { id: string; x: number; y: number; radius: number; dragged: boolean };

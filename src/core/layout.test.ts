@@ -4,7 +4,8 @@ import { periodOf } from './calendar.js';
 import { collisionRadius } from './collision.js';
 import { toDay } from './dates.js';
 import { flattenPeriod } from './flatten.js';
-import { dateAtX, dayAtX, generateLayout, placePeriod, tileWidth } from './layout.js';
+import { generateLayout, placePeriod } from './layout.js';
+import { dateAtX, dayAtX, tileWidth } from './timeAxis.js';
 
 const week = periodOf('week', '2026-11-04');
 const WEEK_KEY = week.key;

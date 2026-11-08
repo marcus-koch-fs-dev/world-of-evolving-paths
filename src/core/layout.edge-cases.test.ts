@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { makePath, makePoint } from '../../tests/fixtures.js';
 import { periodOf } from './calendar.js';
-import { dateAtX, generateLayout } from './layout.js';
+import { generateLayout } from './layout.js';
+import { dateAtX } from './timeAxis.js';
 
 const week = periodOf('week', '2026-11-04');
 

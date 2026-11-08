@@ -1,7 +1,8 @@
-import { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useRef } from 'react';
 import type { PathWorldHandle, PathWorldOptions } from '../map/index.js';
-import { DOCK_EDGES, type DockEdge } from './controls/control-bar/dock.js';
-import { type DockContainers, DockContext } from './DockContext.js';
+import { DOCK_EDGES } from './controls/control-bar/dock.js';
+import { DockContext } from './DockContext.js';
+import { useDockContainers } from './hooks/useDockContainers.js';
 import { usePathWorldMount } from './hooks/usePathWorldMount.js';
 import { PathWorldContext } from './PathWorldContext.js';
 import './pathWorld.css';
@@ -26,23 +27,7 @@ export const PathWorld = forwardRef<PathWorldHandle | null, PathWorldProps>(func
   const hostRef = useRef<HTMLDivElement>(null);
   const handle = usePathWorldMount(hostRef, options);
   useImperativeHandle(ref, () => handle as PathWorldHandle, [handle]);
-  const [containers, setContainers] = useState<DockContainers>({});
-  // One stable ref callback per edge, so the containers are not set again on every render
-  const containerRefs = useMemo(
-    () =>
-      Object.fromEntries(
-        DOCK_EDGES.map((edge) => [
-          edge,
-          (element: HTMLElement | null) => {
-            if (element)
-              setContainers((current) => (current[edge] === element ? current : { ...current, [edge]: element }));
-          },
-        ]),
-      ) as Record<DockEdge, (element: HTMLElement | null) => void>,
-    [],
-  );
-  // Controls render once the map and the places for the bars exist, so a bar never moves from one place to another
-  const ready = handle !== null && DOCK_EDGES.every((edge) => containers[edge] !== undefined);
+  const { containers, refs, ready } = useDockContainers();
 
   return (
     <div className={`pw-root${className ? ` ${className}` : ''}`} style={style}>
@@ -51,9 +36,10 @@ export const PathWorld = forwardRef<PathWorldHandle | null, PathWorldProps>(func
         <DockContext.Provider value={containers}>
           <div className="pw-controls">
             {DOCK_EDGES.map((edge) => (
-              <div key={edge} ref={containerRefs[edge]} className={`pw-dock pw-dock-${edge}`} />
+              <div key={edge} ref={refs[edge]} className={`pw-dock pw-dock-${edge}`} />
             ))}
-            {ready && children}
+            {/* Controls render once the map and the places for the bars exist */}
+            {handle !== null && ready && children}
           </div>
         </DockContext.Provider>
       </PathWorldContext.Provider>

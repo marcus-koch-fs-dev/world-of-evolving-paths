@@ -7,6 +7,7 @@ import {
   tierAt,
   toDay,
 } from 'world-of-evolving-paths';
+import { groupBy } from './groupBy';
 import { FREE_VIEW_MIN_IMPORTANCE, LEVEL_SETTINGS } from './levels';
 import type { CheckIn, DemoPoint } from './types';
 
@@ -21,12 +22,9 @@ export function importanceOf(point: Pick<PathPoint, 'kind' | 'importance'>): num
 /** Splits path ids into pages. A whole path always stays on one page. */
 export function pagesOf(pathIds: string[], pageSize: number): string[][] {
   const size = Math.max(1, Math.floor(pageSize));
-  const pages: string[][] = [];
-  pathIds.forEach((id, index) => {
-    const page = Math.floor(index / size);
-    pages[page] = [...(pages[page] ?? []), id];
-  });
-  return pages;
+  return Array.from({ length: Math.ceil(pathIds.length / size) }, (_, page) =>
+    pathIds.slice(page * size, (page + 1) * size),
+  );
 }
 
 /**
@@ -121,24 +119,22 @@ export function buildPeriodData({ paths, points, checkIns, asOf, period, page, p
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
   const dated = asOf ? withStatusAsOf(points, asOf) : points;
   const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns, asOf);
-  const usedPaths = paths.filter((path) => shown.some((point) => point.pathId === path.id));
+  const shownByPath = groupBy(shown, (point) => point.pathId);
+  const usedPaths = paths.filter((path) => shownByPath.has(path.id));
   const pages = pagesOf(
     usedPaths.map((path) => path.id),
     pageSize,
   );
   const current = Math.min(Math.max(0, page), Math.max(0, pages.length - 1));
   const onPage = new Set(pages[current] ?? []);
-  const onPagePoints = shown.filter((point) => onPage.has(point.pathId));
-  const ids = new Set(onPagePoints.map((point) => point.id));
+  const ids = new Set(shown.filter((point) => onPage.has(point.pathId)).map((point) => point.id));
   const nest = (path: PathInfo) => ({
     ...path,
-    points: onPagePoints
-      .filter((point) => point.pathId === path.id)
-      .map(({ pathId: _pathId, ...point }) => ({
-        ...point,
-        next: point.next.filter((id) => ids.has(id)),
-        ...pins[point.id],
-      })),
+    points: (shownByPath.get(path.id) ?? []).map(({ pathId: _pathId, ...point }) => ({
+      ...point,
+      next: point.next.filter((id) => ids.has(id)),
+      ...pins[point.id],
+    })),
   });
   return {
     data: { paths: usedPaths.filter((path) => onPage.has(path.id)).map(nest) },
