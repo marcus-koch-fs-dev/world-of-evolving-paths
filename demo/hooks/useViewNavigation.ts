@@ -31,3 +31,5 @@ export function useViewNavigation(today: string) {
 
   return { level: view.level, period: view.period, page, setPage, chooseLevel, move, goToToday };
 }
+
+export type ViewNavigation = ReturnType<typeof useViewNavigation>;

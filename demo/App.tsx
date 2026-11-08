@@ -1,61 +1,25 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
-import {
-  type BackgroundOptions,
-  fromDay,
-  isValidLocale,
-  type Orientation,
-  type PeriodMap,
-  periodLabel,
-  toDay,
-  todayLocal,
-  VIEW_LEVELS,
-  type ViewLevel,
-} from 'world-of-evolving-paths';
-import {
-  BackgroundPanel,
-  ControlBar,
-  type DockSlot,
-  PathWorld,
-  PointMenu,
-  playbackPlan,
-  SidePanel,
-  TimeSlider,
-  Toast,
-  useTimePlayback,
-  ViewBar,
-} from 'world-of-evolving-paths/react';
+import { useMemo, useReducer, useState } from 'react';
+import { fromDay, type PeriodMap, toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
+import { BackgroundPanel, ControlBar, PathWorld, PointMenu, SidePanel, Toast } from 'world-of-evolving-paths/react';
 import { rememberColor } from './app-logic/customColors';
-import { DEFAULT_LEVELS } from './app-logic/levels';
+import type { DemoMode } from './app-logic/menuGroups';
 import { buildPeriodData } from './app-logic/periodData';
 import { canComplete } from './app-logic/rules';
-import { connectProblem, DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
-import { playbackStartDay } from './app-logic/timeTravel';
-import { type DemoMode, MainMenu } from './components/MainMenu';
+import { customPointId, DEFAULT_SEED, initialState, nextPointProblem, reduce } from './app-logic/state';
+import { viewRange } from './app-logic/timeTravel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { TimeBar } from './components/TimeBar';
+import { TopBar } from './components/TopBar';
 import { createHabits } from './data/habits';
-import { useStoredState } from './hooks/useStoredState';
+import { useConnectMode } from './hooks/useConnectMode';
+import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
+import { useTimeTravel } from './hooks/useTimeTravel';
 import { useViewNavigation } from './hooks/useViewNavigation';
 
 const FREE_VIEW = 'free';
 // On a phone the bars start collapsed, so they leave room for the map
 const SMALL_SCREEN = window.matchMedia('(max-width: 600px)').matches;
-// Where the user docked the two bars
-type Docks = { main: DockSlot; time: DockSlot };
-const DEFAULT_DOCKS: Docks = { main: 'top-left', time: 'bottom-left' };
 const NO_PINS = {};
-const DEFAULT_BACKGROUND: BackgroundOptions = { pattern: 'stars', intensity: 0.5 };
-// Playing through any range takes about this long at normal speed
-const PLAY_DURATION_MS = 24000;
-const PLAY_SPEEDS = [0.5, 1, 2];
-
-// An older version of the demo could store an image in the background settings. It is dropped, it can be megabytes.
-function withoutImage(stored: BackgroundOptions): BackgroundOptions {
-  const { image: _image, ...rest } = stored as BackgroundOptions & { image?: unknown };
-  return rest;
-}
-
-/** Moving through time: the day, whether it plays, and the view it belongs to. It ends when the view changes. */
-type TimeTravel = { view: string; day: number; playing: boolean };
 
 function createInitialState(today: string) {
   const habits = createHabits(today);
@@ -67,38 +31,31 @@ export function App() {
   const today = useMemo(() => todayLocal(), []);
   const [state, dispatch] = useReducer(reduce, today, createInitialState);
   const navigation = useViewNavigation(today);
+  const settings = useDemoSettings();
+  const { values, docks } = settings;
   const [mode, setMode] = useState<DemoMode>('edit');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
-  const [wavy, setWavy] = useState(false);
-  const [pointsLocked, setPointsLocked] = useState(false);
-  const [animate, setAnimate] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [speed, setSpeed] = useState(1);
-  const [travel, setTravel] = useState<TimeTravel | null>(null);
-  const [background, setBackground] = useStoredState<BackgroundOptions>(
-    'wep-demo:background',
-    DEFAULT_BACKGROUND,
-    withoutImage,
-  );
-  const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
-  const [levels, setLevels] = useStoredState<ViewLevel[]>('wep-demo:levels', DEFAULT_LEVELS);
-  const [orientation, setOrientation] = useStoredState<Orientation>('wep-demo:orientation', 'auto');
-  const [docks, setDocks] = useStoredState<Docks>('wep-demo:docks', DEFAULT_DOCKS);
   // The settings slide in from the side the menu bar is not on
   const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
-  const [storedLocale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || 'en-GB');
-  const locale = isValidLocale(storedLocale) ? storedLocale : 'en-GB';
   const editing = mode === 'edit';
 
-  const view = navigation.level === null ? FREE_VIEW : navigation.period.key;
+  const period = navigation.level === null ? null : navigation.period;
+  const view = period ? period.key : FREE_VIEW;
   const tileKey = `${view}:p${navigation.page}`;
   const pins = state.pins[tileKey] ?? NO_PINS;
-  // Time travel only counts in the view it was started in
-  const travelDay = travel?.view === view ? travel.day : null;
-  const playing = travel?.view === view && travel.playing;
-  const shownToday = travelDay === null ? today : fromDay(travelDay);
+
+  const range = useMemo(
+    () =>
+      viewRange(
+        period,
+        state.points.map((point) => point.date),
+        today,
+      ),
+    [period, state.points, today],
+  );
+  const travel = useTimeTravel({ view, today, range });
 
   const result = useMemo(
     () =>
@@ -106,41 +63,33 @@ export function App() {
         paths: state.paths,
         points: state.points,
         checkIns: state.checkIns,
-        asOf: travelDay === null ? undefined : fromDay(travelDay),
-        period: navigation.level === null ? null : navigation.period,
+        asOf: travel.day === null ? undefined : fromDay(travel.day),
+        period,
         page: navigation.page,
         pins,
       }),
-    [state.paths, state.points, state.checkIns, travelDay, navigation.level, navigation.period, navigation.page, pins],
+    [state.paths, state.points, state.checkIns, travel.day, period, navigation.page, pins],
   );
   const periods = useMemo<PeriodMap>(() => ({ [view]: result.data }), [view, result.data]);
-
-  const range = useMemo(() => {
-    if (navigation.level !== null) return { start: navigation.period.start, end: navigation.period.end };
-    const days = state.points.map((point) => toDay(point.date));
-    return { start: Math.min(...days), end: Math.max(...days) };
-  }, [navigation.level, navigation.period, state.points]);
-
-  const plan = playbackPlan(range.end - range.start, PLAY_DURATION_MS / speed);
-  useTimePlayback({
-    playing,
-    day: travelDay ?? toDay(today),
-    end: range.end,
-    intervalMs: plan.intervalMs,
-    stepDays: plan.stepDays,
-    onDayChange: (day) => setTravel({ view, day, playing: true }),
-    onEnd: () => setTravel((current) => (current ? { ...current, playing: false } : current)),
-  });
 
   // A point that is not in the current view is not selected, so its menu and check-in button do not linger
   const visibleIds = new Set(result.data.paths.flatMap((path) => path.points.map((point) => point.id)));
   const selected = state.points.find((point) => point.id === selectedId && visibleIds.has(point.id));
   const selectedPath = state.paths.find((path) => path.id === selected?.pathId);
-  const offeredLevels = VIEW_LEVELS.filter((option) => levels.includes(option.level));
+  const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
 
-  const changeLevels = (next: ViewLevel[]) => {
-    setLevels(next);
-    if (navigation.level !== null && !next.includes(navigation.level)) navigation.chooseLevel(next[0]);
+  const connecting = useConnectMode({
+    points: state.points,
+    selectedId: selected?.id ?? null,
+    connect: (fromId, toId) => dispatch({ type: 'connect', fromId, toId }),
+    select: setSelectedId,
+    setNotice,
+  });
+
+  const changeSettings = (patch: Partial<SettingsValues>) => {
+    settings.change(patch);
+    const { levels } = patch;
+    if (levels && navigation.level !== null && !levels.includes(navigation.level)) navigation.chooseLevel(levels[0]);
   };
 
   const addNext = (fromId: string, input: Parameters<typeof nextPointProblem>[0]) => {
@@ -148,48 +97,9 @@ export function App() {
     if (problem) return problem;
     dispatch({ type: 'addNext', fromId, input });
     const day = toDay(input.date);
-    const outside = navigation.level !== null && (day < navigation.period.start || day > navigation.period.end);
+    const outside = period !== null && (day < period.start || day > period.end);
     setNotice(outside ? `"${input.title}" was created, but its date is outside this ${navigation.level}.` : null);
     return null;
-  };
-
-  const stopConnecting = () => {
-    setConnectingFrom(null);
-    setNotice(null);
-  };
-
-  // Connecting ends when the point it started from is no longer selected (another view, deleted) and on Escape
-  const connectingStale = connectingFrom !== null && connectingFrom !== selected?.id;
-  useEffect(() => {
-    if (!connectingStale) return;
-    setConnectingFrom(null);
-    setNotice(null);
-  }, [connectingStale]);
-  useEffect(() => {
-    if (connectingFrom === null) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setConnectingFrom(null);
-      setNotice(null);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [connectingFrom]);
-
-  const toggleConnecting = (fromId: string) => {
-    if (connectingFrom === fromId) return stopConnecting();
-    setConnectingFrom(fromId);
-    setNotice('Click the point to connect to. Click the background or press Escape to cancel.');
-  };
-
-  /** While connecting, the next point that is clicked is the target. Anything else selects as usual. */
-  const handleSelect = (id: string | null) => {
-    if (connectingFrom === null) return setSelectedId(id);
-    const problem = id === null ? null : connectProblem(state.points, connectingFrom, id);
-    if (id !== null && !problem) dispatch({ type: 'connect', fromId: connectingFrom, toId: id });
-    setConnectingFrom(null);
-    setNotice(problem);
-    if (id === null) setSelectedId(null);
   };
 
   return (
@@ -197,91 +107,53 @@ export function App() {
       <PathWorld
         periods={periods}
         view={view}
-        today={shownToday}
+        today={travel.shownToday}
         seed={state.seeds[tileKey] ?? DEFAULT_SEED}
         editable={editing}
-        wavy={wavy}
-        pointsLocked={pointsLocked}
-        animate={animate}
-        locale={locale}
-        background={background}
-        orientation={orientation}
-        onSelect={handleSelect}
+        wavy={values.wavy}
+        pointsLocked={values.pointsLocked}
+        animate={values.animate}
+        locale={values.locale}
+        background={settings.background}
+        orientation={values.orientation}
+        onSelect={connecting.handleSelect}
         onPointMove={({ positions }) => dispatch({ type: 'move', viewKey: tileKey, positions })}
         onPointAdd={({ x, y, date }) => {
           dispatch({ type: 'add', viewKey: tileKey, pathId: selected?.pathId ?? state.paths[0].id, x, y, date });
-          setSelectedId(`custom-${state.nextId}`);
+          setSelectedId(customPointId(state.nextId));
         }}
         onError={(errors) => console.error(errors.join('\n'))}
       >
-        <ControlBar dock={docks.main} onDockChange={(main) => setDocks({ ...docks, main })}>
-          <ViewBar
-            periodOnly
-            level={navigation.level}
-            onLevelChange={navigation.chooseLevel}
-            periodLabel={periodLabel(navigation.period, locale)}
-            onPrevious={() => navigation.move(-1)}
-            onNext={() => navigation.move(1)}
-            onToday={navigation.goToToday}
-            page={result.page}
-            pages={navigation.level === null ? 0 : result.pages}
-            onPageChange={navigation.setPage}
-          />
-          <MainMenu
-            levels={offeredLevels}
-            level={navigation.level}
-            onLevelChange={navigation.chooseLevel}
-            onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey })}
-            mode={mode}
-            onModeChange={setMode}
-            settingsOpen={settingsOpen}
-            onSettingsToggle={() => setSettingsOpen((open) => !open)}
-          />
-        </ControlBar>
+        <TopBar
+          dock={docks.main}
+          onDockChange={(main) => settings.setDocks({ ...docks, main })}
+          navigation={navigation}
+          paging={result}
+          locale={values.locale}
+          levels={offeredLevels}
+          onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey })}
+          mode={mode}
+          onModeChange={setMode}
+          settingsOpen={settingsOpen}
+          onSettingsToggle={() => setSettingsOpen((open) => !open)}
+        />
 
         {editing && settingsOpen && (
           <SidePanel side={settingsSide} title="Settings" onClose={() => setSettingsOpen(false)}>
-            <SettingsPanel
-              orientation={orientation}
-              onOrientationChange={setOrientation}
-              wavy={wavy}
-              pointsLocked={pointsLocked}
-              animate={animate}
-              levels={levels}
-              locale={locale}
-              onWavyChange={setWavy}
-              onPointsLockedChange={setPointsLocked}
-              onAnimateChange={setAnimate}
-              onLevelsChange={changeLevels}
-              onLocaleChange={setLocale}
-            >
-              <BackgroundPanel value={background} onChange={setBackground} />
+            <SettingsPanel values={values} onChange={changeSettings}>
+              <BackgroundPanel value={settings.background} onChange={settings.setBackground} />
             </SettingsPanel>
           </SidePanel>
         )}
 
-        <ControlBar
+        <TimeBar
           dock={docks.time}
-          onDockChange={(time) => setDocks({ ...docks, time })}
-          label="Time"
+          onDockChange={(time) => settings.setDocks({ ...docks, time })}
+          range={range}
+          travel={travel}
+          locale={values.locale}
           startCollapsed={SMALL_SCREEN}
-        >
-          <TimeSlider
-            start={range.start}
-            end={range.end}
-            day={travelDay ?? Math.min(range.end, Math.max(range.start, toDay(today)))}
-            locale={locale}
-            playing={playing}
-            speed={speed}
-            speeds={PLAY_SPEEDS}
-            onSpeedChange={setSpeed}
-            onDayChange={(day) => setTravel({ view, day, playing: false })}
-            onPlayingChange={(next) =>
-              setTravel({ view, day: playbackStartDay(travelDay, range.start, range.end), playing: next })
-            }
-            onReset={travelDay === null ? undefined : () => setTravel(null)}
-          />
-        </ControlBar>
+        />
 
         {editing && selected && selectedPath && (
           <ControlBar dock="bottom-right">
@@ -303,11 +175,11 @@ export function App() {
             point={selected}
             path={selectedPath}
             canComplete={canComplete(state.points, selected.id)}
-            connecting={connectingFrom === selected.id}
-            onConnect={() => toggleConnecting(selected.id)}
+            connecting={connecting.from === selected.id}
+            onConnect={() => connecting.toggle(selected.id)}
             checkInCount={state.checkIns.filter((checkIn) => checkIn.pathId === selectedPath.id).length}
-            customColors={customColors}
-            onCustomColor={(color) => setCustomColors((colors) => rememberColor(colors, color))}
+            customColors={settings.customColors}
+            onCustomColor={(color) => settings.setCustomColors((colors) => rememberColor(colors, color))}
             onUpdate={(patch) => dispatch({ type: 'update', id: selected.id, patch })}
             onAddNext={(input) => addNext(selected.id, input)}
             onPathColor={(color) => dispatch({ type: 'pathColor', pathId: selectedPath.id, color })}
