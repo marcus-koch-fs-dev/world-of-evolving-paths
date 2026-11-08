@@ -18,9 +18,22 @@
     "paths",
     "canvas",
     "pixi",
+    "pixijs",
+    "webgl",
     "react",
+    "typescript",
+    "visualization",
     "habits",
-    "visualization"
+    "habit-tracker",
+    "skill-tree",
+    "roadmap",
+    "milestones",
+    "goals",
+    "progress",
+    "map",
+    "interactive-map",
+    "zoom",
+    "pan"
   ],
   "sideEffects": [
     "**/*.css"
