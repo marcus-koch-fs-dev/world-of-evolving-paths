@@ -1,6 +1,9 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import type { HereDraw } from '../../core/scene/types.js';
+import { createSlotMap } from './createSlotMap.js';
 import type { TextPool } from './createTextPool.js';
+import { pulseRing } from './pulse.js';
+import { followShare } from './timing.js';
 
 const INK = '#edefe6';
 const GLIDE_TAU_MS = 140; // time constant of the glide towards the target, in milliseconds
@@ -28,7 +31,7 @@ function glide(slot: HereSlot, deltaMs: number): boolean {
     slot.container.position.set(slot.target.x, slot.target.y);
     return false;
   }
-  const share = 1 - Math.exp(-deltaMs / GLIDE_TAU_MS);
+  const share = followShare(deltaMs, GLIDE_TAU_MS);
   slot.container.position.set(
     slot.container.x + (slot.target.x - slot.container.x) * share,
     slot.container.y + (slot.target.y - slot.container.y) * share,
@@ -37,7 +40,7 @@ function glide(slot: HereSlot, deltaMs: number): boolean {
 }
 
 /** One marker: a white dot with a ring around it and the word "Today" above. */
-function createHereSlot(texts: TextPool): HereSlot {
+function createHereSlot(here: HereDraw, texts: TextPool): HereSlot {
   const container = new Container();
   const dot = new Graphics();
   dot.circle(0, 0, 10).fill({ color: '#000000', alpha: 0.4 });
@@ -48,24 +51,30 @@ function createHereSlot(texts: TextPool): HereSlot {
   label.anchor.set(0.5, 1);
   label.position.set(0, -13);
   container.addChild(ring, dot, label);
-  return { container, ring, label, target: { x: 0, y: 0 } };
+  container.position.set(here.x, here.y);
+  return { container, ring, label, target: { x: here.x, y: here.y } };
 }
 
 /** Draws the "today" markers: a white dot with a pulsing ring and a label. */
 export function createHereLayer(texts: TextPool): HereLayer {
   const container = new Container();
-  const slots = new Map<string, HereSlot>();
   let animate = true;
 
-  const slotFor = (here: HereDraw): HereSlot => {
-    const existing = slots.get(here.id);
-    if (existing) return existing;
-    const created = createHereSlot(texts);
-    created.target = { x: here.x, y: here.y };
-    created.container.position.set(here.x, here.y);
-    container.addChild(created.container);
-    slots.set(here.id, created);
-    return created;
+  const slots = createSlotMap<HereDraw, HereSlot>({
+    create(here) {
+      const slot = createHereSlot(here, texts);
+      container.addChild(slot.container);
+      return slot;
+    },
+    destroy(slot) {
+      texts.drop(slot.label);
+      slot.container.destroy({ children: true });
+    },
+  });
+
+  const update = (slot: HereSlot, here: HereDraw) => {
+    slot.target = { x: here.x, y: here.y };
+    if (!animate) slot.container.position.set(here.x, here.y);
   };
 
   return {
@@ -73,30 +82,14 @@ export function createHereLayer(texts: TextPool): HereLayer {
     setAnimate: (on) => {
       animate = on;
     },
-    isAnimated: () => animate && slots.size > 0,
-    isMoving: () => animate && [...slots.values()].some(isGliding),
-
-    sync(heres) {
-      const seen = new Set<string>();
-      heres.forEach((here) => {
-        seen.add(here.id);
-        const slot = slotFor(here);
-        slot.target = { x: here.x, y: here.y };
-        if (!animate) slot.container.position.set(here.x, here.y);
-      });
-      slots.forEach((slot, id) => {
-        if (seen.has(id)) return;
-        texts.drop(slot.label);
-        slot.container.destroy({ children: true });
-        slots.delete(id);
-      });
-    },
+    isAnimated: () => animate && slots.values().length > 0,
+    isMoving: () => animate && slots.values().some(isGliding),
+    sync: (heres) => slots.sync(heres, update),
 
     tick(phase, deltaMs) {
       // Every marker glides, so collect the results first and only then ask whether any is still moving
-      const moving = [...slots.values()].map((slot) => {
-        slot.ring.scale.set(1 + 1.2 * phase);
-        slot.ring.alpha = 0.6 * (1 - phase);
+      const moving = slots.values().map((slot) => {
+        pulseRing(slot.ring, phase);
         return animate ? glide(slot, deltaMs) : false;
       });
       return moving.some(Boolean);
