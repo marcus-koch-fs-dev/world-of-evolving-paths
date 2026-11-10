@@ -4,6 +4,7 @@ import { BackgroundPanel, ControlBar, PathWorld, PointMenu, SidePanel, Toast } f
 import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
 import { rememberColor } from './app-logic/customColors';
 import { canRedo, canUndo } from './app-logic/history';
+import { minImportanceOf } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
 import { canComplete } from './app-logic/rules';
 import { customPointId, DEFAULT_SEED, initialState, nextPointProblem } from './app-logic/state';
@@ -103,7 +104,17 @@ export function App() {
         onSelect={connecting.handleSelect}
         onPointMove={({ positions }) => dispatch({ type: 'move', viewKey: tileKey, positions })}
         onPointAdd={({ x, y, date }) => {
-          dispatch({ type: 'add', viewKey: tileKey, pathId: selected?.pathId ?? state.paths[0].id, x, y, date });
+          // The new point is as important as the view needs, so it shows where it was added
+          const importance = minImportanceOf(period?.level ?? null);
+          dispatch({
+            type: 'add',
+            viewKey: tileKey,
+            pathId: selected?.pathId ?? state.paths[0].id,
+            x,
+            y,
+            date,
+            importance,
+          });
           setSelectedId(customPointId(state.nextId));
         }}
         onError={(errors) => console.error(errors.join('\n'))}

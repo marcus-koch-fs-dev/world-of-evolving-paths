@@ -17,7 +17,7 @@ export type DemoState = {
 
 export type DemoAction =
   | { type: 'move'; viewKey: string; positions: Record<string, Position> }
-  | { type: 'add'; viewKey: string; pathId: string; x: number; y: number; date: string }
+  | { type: 'add'; viewKey: string; pathId: string; x: number; y: number; date: string; importance: number }
   | { type: 'addNext'; fromId: string; input: NextPointInput }
   | { type: 'update'; id: string; patch: PointPatch }
   | { type: 'pathColor'; pathId: string; color: string }
@@ -83,6 +83,7 @@ function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>
     title: 'New point',
     kind: 'milestone',
     status: 'open',
+    importance: action.importance,
     next: [],
   };
   const pins = { ...state.pins[action.viewKey], [id]: { x: action.x, y: action.y } };

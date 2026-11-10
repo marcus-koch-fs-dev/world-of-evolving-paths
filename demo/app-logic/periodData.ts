@@ -8,7 +8,7 @@ import {
   toDay,
 } from 'world-of-evolving-paths';
 import { groupBy } from './groupBy';
-import { FREE_VIEW_MIN_IMPORTANCE, LEVEL_SETTINGS } from './levels';
+import { LEVEL_SETTINGS, minImportanceOf } from './levels';
 import type { CheckIn, DemoPoint } from './types';
 
 const MIN_IMPORTANCE_OF_ENDS = 3;
@@ -115,7 +115,7 @@ export type ViewResult = { data: PeriodData; pages: number; page: number };
 
 /** Everything the library needs for one view, plus how many pages there are. */
 export function buildPeriodData({ paths, points, checkIns, asOf, period, page, pins }: ViewRequest): ViewResult {
-  const minImportance = period ? LEVEL_SETTINGS[period.level].minImportance : FREE_VIEW_MIN_IMPORTANCE;
+  const minImportance = minImportanceOf(period?.level ?? null);
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
   const dated = asOf ? withStatusAsOf(points, asOf) : points;
   const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns, asOf);
