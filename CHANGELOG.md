@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.5 (2026-11-10)
+
+### Library
+
+- New event `onPointDoubleClick({ id, date })`. It tells your app that a point was double-clicked and gives the date of the point. What happens next is up to your app.
+- `ViewBar` has two new optional props, `date` and `onDateChange`. With them a click on the period opens a date picker, so the user does not have to click through the periods one by one.
+
+### Demo
+
+- Click the period in the top bar to pick a date. The view jumps to the period that has that date.
+- Double-click a point to go one level deeper, to the period of its date: year, month, week (and day, if it is switched on). The half year is skipped.
+- A new **Back** button returns to the view before the last double-click.
+
 ## 0.0.4 (2026-11-10)
 
 ### Library
