@@ -8,6 +8,7 @@ import {
   toDay,
 } from 'world-of-evolving-paths';
 import { groupBy } from './groupBy';
+import { createLeadFinder } from './leads';
 import { LEVEL_SETTINGS, minImportanceOf } from './levels';
 import type { CheckIn, DemoPoint } from './types';
 
@@ -29,16 +30,18 @@ export function pagesOf(pathIds: string[], pageSize: number): string[][] {
 
 /**
  * The points of a view: inside the period and important enough. A connection runs across hidden points
- * to the next visible one, and only points the view shows are linked.
+ * to the next visible one, and only points the view shows are linked. A point whose path continues outside the
+ * period gets `incoming` and `outgoing`, so the map can show where the path comes from and where it goes.
  */
 export function visiblePoints(all: DemoPoint[], period: Period | null, minImportance: number): DemoPoint[] {
   const byId = new Map(all.map((point) => [point.id, point]));
-  const isShown = (point: DemoPoint) => {
+  const isInPeriod = (point: DemoPoint) => {
     const day = toDay(point.date);
-    const inPeriod = period === null || (day >= period.start && day <= period.end);
-    return inPeriod && importanceOf(point) >= minImportance;
+    return period === null || (day >= period.start && day <= period.end);
   };
+  const isShown = (point: DemoPoint) => isInPeriod(point) && importanceOf(point) >= minImportance;
   const shown = new Set(all.filter(isShown).map((point) => point.id));
+  const leadsOf = createLeadFinder(all, shown, isInPeriod);
 
   const reach = (id: string, seen: Set<string>, found: Set<string>) => {
     (byId.get(id)?.next ?? []).forEach((nextId) => {
@@ -54,7 +57,7 @@ export function visiblePoints(all: DemoPoint[], period: Period | null, minImport
     .map((point) => {
       const found = new Set<string>();
       reach(point.id, new Set([point.id]), found);
-      return { ...point, next: [...found] };
+      return { ...point, next: [...found], ...leadsOf(point) };
     });
 }
 
