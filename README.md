@@ -168,19 +168,20 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 
 **Moving around**
 
-| I want to …             | Do this                                                                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Zoom                    | Mouse wheel or pinch.                                                                                                                    |
-| Pan                     | Drag the empty area.                                                                                                                     |
-| Center / fit everything | Keys **M** and **E** while the pointer is over the map, or the buttons (tiles) in the menu.                                              |
-| Change the period       | The arrows and **Today** in the top bar. The levels (Free, Week, Month, Half year, Year) are in the menu (▦) under **View**.             |
-| Pick a date directly    | Click the period in the top bar (for example "2026" or "KW 2"). A date picker opens. The view jumps to the period that has that date.    |
-| Go one level deeper     | Double-click a point. From the year you go to the month, then the week (and the day, if you switched it on in the settings).             |
-| Go back                 | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                    |
-| Travel through time     | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view. |
-| Turn the map            | Menu (▦) → **Map** → Turn left / Turn right.                                                                                             |
-| Change the background   | Menu (▦) → **Mode** → Settings.                                                                                                          |
-| Switch to read-only     | Menu (▦) → **Mode** → Map. The editor mode has everything on.                                                                            |
+| I want to …              | Do this                                                                                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zoom                     | Mouse wheel or pinch.                                                                                                                         |
+| Pan                      | Drag the empty area.                                                                                                                          |
+| Center / fit everything  | Keys **M** and **E** while the pointer is over the map, or the buttons (tiles) in the menu.                                                   |
+| Change the period        | The arrows and **Today** in the top bar. The levels (Free, Week, Month, Half year, Year) are in the menu (▦) under **View**.                  |
+| Pick a date directly     | Click the period in the top bar (for example "2026" or "KW 2"). A date picker opens. The view jumps to the period that has that date.         |
+| Go one level deeper      | Double-click a point. From the year you go to the month, then the week (and the day, if you switched it on in the settings).                  |
+| See where a path goes on | At the start and end of a view, a line leaves the point towards the edge. At its end you read the name and date of the next or earlier point. |
+| Go back                  | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                         |
+| Travel through time      | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view.      |
+| Turn the map             | Menu (▦) → **Map** → Turn left / Turn right.                                                                                                  |
+| Change the background    | Menu (▦) → **Mode** → Settings.                                                                                                               |
+| Switch to read-only      | Menu (▦) → **Mode** → Map. The editor mode has everything on.                                                                                 |
 
 > [!TIP]
 > Both bars can be dragged to the top or bottom edge, left, middle or right. Everything on the bars is built from the controls of the library, see [Controls](#controls-react).
@@ -223,6 +224,29 @@ const periods: PeriodMap = {
 - **What a view shows is up to your app.** The library does not filter. A year view typically gets only the important points, a day view all of them. The demo shows one way to do it (`demo/app-logic/`): filter by period and importance, connect across hidden points, split many paths into pages.
 - Typically `periods` holds only the view you show, and you load the next one when the user changes the view.
 - If `periods` has no entry for `view`, the map stays empty and reports nothing, so make sure the view you show has data.
+
+### Show where a path comes from and goes
+
+A view shows only some points. A point at the start of the period has a path that came from before, and the last point has a path that goes on after. Without a hint it looks as if the path ended there, and that looks like a mistake.
+
+Tell the map about those connections with `incoming` and `outgoing` on the point. Each entry has the `title` and the `date` of the point out there:
+
+```ts
+const point = {
+  id: 'pull-up',
+  date: '2026-03-23',
+  title: '5 pull-ups',
+  kind: 'milestone',
+  status: 'done',
+  next: [],
+  incoming: [{ title: 'First pull-up', date: '2026-02-09' }], // the path comes from here
+  outgoing: [{ title: '10 pull-ups', date: '2026-06-08' }], // and goes on to here
+};
+```
+
+The map draws a line from the point towards the edge of the view and writes the title and date at its end. The line looks like the path: wide when it was walked, dotted when it is still ahead. A point can have several, for example at a fork.
+
+The map does not look for these points itself, because it only knows the points of this view. Your app finds them when it builds the view. The demo does it in `demo/app-logic/leads.ts`: it follows the connections over hidden points until it reaches the first point outside the period.
 
 ### Keep the layout
 
@@ -297,18 +321,20 @@ The option `orientation` sets which way time runs: `horizontal` (left to right),
 
 **`PathPoint`** is one point on a path.
 
-| Field        | Type                                              | Meaning                                                                                        |
-| ------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `id`         | `string`                                          | Unique within the view.                                                                        |
-| `date`       | `string`                                          | ISO date `YYYY-MM-DD`. Decides the rough horizontal position.                                  |
-| `title`      | `string`                                          | Shown under the point.                                                                         |
-| `kind`       | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when two or more points follow), otherwise ●.                    |
-| `status`     | `'done' \| 'current' \| 'open' \| 'abandoned'`    | Looks and animation.                                                                           |
-| `next`       | `string[]`                                        | Ids of the points this one leads to. Draws the connections.                                    |
-| `importance` | `number` (1–5, optional)                          | Bigger points keep more distance.                                                              |
-| `note`       | `string` (optional)                               | Free text for your app.                                                                        |
-| `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Make paths stronger](#make-paths-stronger). |
-| `x`, `y`     | `number` (optional)                               | Pins the point. Set both or neither.                                                           |
+| Field        | Type                                              | Meaning                                                                                                                                                                                         |
+| ------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | `string`                                          | Unique within the view.                                                                                                                                                                         |
+| `date`       | `string`                                          | ISO date `YYYY-MM-DD`. Decides the rough horizontal position.                                                                                                                                   |
+| `title`      | `string`                                          | Shown under the point.                                                                                                                                                                          |
+| `kind`       | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when two or more points follow), otherwise ●.                                                                                                                     |
+| `status`     | `'done' \| 'current' \| 'open' \| 'abandoned'`    | Looks and animation.                                                                                                                                                                            |
+| `next`       | `string[]`                                        | Ids of the points this one leads to. Draws the connections.                                                                                                                                     |
+| `importance` | `number` (1–5, optional)                          | Bigger points keep more distance.                                                                                                                                                               |
+| `note`       | `string` (optional)                               | Free text for your app.                                                                                                                                                                         |
+| `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Make paths stronger](#make-paths-stronger).                                                                                                  |
+| `incoming`   | `{ title, date }[]` (optional)                    | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
+| `outgoing`   | `{ title, date }[]` (optional)                    | Points outside this view that this point leads to. The map draws a line to the edge, with title and date.                                                                                       |
+| `x`, `y`     | `number` (optional)                               | Pins the point. Set both or neither.                                                                                                                                                            |
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order.
 
