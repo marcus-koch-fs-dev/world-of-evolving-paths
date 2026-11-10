@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.0.4 (2026-11-10)
+
+### Library
+
+- `PointMenu` shows the name of the path of the selected point, so you can always see where a point belongs.
+- The "Next point" panel has a field for the name of a new path. `NextPointInput` has a new field `pathName` (empty when the user gave none).
+
+### Documentation
+
+- README: a copy-and-paste object with every option and its default value, the start state of the demo editor, and the defaults of the `PointMenu`.
+
+### Demo
+
+- A new path gets the name the user typed. Without a name it takes the title of its first point, as before.
+- The demo check-ins now end yesterday. Every path can be checked in today, and the check-in can be undone.
+
 ## 0.0.3 (2026-11-10)
 
 ### Documentation
