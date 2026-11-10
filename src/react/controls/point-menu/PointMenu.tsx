@@ -83,6 +83,7 @@ function PointMenuBody(props: PointMenuProps) {
               : `${STATUS_LABELS[point.status]} · ${checkInLabel(props.checkInCount)}`}
           </span>
         </div>
+        <div className="pw-menu-path">Path: {path.name}</div>
         <MenuTiles
           tiles={tiles}
           open={open}

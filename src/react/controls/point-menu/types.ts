@@ -9,6 +9,8 @@ export type NextPointInput = {
   newPath: boolean;
   /** Color of the new path. Only meaningful with `newPath`. */
   color: string;
+  /** Name of the new path. Only meaningful with `newPath`. Empty: the app picks a name, for example the title. */
+  pathName: string;
 };
 
 export type TileId = 'status' | 'next' | 'connect' | 'kind' | 'color' | 'rename' | 'details' | 'remove';

@@ -56,6 +56,15 @@
   white-space: nowrap;
 }
 
+.pw-menu-path {
+  margin-bottom: 6px;
+  overflow: hidden;
+  color: var(--pw-muted);
+  font-size: 0.85em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .pw-menu-tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
