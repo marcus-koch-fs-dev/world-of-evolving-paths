@@ -174,6 +174,9 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | Pan                     | Drag the empty area.                                                                                                                     |
 | Center / fit everything | Keys **M** and **E** while the pointer is over the map, or the buttons (tiles) in the menu.                                              |
 | Change the period       | The arrows and **Today** in the top bar. The levels (Free, Week, Month, Half year, Year) are in the menu (▦) under **View**.             |
+| Pick a date directly    | Click the period in the top bar (for example "2026" or "KW 2"). A date picker opens. The view jumps to the period that has that date.    |
+| Go one level deeper     | Double-click a point. From the year you go to the month, then the week (and the day, if you switched it on in the settings).             |
+| Go back                 | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                    |
 | Travel through time     | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view. |
 | Turn the map            | Menu (▦) → **Map** → Turn left / Turn right.                                                                                             |
 | Change the background   | Menu (▦) → **Mode** → Settings.                                                                                                          |
@@ -239,6 +242,7 @@ You give points without positions and the library lays them out:
 ### Add points and paths
 
 - The user double-clicks the empty area: `onPointAdd({ x, y, date })` tells you where. You decide whether and how to add a point.
+- The user double-clicks a point: `onPointDoubleClick({ id, date })` tells you which one. The demo uses it to go one level deeper, to the period of that date.
 - The `PointMenu` control has a **Next point** panel. It calls your `onAddNext({ title, date, newPath, color, pathName })`. With `newPath` you create a new `Path` with that color and `pathName` (if empty, use the title) and put the point on it. Without it, the point joins the path of the selected point.
 - A new path is just another entry in `paths`. Give it an `id`, a `name`, a `color` and its points.
 
@@ -323,6 +327,7 @@ All events are options of `PathWorld` and `createPathWorld`.
 | `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                                         |
 | `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                                                                                                                                 |
 | `onPointAdd({ x, y, date })`           | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot. |
+| `onPointDoubleClick({ id, date })`     | A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view.                                                                               |
 | `onError(errors)`                      | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                              |
 
 Update your data in these callbacks and pass the new objects back in. The data is yours. If you do not answer a move within 80 ms with a **new** `PeriodData` object for the current view, the point moves back to where it was. Changing the old object in place does not count, the map compares by reference. Sometimes a point cannot stay where it was dropped (no room, or on a foreign line). Then it moves back along its way until it finds a free spot. That spot is what `onPointMove` reports.
@@ -360,7 +365,7 @@ const options: PathWorldOptions = {
   },
   // formatDate: (iso) => iso, // no default: write the date under a point yourself
   // The events, all optional (see Events above):
-  // onSelect, onPointMove, onPointAdd, onError
+  // onSelect, onPointMove, onPointAdd, onPointDoubleClick, onError
 };
 ```
 
@@ -434,7 +439,7 @@ Ready-made controls are imported from `world-of-evolving-paths/react`. In the re
 | Control           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ZoomControls`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                                                                                                                                         |
-| `ViewBar`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                                                                                                                                          |
+| `ViewBar`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. With `onDateChange` (and `date`) a click on the period opens a date picker. Holds no state.                                                                                                                                                                                                                                              |
 | `ControlBar`      | A bar fixed to the top or bottom edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). Bars on one edge sit side by side. With `onDockChange` the user drags it to another place, you store it; with `label` it can be folded.                                                                                                                                                                                         |
 | `TilePanel`       | One button (`▦`) that opens a small panel of buttons (tiles) in groups, like a number pad. You give the groups and tiles (glyph, label, `active`, `disabled`, `onClick`). It opens away from the edge of its `ControlBar` and stays open until the button is clicked again or Escape is pressed. `ViewBar` with `periodOnly` pairs with it: the period stays in the bar, everything else goes into tiles.                            |
 | `SidePanel`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                                                        |

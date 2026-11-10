@@ -18,6 +18,8 @@ export type PointerHooks = {
   onDragMove(id: string, position: Position): void;
   onDragEnd(id: string): void;
   onBackgroundClick(): void;
+  /** A point was double-clicked. */
+  onPointDoubleClick(id: string): void;
   onBackgroundDoubleClick(world: Position): void;
 };
 
@@ -148,7 +150,9 @@ export function createPointerController(
   const onDoubleClick = (event: MouseEvent) => {
     if (isUiEvent(event) || moved) return;
     const at = world(event);
-    if (hooks.pointAt(at) === null) hooks.onBackgroundDoubleClick(at);
+    const id = hooks.pointAt(at);
+    if (id === null) hooks.onBackgroundDoubleClick(at);
+    else hooks.onPointDoubleClick(id);
   };
 
   const listen = <K extends keyof HTMLElementEventMap>(

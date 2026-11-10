@@ -9,6 +9,7 @@ import type { DemoMode } from './app-logic/menuGroups';
 import { canComplete } from './app-logic/rules';
 import { customPointId, DEFAULT_SEED, initialState, nextPointProblem } from './app-logic/state';
 import { createStateHistory, historyReduce } from './app-logic/stateHistory';
+import { finerLevel } from './app-logic/zoom';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
@@ -116,6 +117,11 @@ export function App() {
             importance,
           });
           setSelectedId(customPointId(state.nextId));
+        }}
+        onPointDoubleClick={({ date }) => {
+          // A double-click on a point goes one level finer, to the period of its date
+          const level = finerLevel(navigation.level, values.levels);
+          if (level) navigation.zoomInto(level, date);
         }}
         onError={(errors) => console.error(errors.join('\n'))}
       >

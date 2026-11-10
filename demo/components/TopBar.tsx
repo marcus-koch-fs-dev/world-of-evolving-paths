@@ -1,7 +1,8 @@
-import { type Orientation, periodLabel, type ViewLevel } from 'world-of-evolving-paths';
+import { fromDay, type Orientation, periodLabel, type ViewLevel } from 'world-of-evolving-paths';
 import { ControlBar, type DockSlot, ViewBar } from 'world-of-evolving-paths/react';
 import type { DemoMode } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
+import { BackButton } from './BackButton';
 import { MainMenu } from './MainMenu';
 import { UndoRedo, type UndoRedoProps } from './UndoRedo';
 
@@ -47,6 +48,8 @@ export function TopBar({
         level={navigation.level}
         onLevelChange={navigation.chooseLevel}
         periodLabel={periodLabel(navigation.period, locale)}
+        date={fromDay(navigation.period.start)}
+        onDateChange={navigation.goToDate}
         onPrevious={() => navigation.move(-1)}
         onNext={() => navigation.move(1)}
         onToday={navigation.goToToday}
@@ -54,6 +57,7 @@ export function TopBar({
         pages={navigation.level === null ? 0 : paging.pages}
         onPageChange={navigation.setPage}
       />
+      <BackButton canGoBack={navigation.canGoBack} onBack={navigation.back} />
       {undoRedo && <UndoRedo {...undoRedo} />}
       <MainMenu
         levels={levels}

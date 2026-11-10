@@ -1,5 +1,6 @@
 import { VIEW_LEVELS, type ViewLevel } from '../../../core/index.js';
 import { LevelSwitch } from './LevelSwitch.js';
+import { PeriodLabel } from './PeriodLabel.js';
 import './viewBar.css';
 
 export type ViewBarProps = {
@@ -12,6 +13,10 @@ export type ViewBarProps = {
   freeLabel?: string;
   /** Label of the shown period, such as `CW 45, 2 Nov – 8 Nov 2026`. */
   periodLabel?: string;
+  /** A date inside the shown period, as `YYYY-MM-DD`. The date picker starts there. */
+  date?: string;
+  /** The user picked a date (`YYYY-MM-DD`). With it the period label is a button that opens a date picker. */
+  onDateChange?: (date: string) => void;
   onPrevious?: () => void;
   onNext?: () => void;
   onToday?: () => void;
@@ -50,7 +55,7 @@ export function ViewBar(props: ViewBarProps) {
           <button type="button" className="pw-button" aria-label="Previous period" onClick={props.onPrevious}>
             ◀
           </button>
-          <span className="pw-view-label">{props.periodLabel}</span>
+          <PeriodLabel label={props.periodLabel} date={props.date} onDateChange={props.onDateChange} />
           <button type="button" className="pw-button" aria-label="Next period" onClick={props.onNext}>
             ▶
           </button>

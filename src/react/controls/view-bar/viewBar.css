@@ -18,6 +18,22 @@
   color: var(--pw-muted);
 }
 
+.pw-date-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* The field is only there to open the date picker next to the label, so it is not shown */
+.pw-date-input {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .pw-select {
   height: 30px;
   padding: 0 8px;
