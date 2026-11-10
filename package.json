@@ -1,6 +1,6 @@
 {
   "name": "world-of-evolving-paths",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Evolving, date-based paths on a pannable, zoomable canvas.",
   "type": "module",
   "license": "MIT",
@@ -42,7 +42,8 @@
     "node": ">=24"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
