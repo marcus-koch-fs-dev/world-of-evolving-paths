@@ -1,5 +1,5 @@
 import type { Shape } from '../shapes.js';
-import type { Position } from '../types.js';
+import type { Lead, Position } from '../types.js';
 
 export type Dash = [on: number, off: number];
 
@@ -57,6 +57,32 @@ export type HereDraw = {
 /** A thin circle that shows how much room a point keeps around it. */
 export type RingDraw = { id: string; x: number; y: number; radius: number; dragged: boolean };
 
+/** The label at the end of a line that leaves the view: the title and date of the point out there. */
+export type LeadDraw = {
+  id: string;
+  /** The point the line leaves from, and what the app told about the point out there. */
+  pointId: string;
+  lead: Lead;
+  /** Where the label sits. The line ends a little before it, at `end`. */
+  x: number;
+  y: number;
+  text: string;
+  /** The line itself, from the point to its end, so a click on it can be found. */
+  line: Position[];
+  /** The end of the line, where the arrow sits. */
+  end: Position;
+  /** The direction out of the view, as a unit vector on the screen. The arrow points that way. */
+  outward: Position;
+  /** Color of the line and the arrow. */
+  color: string;
+  /** The pointer is on the line, so the arrow and the text stand out. */
+  hovered: boolean;
+  /** Before the point in time (incoming) or after it (outgoing). */
+  side: 'before' | 'after';
+  /** Which spot of the text sits on x and y, 0 to 1 each, so the text grows away from the point. */
+  anchor: Position;
+};
+
 export type SceneState = {
   /** Slight wave on the lines. */
   wave: boolean;
@@ -68,4 +94,4 @@ export type SceneState = {
   formatDate?: (iso: string) => string;
 };
 
-export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[] };
+export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[]; leads: LeadDraw[] };

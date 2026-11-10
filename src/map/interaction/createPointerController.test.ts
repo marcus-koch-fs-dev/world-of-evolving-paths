@@ -37,7 +37,13 @@ function fakeElement(offset = { left: 0, top: 0 }) {
   return { element: element as unknown as HTMLElement, fire };
 }
 
-function setup(options: { pointAt?: PointerHooks['pointAt']; offset?: { left: number; top: number } } = {}) {
+function setup(
+  options: {
+    pointAt?: PointerHooks['pointAt'];
+    leadAt?: PointerHooks['leadAt'];
+    offset?: { left: number; top: number };
+  } = {},
+) {
   const { element, fire } = fakeElement(options.offset);
   const camera = createCameraController(() => ({ width: 1000, height: 800 }));
   const hooks = {
@@ -47,7 +53,9 @@ function setup(options: { pointAt?: PointerHooks['pointAt']; offset?: { left: nu
     onDragMove: vi.fn(),
     onDragEnd: vi.fn(),
     onBackgroundClick: vi.fn(),
+    leadAt: vi.fn(options.leadAt ?? (() => null)),
     onPointDoubleClick: vi.fn(),
+    onLeadDoubleClick: vi.fn(),
     onBackgroundDoubleClick: vi.fn(),
   };
   const controller = createPointerController(element, camera, hooks, () => ({ x: 100, y: 100 }));
@@ -65,6 +73,24 @@ describe('Pointer controller', () => {
 
       expect(hooks.onPointDoubleClick).toHaveBeenCalledWith('a');
       expect(hooks.onBackgroundDoubleClick).not.toHaveBeenCalled();
+    });
+
+    it('on a line that leaves the view tells the hooks which line, and does not add a point', () => {
+      const { fire, hooks } = setup({ leadAt: () => 'lead:after:a:0' });
+
+      fire('dblclick', { clientX: 100, clientY: 100 });
+
+      expect(hooks.onLeadDoubleClick).toHaveBeenCalledWith('lead:after:a:0');
+      expect(hooks.onBackgroundDoubleClick).not.toHaveBeenCalled();
+    });
+
+    it('on a point wins over a line that leaves the view', () => {
+      const { fire, hooks } = setup({ pointAt: onPoint, leadAt: () => 'lead:after:a:0' });
+
+      fire('dblclick', { clientX: 100, clientY: 100 });
+
+      expect(hooks.onPointDoubleClick).toHaveBeenCalledWith('a');
+      expect(hooks.onLeadDoubleClick).not.toHaveBeenCalled();
     });
 
     it('on the empty area tells the hooks the position, and no point is reported', () => {

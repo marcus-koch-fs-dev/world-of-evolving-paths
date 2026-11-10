@@ -18,8 +18,12 @@ export type PointerHooks = {
   onDragMove(id: string, position: Position): void;
   onDragEnd(id: string): void;
   onBackgroundClick(): void;
+  /** The id of the line that leaves the view at a world position, if any. */
+  leadAt(world: Position): string | null;
   /** A point was double-clicked. */
   onPointDoubleClick(id: string): void;
+  /** A line that leaves the view was double-clicked. */
+  onLeadDoubleClick(id: string): void;
   onBackgroundDoubleClick(world: Position): void;
 };
 
@@ -123,7 +127,11 @@ export function createPointerController(
       moved = pan.moveTo(event, moved);
       return;
     }
-    if (event.buttons === 0) hooks.onHover(hooks.pointAt(world(event)));
+    if (event.buttons === 0) {
+      const at = world(event);
+      // A line that leaves the view is hovered like a point: the cursor changes and the line lights up
+      hooks.onHover(hooks.pointAt(at) ?? hooks.leadAt(at));
+    }
   };
 
   const onUp = (event: PointerEvent) => {
@@ -151,8 +159,10 @@ export function createPointerController(
     if (isUiEvent(event) || moved) return;
     const at = world(event);
     const id = hooks.pointAt(at);
-    if (id === null) hooks.onBackgroundDoubleClick(at);
-    else hooks.onPointDoubleClick(id);
+    if (id !== null) return hooks.onPointDoubleClick(id);
+    const leadId = hooks.leadAt(at);
+    if (leadId !== null) hooks.onLeadDoubleClick(leadId);
+    else hooks.onBackgroundDoubleClick(at);
   };
 
   const listen = <K extends keyof HTMLElementEventMap>(

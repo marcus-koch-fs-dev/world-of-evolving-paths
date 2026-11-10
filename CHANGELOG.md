@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.0.6 (2026-11-10)
+
+### Library
+
+- Points can have `incoming` and `outgoing`: a list of `{ title, date }` for the points outside the view that the path comes from or goes to. The map draws a line from the point towards the edge, with the title and the date at its end. The line looks like the path (wide when walked, dotted when open) and works in all directions of time. New type `Lead`.
+- The data check reports a wrong `incoming` or `outgoing` with the place of the error.
+- The end of a line that leaves the view is an arrow, in the color of the line, that points out of the view. It and the text stand out while the pointer is on the line.
+- A lead can have an `id`. Double-clicking its line or its text calls the new event `onLeadDoubleClick({ pointId, side, title, date, id })`. The cursor changes over a line that leaves the view, and the line lights up like a connection of a hovered point.
+
+### Demo
+
+- A point whose path goes on outside the period now shows lines to the edge, with the name and date of the point out there. Before, a point in the month or week view looked cut off from its path.
+- Double-click such a line to go to the period of the point out there, in the same level. The point is selected, and **Back** returns.
+
 ## 0.0.5 (2026-11-10)
 
 ### Library

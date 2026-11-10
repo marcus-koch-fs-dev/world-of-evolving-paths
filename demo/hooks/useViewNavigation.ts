@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { fromDay, isIsoDate, type Period, periodOf, shiftPeriod, toDay, type ViewLevel } from 'world-of-evolving-paths';
 
+import { popStep, pushStep } from '../app-logic/viewTrail';
+
 type View = { level: ViewLevel | null; period: Period };
 // Where the user was before going into a finer view, so Back can return there
 type Step = { view: View; page: number };
@@ -44,18 +46,18 @@ export function useViewNavigation(today: string) {
 
   /** Goes into a finer level at a date, and remembers the view it came from. */
   const zoomInto = (level: ViewLevel, date: string) => {
-    setTrail((steps) => [...steps, { view, page }]);
+    setTrail((steps) => pushStep(steps, { view, page }));
     setPage(0);
     setView({ level, period: periodOf(level, date) });
   };
 
   /** Returns to the view before the last zoom. */
   const back = () => {
-    const last = trail.at(-1);
-    if (!last) return;
-    setTrail((steps) => steps.slice(0, -1));
-    setView(last.view);
-    setPage(last.page);
+    const { step, rest } = popStep(trail);
+    if (!step) return;
+    setTrail(rest);
+    setView(step.view);
+    setPage(step.page);
   };
 
   return {

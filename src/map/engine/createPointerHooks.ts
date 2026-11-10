@@ -1,6 +1,6 @@
 import { layoutOf, nearestFree } from '../../core/collision.js';
 import type { Turn } from '../../core/orientation.js';
-import { hitNode } from '../../core/scene/hit.js';
+import { hitLead, hitNode } from '../../core/scene/hit.js';
 import { dateAtX } from '../../core/timeAxis.js';
 import type { Position } from '../../core/types.js';
 import type { Viewport } from '../dom/createViewport.js';
@@ -65,6 +65,14 @@ export function createPointerHooks({
     },
 
     onBackgroundClick: () => options().onSelect?.(null),
+
+    leadAt: (world) => hitLead(scene.current().leads, world)?.id ?? null,
+
+    onLeadDoubleClick(id) {
+      const lead = scene.current().leads.find((candidate) => candidate.id === id);
+      if (!lead) return;
+      options().onLeadDoubleClick?.({ pointId: lead.pointId, side: lead.side, ...lead.lead });
+    },
 
     onPointDoubleClick(id) {
       const date = model.world()?.points.find((point) => point.id === id)?.date;

@@ -123,6 +123,12 @@ export function App() {
           const level = finerLevel(navigation.level, values.levels);
           if (level) navigation.zoomInto(level, date);
         }}
+        onLeadDoubleClick={({ id, date }) => {
+          // A double-click on a line that leaves the view goes to the period of the point out there, in the same level
+          if (navigation.level === null) return;
+          navigation.zoomInto(navigation.level, date);
+          if (id) setSelectedId(id);
+        }}
         onError={(errors) => console.error(errors.join('\n'))}
       >
         <TopBar

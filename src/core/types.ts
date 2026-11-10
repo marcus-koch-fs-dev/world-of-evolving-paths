@@ -1,3 +1,9 @@
+/**
+ * A connection to a point that is not in the shown view: the title and the date of that point, and its id if the
+ * app wants to go there (see `onLeadDoubleClick`).
+ */
+export type Lead = { title: string; date: string; id?: string };
+
 export type PointKind = 'start' | 'milestone' | 'crossroad' | 'goal';
 export type PointStatus = 'done' | 'current' | 'open' | 'abandoned';
 
@@ -12,6 +18,10 @@ export type PathPoint = {
   status: PointStatus;
   /** Ids of the points this point leads to. Two or more make it a fork. */
   next: string[];
+  /** Connections that come from points outside this view. The map draws a line towards the edge with title and date. */
+  incoming?: Lead[];
+  /** Connections that lead to points outside this view. The map draws a line towards the edge with title and date. */
+  outgoing?: Lead[];
   /** 1 (default) to 5. Bigger points are drawn larger and keep more distance. */
   importance?: number;
   note?: string;
