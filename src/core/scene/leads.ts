@@ -4,6 +4,8 @@ import type { Lead, PlacedPoint, PlacedWorld, Position } from '../types.js';
 import { buildEdges } from './edges.js';
 import type { EdgeDraw, LeadDraw, SceneState } from './types.js';
 
+/** Size of the text of a label. The layer draws with it, the hit test estimates the width from it. */
+export const LEAD_FONT_SIZE = 15;
 const LEAD_LENGTH = 220; // how far a line runs out of the view, along the time axis
 const LEAD_SPREAD = 44; // room between lines that leave on the same side of one point
 const LABEL_GAP = 8; // between the end of the line and its text
@@ -55,6 +57,8 @@ function leadsOfSide(
     const gap = side === 'before' ? -LABEL_GAP : LABEL_GAP;
     const label: LeadDraw = {
       id: stand.id,
+      pointId: point.id,
+      lead,
       x: stand.x + gap,
       y: stand.y,
       text: `${lead.title} · ${dateOf(lead.date)}`,

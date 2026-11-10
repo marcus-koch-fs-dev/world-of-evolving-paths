@@ -95,6 +95,14 @@ describe('Period data validation', () => {
       expect(errorsFor(data)[0]).toContain('outgoing must be a list');
     });
 
+    it('accepts the id of the point out there, and rejects an empty one', () => {
+      const ok = editPoint(makePeriodData(), 'c1', { outgoing: [{ title: 'x', date: '2026-03-23', id: 'goal' }] });
+      const empty = editPoint(makePeriodData(), 'c1', { outgoing: [{ title: 'x', date: '2026-03-23', id: '' }] });
+
+      expect(validatePeriodData(ok).ok).toBe(true);
+      expect(errorsFor(empty)[0]).toContain('outgoing[0].id');
+    });
+
     it('rejects a lead without a title or with a bad date, and says which one', () => {
       const data = editPoint(makePeriodData(), 'c1', {
         incoming: [{ date: '2026-03-23' } as never, { title: 'x', date: '23.3.2026' }],

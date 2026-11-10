@@ -1,5 +1,8 @@
-/** A connection to a point that is not in the shown view: the title and the date of that point. */
-export type Lead = { title: string; date: string };
+/**
+ * A connection to a point that is not in the shown view: the title and the date of that point, and its id if the
+ * app wants to go there (see `onLeadDoubleClick`).
+ */
+export type Lead = { title: string; date: string; id?: string };
 
 export type PointKind = 'start' | 'milestone' | 'crossroad' | 'goal';
 export type PointStatus = 'done' | 'current' | 'open' | 'abandoned';

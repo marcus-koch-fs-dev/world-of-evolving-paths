@@ -25,6 +25,8 @@ function leadErrors(leads: unknown, where: string): string[] {
     if (!isRecord(lead) || typeof lead.title !== 'string') return [`${where}[${index}].title must be a string.`];
     if (typeof lead.date !== 'string' || !isIsoDate(lead.date))
       return [`${where}[${index}].date must be a valid YYYY-MM-DD date.`];
+    if (lead.id !== undefined && !isNonEmptyString(lead.id))
+      return [`${where}[${index}].id must be a non-empty string.`];
     return [];
   });
 }

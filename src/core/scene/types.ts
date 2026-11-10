@@ -1,5 +1,5 @@
 import type { Shape } from '../shapes.js';
-import type { Position } from '../types.js';
+import type { Lead, Position } from '../types.js';
 
 export type Dash = [on: number, off: number];
 
@@ -60,6 +60,9 @@ export type RingDraw = { id: string; x: number; y: number; radius: number; dragg
 /** The label at the end of a line that leaves the view: the title and date of the point out there. */
 export type LeadDraw = {
   id: string;
+  /** The point the line leaves from, and what the app told about the point out there. */
+  pointId: string;
+  lead: Lead;
   x: number;
   y: number;
   text: string;

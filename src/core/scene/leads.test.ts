@@ -60,6 +60,17 @@ describe('Lines that leave the view', () => {
     });
   });
 
+  describe('when the app gives the id of the point out there', () => {
+    it('keeps it with the label, together with the point the line leaves from', () => {
+      const point = placed({ id: 'a', incoming: [{ title: 'Start', date: '2026-03-23', id: 'start' }] });
+
+      const [label] = buildScene(worldOf([point]), calm).leads;
+
+      expect(label.pointId).toBe('a');
+      expect(label.lead).toEqual({ title: 'Start', date: '2026-03-23', id: 'start' });
+    });
+  });
+
   describe('when a point leads to something outside the view', () => {
     it('draws an open, dotted line to the right edge if that point lies in the future', () => {
       const point = placed({ id: 'a', status: 'current', outgoing: [{ title: 'Goal', date: '2027-01-05' }] });

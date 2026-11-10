@@ -4,6 +4,7 @@ export type {
   BackgroundOptions,
   BackgroundPattern,
   CameraListener,
+  LeadDoubleClickEvent,
   Orientation,
   PathWorldEvents,
   PathWorldHandle,

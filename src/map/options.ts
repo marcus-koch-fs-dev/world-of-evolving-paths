@@ -17,6 +17,14 @@ export type PointMoveEvent = {
 };
 export type PointAddEvent = { x: number; y: number; date: string };
 export type PointDoubleClickEvent = { id: string; date: string };
+/** A line that leaves the view was double-clicked: the point it leaves from, the side and what the app told about the point out there. */
+export type LeadDoubleClickEvent = {
+  pointId: string;
+  side: 'before' | 'after';
+  title: string;
+  date: string;
+  id?: string;
+};
 
 export type PathWorldEvents = {
   /** A point was clicked (its id) or the empty area was clicked (null). */
@@ -27,6 +35,8 @@ export type PathWorldEvents = {
   onPointAdd?: (event: PointAddEvent) => void;
   /** A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view. */
   onPointDoubleClick?: (event: PointDoubleClickEvent) => void;
+  /** A line that leaves the view was double-clicked, on its label or on the line. Your app decides what happens, for example a jump to the period of `date`. */
+  onLeadDoubleClick?: (event: LeadDoubleClickEvent) => void;
   /** The data of the current view is invalid. Without this callback the errors go to `console.error`. */
   onError?: (errors: string[]) => void;
 };
