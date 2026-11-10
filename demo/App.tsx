@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useReducer, useState } from 'react';
 import { toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import { BackgroundPanel, ControlBar, PathWorld, PointMenu, SidePanel, Toast } from 'world-of-evolving-paths/react';
+import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
 import { rememberColor } from './app-logic/customColors';
 import { canRedo, canUndo } from './app-logic/history';
 import type { DemoMode } from './app-logic/menuGroups';
@@ -137,10 +138,16 @@ export function App() {
             <button
               type="button"
               className="pw-button"
+              disabled={hasCheckedIn(state.checkIns, selectedPath.id, today)}
               title="Count today for this path. It gets stronger the more days you check in."
-              onClick={() => dispatch({ type: 'checkIn', pathId: selectedPath.id, date: today })}
+              onClick={() => {
+                setNotice(checkInMessage(state.checkIns, selectedPath, today));
+                dispatch({ type: 'checkIn', pathId: selectedPath.id, date: today });
+              }}
             >
-              Check in: {selectedPath.name}
+              {hasCheckedIn(state.checkIns, selectedPath.id, today)
+                ? `✓ Checked in today: ${selectedPath.name}`
+                : `Check in: ${selectedPath.name}`}
             </button>
           </ControlBar>
         )}
