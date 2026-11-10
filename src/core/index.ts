@@ -18,6 +18,7 @@ export { PATH_PALETTE } from './scene/paths.js';
 export type { StrengthRule, Tier } from './strength.js';
 export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength.js';
 export type {
+  Lead,
   Path,
   PathInfo,
   PathPoint,

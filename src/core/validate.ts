@@ -18,6 +18,17 @@ const isRecord = (value: unknown): value is UnknownRecord =>
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value !== '';
 
+function leadErrors(leads: unknown, where: string): string[] {
+  if (leads === undefined) return [];
+  if (!Array.isArray(leads)) return [`${where} must be a list of { title, date }.`];
+  return leads.flatMap((lead, index) => {
+    if (!isRecord(lead) || typeof lead.title !== 'string') return [`${where}[${index}].title must be a string.`];
+    if (typeof lead.date !== 'string' || !isIsoDate(lead.date))
+      return [`${where}[${index}].date must be a valid YYYY-MM-DD date.`];
+    return [];
+  });
+}
+
 function pointErrors(point: unknown, where: string): string[] {
   if (!isRecord(point)) return [`${where} must be an object.`];
   const errors: string[] = [];
@@ -44,6 +55,7 @@ function pointErrors(point: unknown, where: string): string[] {
   ) {
     errors.push(`${where}.strength must be a whole number from 0 to ${MAX_STRENGTH}.`);
   }
+  errors.push(...leadErrors(point.incoming, `${where}.incoming`), ...leadErrors(point.outgoing, `${where}.outgoing`));
   if ((point.x === undefined) !== (point.y === undefined)) errors.push(`${where} needs both x and y, or neither.`);
   if (point.x !== undefined && !(isFiniteNumber(point.x) && isFiniteNumber(point.y)))
     errors.push(`${where}.x and y must be numbers.`);

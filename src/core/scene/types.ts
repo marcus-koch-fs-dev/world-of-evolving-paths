@@ -57,6 +57,18 @@ export type HereDraw = {
 /** A thin circle that shows how much room a point keeps around it. */
 export type RingDraw = { id: string; x: number; y: number; radius: number; dragged: boolean };
 
+/** The label at the end of a line that leaves the view: the title and date of the point out there. */
+export type LeadDraw = {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  /** Before the point in time (incoming) or after it (outgoing). */
+  side: 'before' | 'after';
+  /** Which spot of the text sits on x and y, 0 to 1 each, so the text grows away from the point. */
+  anchor: Position;
+};
+
 export type SceneState = {
   /** Slight wave on the lines. */
   wave: boolean;
@@ -68,4 +80,4 @@ export type SceneState = {
   formatDate?: (iso: string) => string;
 };
 
-export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[] };
+export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[]; leads: LeadDraw[] };
