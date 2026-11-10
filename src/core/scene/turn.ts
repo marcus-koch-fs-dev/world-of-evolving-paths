@@ -11,6 +11,11 @@ export function turnScene(scene: Scene, turn: Turn): Scene {
   const origin = turn({ x: 0, y: 0 });
   const along = turn({ x: 1, y: 0 });
   const direction = { x: along.x - origin.x, y: along.y - origin.y };
+  // A direction is turned like a position, minus the turned origin
+  const turnDirection = (vector: { x: number; y: number }) => {
+    const turned = turn(vector);
+    return { x: turned.x - origin.x, y: turned.y - origin.y };
+  };
   return {
     edges: scene.edges.map((edge) => ({
       ...edge,
@@ -20,6 +25,11 @@ export function turnScene(scene: Scene, turn: Turn): Scene {
     nodes: scene.nodes.map(turn),
     heres: scene.heres.map(turn),
     rings: scene.rings.map(turn),
-    leads: scene.leads.map((lead) => ({ ...turn(lead), anchor: leadAnchor(lead.side, direction) })),
+    leads: scene.leads.map((lead) => ({
+      ...turn(lead),
+      end: turn(lead.end),
+      outward: turnDirection(lead.outward),
+      anchor: leadAnchor(lead.side, direction),
+    })),
   };
 }

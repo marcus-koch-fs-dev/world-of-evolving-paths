@@ -11,6 +11,10 @@ const after: LeadDraw = {
   text: 'Goal · 5.1.',
   side: 'after',
   anchor: { x: 0, y: 0.5 },
+  end: { x: 620, y: 100 },
+  outward: { x: 1, y: 0 },
+  color: '#fff',
+  hovered: false,
 };
 
 const before: LeadDraw = {
@@ -22,6 +26,10 @@ const before: LeadDraw = {
   text: 'Start · 5.1.',
   side: 'before',
   anchor: { x: 1, y: 0.5 },
+  end: { x: 180, y: 100 },
+  outward: { x: -1, y: 0 },
+  color: '#fff',
+  hovered: false,
 };
 
 const line = (id: string, from: number, to: number): EdgeDraw =>

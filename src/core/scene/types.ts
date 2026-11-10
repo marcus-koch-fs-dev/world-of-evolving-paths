@@ -63,9 +63,18 @@ export type LeadDraw = {
   /** The point the line leaves from, and what the app told about the point out there. */
   pointId: string;
   lead: Lead;
+  /** Where the label sits. The line ends a little before it, at `end`. */
   x: number;
   y: number;
   text: string;
+  /** The end of the line, where the arrow sits. */
+  end: Position;
+  /** The direction out of the view, as a unit vector on the screen. The arrow points that way. */
+  outward: Position;
+  /** Color of the line and the arrow. */
+  color: string;
+  /** The pointer is on the line, so the arrow and the text stand out. */
+  hovered: boolean;
   /** Before the point in time (incoming) or after it (outgoing). */
   side: 'before' | 'after';
   /** Which spot of the text sits on x and y, 0 to 1 each, so the text grows away from the point. */

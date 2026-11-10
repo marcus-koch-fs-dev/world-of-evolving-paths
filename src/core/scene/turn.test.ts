@@ -18,7 +18,18 @@ const scene = {
   nodes: [{ id: 'a', x: 1, y: 2, title: 'A' }],
   heres: [{ id: 'h', x: 7, y: 9 }],
   rings: [{ id: 'r', x: 4, y: 6, radius: 30, dragged: false }],
-  leads: [{ id: 'l', x: 2, y: 8, text: 'Next · 1.2.', side: 'after', anchor: { x: 0, y: 0.5 } }],
+  leads: [
+    {
+      id: 'l',
+      x: 2,
+      y: 8,
+      text: 'Next · 1.2.',
+      side: 'after',
+      anchor: { x: 0, y: 0.5 },
+      end: { x: 0, y: 8 },
+      outward: { x: 1, y: 0 },
+    },
+  ],
 } as unknown as Scene;
 
 describe('Turning the scene', () => {
@@ -41,6 +52,14 @@ describe('Turning the scene', () => {
 
     // Time runs down the screen, so the text of a label after the point sits below it
     expect(turned.leads[0]).toMatchObject({ x: 8, y: 2, text: 'Next · 1.2.', anchor: { x: 0.5, y: 0 } });
+  });
+
+  it('turns the end of the line and the direction of the arrow, so it points out of the view on the screen', () => {
+    const [down] = turnScene(scene, TURNS.vertical.toScreen).leads;
+    const [left] = turnScene(scene, TURNS['horizontal-inverted'].toScreen).leads;
+
+    expect(down).toMatchObject({ end: { x: 8, y: 0 }, outward: { x: 0, y: 1 } });
+    expect(left.outward).toEqual({ x: -1, y: 0 });
   });
 
   it('gives the original after turning there and back, also upside down', () => {

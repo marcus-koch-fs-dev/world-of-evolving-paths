@@ -8,7 +8,9 @@ import type { EdgeDraw, LeadDraw, SceneState } from './types.js';
 export const LEAD_FONT_SIZE = 15;
 const LEAD_LENGTH = 220; // how far a line runs out of the view, along the time axis
 const LEAD_SPREAD = 44; // room between lines that leave on the same side of one point
-const LABEL_GAP = 8; // between the end of the line and its text
+/** Size of the arrow at the end of a line. The label keeps its distance from it. */
+export const LEAD_ARROW_SIZE = 12;
+const LABEL_GAP = LEAD_ARROW_SIZE + 4; // between the end of the line and its text
 
 type Side = LeadDraw['side'];
 type Found = { edges: EdgeDraw[]; labels: LeadDraw[] };
@@ -62,6 +64,10 @@ function leadsOfSide(
       x: stand.x + gap,
       y: stand.y,
       text: `${lead.title} · ${dateOf(lead.date)}`,
+      end: { x: stand.x, y: stand.y },
+      outward: { x: side === 'before' ? -1 : 1, y: 0 },
+      color: edge.color,
+      hovered: state.hovered === stand.id,
       side,
       anchor: leadAnchor(side, { x: 1, y: 0 }),
     };

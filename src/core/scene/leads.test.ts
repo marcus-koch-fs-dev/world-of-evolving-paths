@@ -48,7 +48,7 @@ describe('Lines that leave the view', () => {
     it('labels the end of the line with the title and date, and the text grows away from the point', () => {
       const [label] = buildScene(worldOf([point]), calm).leads;
 
-      expect(label).toMatchObject({ text: '5 pull-ups · 23.3.', side: 'before', x: 172, y: 100 });
+      expect(label).toMatchObject({ text: '5 pull-ups · 23.3.', side: 'before', x: 164, y: 100 });
       expect(label.anchor).toEqual({ x: 1, y: 0.5 });
     });
 
@@ -57,6 +57,39 @@ describe('Lines that leave the view', () => {
 
       expect(edge.dash).toBeNull();
       expect(edge.lit).not.toBeNull();
+    });
+  });
+
+  describe('when a line leaves the view', () => {
+    it('ends in an arrow that points out of the view, on the end of the line', () => {
+      const point = placed({
+        id: 'a',
+        incoming: [{ title: 'Start', date: '2026-03-23' }],
+        outgoing: [{ title: 'Goal', date: '2027-01-05' }],
+      });
+
+      const [before, after] = buildScene(worldOf([point]), calm).leads;
+
+      expect(before).toMatchObject({ end: { x: 180, y: 100 }, outward: { x: -1, y: 0 } });
+      expect(after).toMatchObject({ end: { x: 620, y: 100 }, outward: { x: 1, y: 0 } });
+    });
+
+    it('gives the arrow the color of its line', () => {
+      const point = placed({ id: 'a', status: 'done', incoming: [{ title: 'Start', date: '2026-03-23' }] });
+
+      const scene = buildScene(worldOf([point]), calm);
+
+      expect(scene.leads[0].color).toBe(scene.edges[0].color);
+    });
+
+    it('stands out while the pointer is on it', () => {
+      const point = placed({ id: 'a', outgoing: [{ title: 'Goal', date: '2027-01-05' }] });
+
+      const [quiet] = buildScene(worldOf([point]), calm).leads;
+      const [lit] = buildScene(worldOf([point]), { ...calm, hovered: quiet.id }).leads;
+
+      expect(quiet.hovered).toBe(false);
+      expect(lit.hovered).toBe(true);
     });
   });
 
@@ -80,7 +113,7 @@ describe('Lines that leave the view', () => {
       expect(scene.edges[0].points.at(-1)).toEqual({ x: 620, y: 100 });
       expect(scene.edges[0].dash).not.toBeNull();
       expect(scene.edges[0].flow).toBe(true);
-      expect(scene.leads[0]).toMatchObject({ side: 'after', x: 628 });
+      expect(scene.leads[0]).toMatchObject({ side: 'after', x: 636 });
       expect(scene.leads[0].anchor).toEqual({ x: 0, y: 0.5 });
     });
 
