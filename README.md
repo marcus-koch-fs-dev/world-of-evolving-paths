@@ -20,7 +20,7 @@ Paths with dates that grow stronger the more you walk them. A pannable, zoomable
 npm install world-of-evolving-paths
 ```
 
-`pixi.js` is installed with it. React (18 or newer) is an optional peer dependency, needed only for `world-of-evolving-paths/react`.
+`pixi.js` is installed with it. `react` and `react-dom` (18 or newer) are optional peer dependencies, needed only for `world-of-evolving-paths/react`. The package declares Node.js 24 or newer (`engines`).
 
 ## Quick start (React)
 
@@ -31,6 +31,7 @@ import 'world-of-evolving-paths/style.css';
 
 const period = periodOf('week', '2026-11-04');
 
+// One entry per view: period key → the paths of that view, each with its points
 const periods: PeriodMap = {
   [period.key]: {
     paths: [
@@ -63,17 +64,39 @@ export function Example() {
 ## Quick start (any framework, or none)
 
 ```ts
-import { createPathWorld, periodOf } from 'world-of-evolving-paths';
-import 'world-of-evolving-paths/style.css';
+import { createPathWorld, periodOf, type PathWorldOptions, type PeriodMap } from 'world-of-evolving-paths';
 
-const handle = createPathWorld(document.getElementById('map')!, { periods, view: period.key });
+const period = periodOf('week', '2026-11-04');
+let periods: PeriodMap = {
+  [period.key]: {
+    paths: [
+      /* your paths, as in the React example */
+    ],
+  },
+};
 
-// Whenever your data or options change:
-handle.update({ periods: newPeriods, view: period.key });
+// The element needs a size, the map fills it
+const element = document.getElementById('map')!;
+
+const options = (): PathWorldOptions => ({
+  periods,
+  view: period.key,
+  onPointMove: ({ positions }) => {
+    // Store the positions, then pass a new object back in (see Events)
+    periods = { ...periods, [period.key]: pinned(periods[period.key], positions) };
+    handle.update(options());
+  },
+});
+
+const handle = createPathWorld(element, options());
 
 // When you remove the element:
 handle.destroy();
 ```
+
+**`handle.update(options)` replaces all options, it does not merge them.** Always pass the full set, callbacks included. An option you leave out is gone: without `onPointMove` a dragged point springs back. The easiest way is one function that builds the options, as above. (`pinned` stands for your own code that writes `x`/`y` into the points.)
+
+The stylesheet is only needed for the React binding and its controls. The map itself styles its element inline.
 
 ## How it works
 
@@ -115,7 +138,9 @@ const periods: PeriodMap = {
 };
 ```
 
-The data is checked when it arrives. Invalid data (a bad date, an unknown path, a duplicate id, ...) is reported through `onError` with a message that says where the problem is, and nothing is drawn. Without `onError` the messages go to `console.error`. `validatePeriodData(data)` runs the same check yourself.
+The data is checked when it arrives. Invalid data (a bad date, a duplicate id, a circle of connections, ...) is reported through `onError` with a message that says where the problem is, and nothing is drawn. Without `onError` the messages go to `console.error`. `validatePeriodData(data)` runs the same check yourself.
+
+If `periods` has no entry for `view`, the map stays empty and reports nothing, so make sure the view you show has data.
 
 ### Views and the calendar
 
@@ -151,14 +176,14 @@ You give points without positions and the library lays them out:
 
 All events are options of `PathWorld` and `createPathWorld`.
 
-| Callback                               | When                                                                                                                 |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                          |
-| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                                                  |
-| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. |
-| `onError(errors)`                      | The data of the current view is invalid.                                                                             |
+| Callback                               | When                                                                                                                                                                                                |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                                         |
+| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                                                                                                                                 |
+| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot. |
+| `onError(errors)`                      | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                              |
 
-Update your data in these callbacks and pass the new objects back in. The data is yours: if you do not answer a move with new data within a moment, the point springs back to where it was. A point that cannot rest where it was dropped (no room, or on a foreign line) springs to the nearest free spot first, and that spot is what onPointMove reports.
+Update your data in these callbacks and pass the new objects back in. The data is yours: if you do not answer a move with a **new** `PeriodData` object for the current view within 80 ms, the point springs back to where it was. Changing the old object in place does not count, the map compares by reference. A point that cannot rest where it was dropped (no room, or on a foreign line) first moves back along its way towards the start until it finds a free spot, and that spot is what `onPointMove` reports.
 
 ### Options
 
@@ -171,7 +196,7 @@ Update your data in these callbacks and pass the new objects back in. The data i
 | `editable`     | `true`         | Allow moving and adding points.                                                                                                                                                                                                                                                                                                   |
 | `pointsLocked` | `false`        | Points cannot be dragged.                                                                                                                                                                                                                                                                                                         |
 | `wavy`         | `false`        | A slight wave on the lines.                                                                                                                                                                                                                                                                                                       |
-| `background`   | black          | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }`.                                                                                                                                                                                              |
+| `background`   | dark, plain    | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }`.                                                                                                                                                                                              |
 | `orientation`  | `'horizontal'` | Which way time runs: `horizontal` (left to right), `horizontal-inverted` (right to left), `vertical` (top to bottom), `vertical-inverted` (bottom to top) or `auto` (vertical while the map is taller than wide, for phones in portrait). Only the picture turns: the data, the positions you store and the events stay the same. |
 | `animate`      | `true`         | Flowing dashes, pulsing rings, breathing glow. Off by default for users who prefer reduced motion.                                                                                                                                                                                                                                |
 | `locale`       | browser        | Language of the dates under the points, such as `de`.                                                                                                                                                                                                                                                                             |
@@ -199,7 +224,8 @@ Paths evolve: the more often a path is walked, the stronger it gets. The library
 ```ts
 import { tierAt, toDay, TIERS } from 'world-of-evolving-paths';
 
-// activityDays: day numbers of the check-ins on this path
+// The days on which this path was walked, as day numbers
+const activityDays = checkInDates.map(toDay); // checkInDates: ['2026-11-02', '2026-11-04', ...]
 const strength = tierAt(activityDays, toDay(point.date));
 TIERS[strength]; // { name: 'Highway', width: 13, glow: 0.7 }
 ```
@@ -216,13 +242,13 @@ The tier counts the **active days in the last 12 weeks** up to the date of the p
 
 A highway is a real habit. It shrinks slowly when the habit stops. Pass your own rule as the third argument: `{ weeks, minActiveDays }`.
 
-The strength of a path arrives at its next point: the outline of a reached point is thicker the stronger the path that led to it. The importance of a point is separate. It is your own rating from 1 to 5 and decides the size of the symbol and in which views the point is shown. A strong path does not make a point more important.
+The strength of a path arrives at its next point: the outline of a reached point is thicker the stronger the path that led to it. The importance of a point is separate. It is your own rating from 1 to 5 and decides the size of the symbol and the room it keeps. Your app can also use it to decide which views show the point (the demo does). A strong path does not make a point more important.
 
 Open (future) connections stay thin and dotted. While a point is dragged, thin rings show how much room it keeps.
 
 ## Controls (React)
 
-Ready-made controls live in `src/react/controls/`, one folder per control with its own styles. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
+Ready-made controls are imported from `world-of-evolving-paths/react`. In the repository they live in `src/react/controls/`, one folder per control with its own styles; their props are typed, so your editor shows what each one needs. They hold no map logic: they get values and callbacks, so you can restyle or replace them.
 
 | Control           | Folder              | What it does                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -240,11 +266,15 @@ Controls that need the map (`ZoomControls`, `PointMenu`) go inside `<PathWorld>`
 
 The color slots of `PointMenu` are filled by you: it reports a confirmed color with `onCustomColor`, you remember it and pass the list back in `customColors`.
 
-They emit your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
+`PointMenu` calls your callbacks (`onUpdate`, `onAddNext`, `onPathColor`, `onDelete`); you change your data.
 
 `useTimePlayback` moves the day of a `TimeSlider` forward while it plays. `playbackPlan(days, durationMs)` works out the pace so that any range takes the same time, and the slider can show speed buttons (`speeds`, `speed`, `onSpeedChange`). Moving through time only changes `today`, so the points keep their places. Statuses and strengths as of that day are your app's to work out, the demo shows how.
 
-Import `world-of-evolving-paths/style.css` once for the map and the controls. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...).
+With React, import `world-of-evolving-paths/style.css` once for `PathWorld` and the controls. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...), the class `PathWorld` puts on its element.
+
+### More exports
+
+Besides what is shown above, the package exports helpers you may want for your own controls: `usePathWorldHandle`, `useCameraZoom` and `useWorldVersion` for React; `positionOf`, `getCamera` and `subscribeCamera` on the handle; and constants and functions such as `VIEW_LEVELS`, `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `tierOf`, `activeDaysIn`, `fromDay` and `todayLocal`. All of them are typed and documented in the source.
 
 ## Performance
 
