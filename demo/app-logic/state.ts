@@ -1,5 +1,6 @@
 import { isIsoDate, type PathInfo, type Position } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
+import { hasCheckedIn } from './checkIn';
 import type { CheckIn, DemoPoint } from './types';
 
 /** What the demo app keeps. The library keeps none of it. */
@@ -126,8 +127,9 @@ function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, {
 
 /** A path is walked on a day. Checking in twice on one day does not count twice. */
 function addCheckIn(state: DemoState, pathId: string, date: string): DemoState {
-  const known = state.checkIns.some((checkIn) => checkIn.pathId === pathId && checkIn.date === date);
-  return known ? state : { ...state, checkIns: [...state.checkIns, { pathId, date }] };
+  return hasCheckedIn(state.checkIns, pathId, date)
+    ? state
+    : { ...state, checkIns: [...state.checkIns, { pathId, date }] };
 }
 
 function deletePoint(state: DemoState, id: string): DemoState {

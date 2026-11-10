@@ -1,6 +1,6 @@
 {
   "name": "world-of-evolving-paths",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Evolving, date-based paths on a pannable, zoomable canvas.",
   "type": "module",
   "license": "MIT",
@@ -18,9 +18,22 @@
     "paths",
     "canvas",
     "pixi",
+    "pixijs",
+    "webgl",
     "react",
+    "typescript",
+    "visualization",
     "habits",
-    "visualization"
+    "habit-tracker",
+    "skill-tree",
+    "roadmap",
+    "milestones",
+    "goals",
+    "progress",
+    "map",
+    "interactive-map",
+    "zoom",
+    "pan"
   ],
   "sideEffects": [
     "**/*.css"
@@ -29,7 +42,8 @@
     "node": ">=24"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
