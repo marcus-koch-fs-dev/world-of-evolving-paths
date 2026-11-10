@@ -244,7 +244,7 @@ const point = {
 };
 ```
 
-The map draws a line from the point towards the edge of the view and writes the title and date at its end. The line looks like the path: wide when it was walked, dotted when it is still ahead. A point can have several, for example at a fork.
+The map draws a line from the point towards the edge of the view. At its end sits an arrow that points out of the view, with the title and date next to it. The arrow and the text get bigger and brighter when the pointer is on the line, so it is clear that you can click it. The line looks like the path: wide when it was walked, dotted when it is still ahead. A point can have several, for example at a fork.
 
 A double-click on the line or its text calls `onLeadDoubleClick({ pointId, side, title, date, id })`. Your app decides what happens. The demo goes to the period of that date, in the same level, and selects the point out there. The **Back** button returns.
 
