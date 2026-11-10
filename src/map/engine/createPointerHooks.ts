@@ -24,7 +24,7 @@ type Dependencies = {
   today(options: PathWorldOptions): string;
 };
 
-/** What the pointer does to the map: hover, select, drag a point, add a point by double-click. */
+/** What the pointer does to the map: hover, select, drag a point, double-click a point or the empty area. */
 export function createPointerHooks({
   options,
   model,
@@ -65,6 +65,11 @@ export function createPointerHooks({
     },
 
     onBackgroundClick: () => options().onSelect?.(null),
+
+    onPointDoubleClick(id) {
+      const date = model.world()?.points.find((point) => point.id === id)?.date;
+      if (date) options().onPointDoubleClick?.({ id, date });
+    },
 
     onBackgroundDoubleClick(onScreen: Position) {
       const current = options();

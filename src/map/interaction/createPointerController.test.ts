@@ -47,6 +47,7 @@ function setup(options: { pointAt?: PointerHooks['pointAt']; offset?: { left: nu
     onDragMove: vi.fn(),
     onDragEnd: vi.fn(),
     onBackgroundClick: vi.fn(),
+    onPointDoubleClick: vi.fn(),
     onBackgroundDoubleClick: vi.fn(),
   };
   const controller = createPointerController(element, camera, hooks, () => ({ x: 100, y: 100 }));
@@ -56,6 +57,26 @@ function setup(options: { pointAt?: PointerHooks['pointAt']; offset?: { left: nu
 const onPoint = () => 'a';
 
 describe('Pointer controller', () => {
+  describe('when a double-click happens', () => {
+    it('on a point tells the hooks which point, and does not add a point', () => {
+      const { fire, hooks } = setup({ pointAt: onPoint });
+
+      fire('dblclick', { clientX: 100, clientY: 100 });
+
+      expect(hooks.onPointDoubleClick).toHaveBeenCalledWith('a');
+      expect(hooks.onBackgroundDoubleClick).not.toHaveBeenCalled();
+    });
+
+    it('on the empty area tells the hooks the position, and no point is reported', () => {
+      const { fire, hooks } = setup();
+
+      fire('dblclick', { clientX: 100, clientY: 100 });
+
+      expect(hooks.onBackgroundDoubleClick).toHaveBeenCalled();
+      expect(hooks.onPointDoubleClick).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when a point is pressed and released without moving', () => {
     it('ends the drag so the point does not stay lifted', () => {
       const { fire, hooks } = setup({ pointAt: onPoint });

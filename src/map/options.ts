@@ -16,6 +16,7 @@ export type PointMoveEvent = {
   positions: Record<string, Position>;
 };
 export type PointAddEvent = { x: number; y: number; date: string };
+export type PointDoubleClickEvent = { id: string; date: string };
 
 export type PathWorldEvents = {
   /** A point was clicked (its id) or the empty area was clicked (null). */
@@ -24,6 +25,8 @@ export type PathWorldEvents = {
   onPointMove?: (event: PointMoveEvent) => void;
   /** The empty area was double-clicked. The app decides whether and how to add a point. */
   onPointAdd?: (event: PointAddEvent) => void;
+  /** A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view. */
+  onPointDoubleClick?: (event: PointDoubleClickEvent) => void;
   /** The data of the current view is invalid. Without this callback the errors go to `console.error`. */
   onError?: (errors: string[]) => void;
 };

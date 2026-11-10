@@ -9,5 +9,6 @@ export type {
   PathWorldHandle,
   PathWorldOptions,
   PointAddEvent,
+  PointDoubleClickEvent,
   PointMoveEvent,
 } from './options.js';
