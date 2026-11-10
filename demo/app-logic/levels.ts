@@ -13,6 +13,10 @@ export const LEVEL_SETTINGS: Record<ViewLevel, { minImportance: number; graphsPe
   year: { minImportance: 3, graphsPerPage: 2 },
 };
 
+/** The least importance a point needs to show in a period, or in the free view when there is no period. */
+export const minImportanceOf = (period: { level: ViewLevel } | null): number =>
+  period ? LEVEL_SETTINGS[period.level].minImportance : FREE_VIEW_MIN_IMPORTANCE;
+
 // The levels the demo offers at first. The user can switch the others on in the settings.
 export const DEFAULT_LEVELS: ViewLevel[] = ['week', 'month', 'halfYear', 'year'];
 

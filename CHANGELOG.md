@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.0.3 (2026-11-10)
+
+### Documentation
+
+- README rebuilt around what a visitor looks for: what it is, install, quick start, then a guide to the demo ("where do I click?"), guides for building an app, and the reference further down.
+- New section "Using the map": how to add points, start a new path, connect points, check in, undo and move through time.
+- Colored notes (note, tip, important, warning) and collapsible tables for the long option and control lists. Badges and a contents table at the top.
+- Simpler English: rare words are replaced by common ones (for example "moves back" instead of "springs back").
+- Link to this changelog from the README.
+
+### Demo
+
+- A point added by double-click gets the importance the current view needs. Before, it was hidden at once in the month, half-year and year views.
+- Undo and redo close the check-in message, so it no longer describes a change that was taken back.
+
+The library code itself is unchanged in this release.
+
 ## 0.0.2 (2026-11-10)
 
 ### Documentation

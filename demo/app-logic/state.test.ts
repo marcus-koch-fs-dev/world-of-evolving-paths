@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { periodOf } from 'world-of-evolving-paths';
 import { makePath, makePoint } from '../../tests/fixtures';
+import { minImportanceOf } from './levels';
+import { buildPeriodData } from './periodData';
 import { canComplete } from './rules';
 import { connectProblem, DEFAULT_SEED, type DemoState, initialState, nextPointProblem, reduce } from './state';
 
@@ -22,11 +25,44 @@ describe('Demo app state', () => {
 
   describe('when a point is added by double-click', () => {
     it('creates an open milestone pinned where the user clicked', () => {
-      const state = reduce(base(), { type: 'add', viewKey: 'v', pathId: 'combat', x: 10, y: 20, date: '2026-11-09' });
+      const state = reduce(base(), {
+        type: 'add',
+        viewKey: 'v',
+        pathId: 'combat',
+        x: 10,
+        y: 20,
+        date: '2026-11-09',
+        importance: 1,
+      });
 
       const added = state.points.find((point) => point.id === 'custom-1');
       expect(added).toMatchObject({ kind: 'milestone', status: 'open', date: '2026-11-09' });
       expect(state.pins.v['custom-1']).toEqual({ x: 10, y: 20 });
+    });
+
+    it('is as important as the view needs, so the view still shows it', () => {
+      const year = periodOf('year', '2026-07-02');
+      const state = reduce(base(), {
+        type: 'add',
+        viewKey: year.key,
+        pathId: 'combat',
+        x: 10,
+        y: 20,
+        date: '2026-07-02',
+        importance: minImportanceOf(year),
+      });
+
+      const { data } = buildPeriodData({
+        paths: state.paths,
+        points: state.points,
+        checkIns: [],
+        period: year,
+        page: 0,
+        pins: {},
+      });
+
+      const shownIds = data.paths.flatMap((path) => path.points.map((point) => point.id));
+      expect(shownIds).toContain('custom-1');
     });
   });
 

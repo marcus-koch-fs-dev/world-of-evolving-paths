@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { toggledLevels } from './levels';
+import { minImportanceOf, toggledLevels } from './levels';
+
+describe('Least importance of a view', () => {
+  it('is higher the wider the view is', () => {
+    expect(minImportanceOf({ level: 'week' })).toBe(1);
+    expect(minImportanceOf({ level: 'month' })).toBe(2);
+    expect(minImportanceOf({ level: 'year' })).toBe(3);
+  });
+
+  it('is 2 in the free view', () => {
+    expect(minImportanceOf(null)).toBe(2);
+  });
+});
 
 describe('Toggled levels', () => {
   describe('when a level is switched on', () => {
