@@ -100,7 +100,12 @@ function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, {
   if (!from) return state;
   const id = customPointId(state.nextId);
   const newPath: PathInfo | null = input.newPath
-    ? { id: `custom-path-${state.nextId}`, name: input.title.trim(), color: input.color, lane: state.paths.length }
+    ? {
+        id: `custom-path-${state.nextId}`,
+        name: input.pathName.trim() || input.title.trim(),
+        color: input.color,
+        lane: state.paths.length,
+      }
     : null;
   const point: DemoPoint = {
     id,

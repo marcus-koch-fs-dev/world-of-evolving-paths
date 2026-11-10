@@ -102,7 +102,7 @@ describe('Demo app state', () => {
 
   describe('when a next point is added', () => {
     it('connects it to the point it follows', () => {
-      const input = { title: 'Next', date: '2026-11-10', newPath: false, color: '#ffffff' };
+      const input = { title: 'Next', date: '2026-11-10', newPath: false, color: '#ffffff', pathName: '' };
 
       const state = reduce(base(), { type: 'addNext', fromId: 'b', input });
 
@@ -110,7 +110,7 @@ describe('Demo app state', () => {
     });
 
     it('creates a new path when asked to', () => {
-      const input = { title: 'Side quest', date: '2026-11-10', newPath: true, color: '#123456' };
+      const input = { title: 'Side quest', date: '2026-11-10', newPath: true, color: '#123456', pathName: '' };
 
       const state = reduce(base(), { type: 'addNext', fromId: 'b', input });
 
@@ -118,9 +118,29 @@ describe('Demo app state', () => {
       expect(state.points.find((point) => point.id === 'custom-1')?.pathId).toBe('custom-path-1');
     });
 
+    it('names the new path as asked, so the name is not lost with the first point', () => {
+      const input = { title: 'Side quest', date: '2026-11-10', newPath: true, color: '#123456', pathName: 'Dungeons' };
+
+      const state = reduce(base(), { type: 'addNext', fromId: 'b', input });
+
+      expect(state.paths.at(-1)?.name).toBe('Dungeons');
+    });
+
+    it('uses the name of the point when the path has no name', () => {
+      const input = { title: 'Side quest', date: '2026-11-10', newPath: true, color: '#123456', pathName: '  ' };
+
+      const state = reduce(base(), { type: 'addNext', fromId: 'b', input });
+
+      expect(state.paths.at(-1)?.name).toBe('Side quest');
+    });
+
     it('rejects an empty name and a bad date', () => {
-      expect(nextPointProblem({ title: ' ', date: '2026-11-10', newPath: false, color: '#fff' })).toContain('name');
-      expect(nextPointProblem({ title: 'x', date: '10.11.2026', newPath: false, color: '#fff' })).toContain('date');
+      expect(
+        nextPointProblem({ title: ' ', date: '2026-11-10', newPath: false, color: '#fff', pathName: '' }),
+      ).toContain('name');
+      expect(
+        nextPointProblem({ title: 'x', date: '10.11.2026', newPath: false, color: '#fff', pathName: '' }),
+      ).toContain('date');
     });
   });
 
@@ -163,7 +183,7 @@ describe('Demo app state', () => {
   describe('when a next point is added to an important point', () => {
     it('is as important, so it shows in the same views', () => {
       const important = initialState([makePath('combat')], [makePoint({ id: 'a', importance: 4 })]);
-      const input = { title: 'Next', date: '2026-11-10', newPath: false, color: '#ffffff' };
+      const input = { title: 'Next', date: '2026-11-10', newPath: false, color: '#ffffff', pathName: '' };
 
       const state = reduce(important, { type: 'addNext', fromId: 'a', input });
 

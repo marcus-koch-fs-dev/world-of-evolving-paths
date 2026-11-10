@@ -49,8 +49,16 @@ describe('Demo habits', () => {
 
       checkIns.forEach((checkIn) => {
         const start = Math.min(...points.filter((point) => point.pathId === checkIn.pathId).map((p) => toDay(p.date)));
-        expect(toDay(checkIn.date)).toBeLessThanOrEqual(today);
+        expect(toDay(checkIn.date)).toBeLessThan(today);
         expect(toDay(checkIn.date)).toBeGreaterThanOrEqual(start);
+      });
+    });
+
+    it('leaves today open on every path, so a check-in can still be made and undone', () => {
+      const { paths, checkIns } = createHabits(TODAY);
+
+      paths.forEach((path) => {
+        expect(checkIns.some((checkIn) => checkIn.pathId === path.id && checkIn.date === TODAY)).toBe(false);
       });
     });
   });
