@@ -168,20 +168,20 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 
 **Moving around**
 
-| I want to …              | Do this                                                                                                                                       |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Zoom                     | Mouse wheel or pinch.                                                                                                                         |
-| Pan                      | Drag the empty area.                                                                                                                          |
-| Center / fit everything  | Keys **M** and **E** while the pointer is over the map, or the buttons (tiles) in the menu.                                                   |
-| Change the period        | The arrows and **Today** in the top bar. The levels (Free, Week, Month, Half year, Year) are in the menu (▦) under **View**.                  |
-| Pick a date directly     | Click the period in the top bar (for example "2026" or "KW 2"). A date picker opens. The view jumps to the period that has that date.         |
-| Go one level deeper      | Double-click a point. From the year you go to the month, then the week (and the day, if you switched it on in the settings).                  |
-| See where a path goes on | At the start and end of a view, a line leaves the point towards the edge. At its end you read the name and date of the next or earlier point. |
-| Go back                  | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                         |
-| Travel through time      | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view.      |
-| Turn the map             | Menu (▦) → **Map** → Turn left / Turn right.                                                                                                  |
-| Change the background    | Menu (▦) → **Mode** → Settings.                                                                                                               |
-| Switch to read-only      | Menu (▦) → **Mode** → Map. The editor mode has everything on.                                                                                 |
+| I want to …              | Do this                                                                                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zoom                     | Mouse wheel or pinch.                                                                                                                                                                                               |
+| Pan                      | Drag the empty area.                                                                                                                                                                                                |
+| Center / fit everything  | Keys **M** and **E** while the pointer is over the map, or the buttons (tiles) in the menu.                                                                                                                         |
+| Change the period        | The arrows and **Today** in the top bar. The levels (Free, Week, Month, Half year, Year) are in the menu (▦) under **View**.                                                                                        |
+| Pick a date directly     | Click the period in the top bar (for example "2026" or "KW 2"). A date picker opens. The view jumps to the period that has that date.                                                                               |
+| Go one level deeper      | Double-click a point. From the year you go to the month, then the week (and the day, if you switched it on in the settings).                                                                                        |
+| See where a path goes on | At the start and end of a view, a line leaves the point towards the edge. At its end you read the name and date of the next or earlier point. Double-click the line or its text to go there. **⤴** brings you back. |
+| Go back                  | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                                                                                               |
+| Travel through time      | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view.                                                                            |
+| Turn the map             | Menu (▦) → **Map** → Turn left / Turn right.                                                                                                                                                                        |
+| Change the background    | Menu (▦) → **Mode** → Settings.                                                                                                                                                                                     |
+| Switch to read-only      | Menu (▦) → **Mode** → Map. The editor mode has everything on.                                                                                                                                                       |
 
 > [!TIP]
 > Both bars can be dragged to the top or bottom edge, left, middle or right. Everything on the bars is built from the controls of the library, see [Controls](#controls-react).
@@ -229,7 +229,7 @@ const periods: PeriodMap = {
 
 A view shows only some points. A point at the start of the period has a path that came from before, and the last point has a path that goes on after. Without a hint it looks as if the path ended there, and that looks like a mistake.
 
-Tell the map about those connections with `incoming` and `outgoing` on the point. Each entry has the `title` and the `date` of the point out there:
+Tell the map about those connections with `incoming` and `outgoing` on the point. Each entry has the `title` and the `date` of the point out there, and its `id` if your app wants to go there:
 
 ```ts
 const point = {
@@ -239,12 +239,14 @@ const point = {
   kind: 'milestone',
   status: 'done',
   next: [],
-  incoming: [{ title: 'First pull-up', date: '2026-02-09' }], // the path comes from here
-  outgoing: [{ title: '10 pull-ups', date: '2026-06-08' }], // and goes on to here
+  incoming: [{ title: 'First pull-up', date: '2026-02-09', id: 'first' }], // the path comes from here
+  outgoing: [{ title: '10 pull-ups', date: '2026-06-08', id: 'ten' }], // and goes on to here
 };
 ```
 
 The map draws a line from the point towards the edge of the view and writes the title and date at its end. The line looks like the path: wide when it was walked, dotted when it is still ahead. A point can have several, for example at a fork.
+
+A double-click on the line or its text calls `onLeadDoubleClick({ pointId, side, title, date, id })`. Your app decides what happens. The demo goes to the period of that date, in the same level, and selects the point out there. The **Back** button returns.
 
 The map does not look for these points itself, because it only knows the points of this view. Your app finds them when it builds the view. The demo does it in `demo/app-logic/leads.ts`: it follows the connections over hidden points until it reaches the first point outside the period.
 
@@ -332,8 +334,8 @@ The option `orientation` sets which way time runs: `horizontal` (left to right),
 | `importance` | `number` (1–5, optional)                          | Bigger points keep more distance.                                                                                                                                                               |
 | `note`       | `string` (optional)                               | Free text for your app.                                                                                                                                                                         |
 | `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Make paths stronger](#make-paths-stronger).                                                                                                  |
-| `incoming`   | `{ title, date }[]` (optional)                    | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
-| `outgoing`   | `{ title, date }[]` (optional)                    | Points outside this view that this point leads to. The map draws a line to the edge, with title and date.                                                                                       |
+| `incoming`   | `{ title, date, id? }[]` (optional)               | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
+| `outgoing`   | `{ title, date, id? }[]` (optional)               | Points outside this view that this point leads to. The map draws a line to the edge, with title and date.                                                                                       |
 | `x`, `y`     | `number` (optional)                               | Pins the point. Set both or neither.                                                                                                                                                            |
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order.
@@ -348,13 +350,14 @@ The data is checked when it arrives. Invalid data (a bad date, a duplicate id, a
 
 All events are options of `PathWorld` and `createPathWorld`.
 
-| Callback                               | When                                                                                                                                                                                                |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onSelect(id \| null)`                 | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                                         |
-| `onPointMove({ id, x, y, positions })` | A dragged point was released at its final position.                                                                                                                                                 |
-| `onPointAdd({ x, y, date })`           | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot. |
-| `onPointDoubleClick({ id, date })`     | A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view.                                                                               |
-| `onError(errors)`                      | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                              |
+| Callback                                                | When                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onSelect(id \| null)`                                  | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                                                                                     |
+| `onPointMove({ id, x, y, positions })`                  | A dragged point was released at its final position.                                                                                                                                                                                             |
+| `onPointAdd({ x, y, date })`                            | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot.                                             |
+| `onPointDoubleClick({ id, date })`                      | A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view.                                                                                                                           |
+| `onLeadDoubleClick({ pointId, side, title, date, id })` | A line that leaves the view was double-clicked, on its text or on the line. `side` is `'before'` for a line that comes from outside and `'after'` for one that goes on. `title`, `date` and `id` are what you gave in `incoming` or `outgoing`. |
+| `onError(errors)`                                       | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                                                                          |
 
 Update your data in these callbacks and pass the new objects back in. The data is yours. If you do not answer a move within 80 ms with a **new** `PeriodData` object for the current view, the point moves back to where it was. Changing the old object in place does not count, the map compares by reference. Sometimes a point cannot stay where it was dropped (no room, or on a foreign line). Then it moves back along its way until it finds a free spot. That spot is what `onPointMove` reports.
 
@@ -391,7 +394,7 @@ const options: PathWorldOptions = {
   },
   // formatDate: (iso) => iso, // no default: write the date under a point yourself
   // The events, all optional (see Events above):
-  // onSelect, onPointMove, onPointAdd, onPointDoubleClick, onError
+  // onSelect, onPointMove, onPointAdd, onPointDoubleClick, onLeadDoubleClick, onError
 };
 ```
 
