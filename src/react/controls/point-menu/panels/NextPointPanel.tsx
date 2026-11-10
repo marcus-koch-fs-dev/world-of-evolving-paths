@@ -16,6 +16,7 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(defaultDate);
   const [newPath, setNewPath] = useState(false);
+  const [pathName, setPathName] = useState('');
   const [color, setColor] = useState(colors[0] ?? '#ffffff');
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +25,7 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
   const submit = () => {
     const missing = nextPointError(title, date);
     if (missing) return setError(missing);
-    const problem = onAddNext({ title: title.trim(), date, newPath, color });
+    const problem = onAddNext({ title: title.trim(), date, newPath, color, pathName: newPath ? pathName.trim() : '' });
     if (problem) return setError(problem);
     onDone();
   };
@@ -51,7 +52,17 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
         <input type="checkbox" checked={newPath} onChange={(event) => setNewPath(event.target.checked)} />
         On a new path (own color)
       </label>
-      {newPath && <ColorSwatches colors={colors} value={color} onPick={setColor} />}
+      {newPath && (
+        <>
+          <input
+            value={pathName}
+            placeholder="Path name (optional)"
+            onChange={(event) => setPathName(event.target.value)}
+            onKeyDown={submitOnEnter}
+          />
+          <ColorSwatches colors={colors} value={color} onPick={setColor} />
+        </>
+      )}
       <button type="button" onClick={submit}>
         Create
       </button>

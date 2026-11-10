@@ -153,7 +153,7 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | Move a point                     | Drag it. It stops where there is room. Otherwise it moves back.                                                                                                              |
 | Add a point                      | Double-click the empty area. It joins the path of the selected point, or the first path. The new point gets the importance the current view needs, so you see it right away. |
 | Add the next point               | Point menu → **Next point** → name and date → **Create**.                                                                                                                    |
-| Start a **new path**             | Point menu → **Next point** → tick **On a new path (own color)**, pick a color → **Create**.                                                                                 |
+| Start a **new path**             | Point menu → **Next point** → tick **On a new path (own color)**, give the path a name (optional) and pick a color → **Create**.                                             |
 | Connect two points               | Point menu → **Connect**, then click the point to connect to. Escape cancels.                                                                                                |
 | Change status, kind, name, color | Point menu → **Properties**: Status, Kind, Name, Path color.                                                                                                                 |
 | Delete a point                   | Point menu → **Delete**.                                                                                                                                                     |
@@ -239,7 +239,7 @@ You give points without positions and the library lays them out:
 ### Add points and paths
 
 - The user double-clicks the empty area: `onPointAdd({ x, y, date })` tells you where. You decide whether and how to add a point.
-- The `PointMenu` control has a **Next point** panel. It calls your `onAddNext({ title, date, newPath, color })`. With `newPath` you create a new `Path` with that color and put the point on it. Without it, the point joins the path of the selected point.
+- The `PointMenu` control has a **Next point** panel. It calls your `onAddNext({ title, date, newPath, color, pathName })`. With `newPath` you create a new `Path` with that color and `pathName` (if empty, use the title) and put the point on it. Without it, the point joins the path of the selected point.
 - A new path is just another entry in `paths`. Give it an `id`, a `name`, a `color` and its points.
 
 ### Make paths stronger
@@ -329,8 +329,82 @@ Update your data in these callbacks and pass the new objects back in. The data i
 
 ### Options
 
+**Copy this object.** It lists every option of `PathWorld` and `createPathWorld` with its default value. Only `periods` and `view` are needed, so you can delete every other line.
+
+```ts
+import type { PathWorldOptions } from 'world-of-evolving-paths';
+
+const options: PathWorldOptions = {
+  periods, // required: the PeriodMap
+  view: period.key, // required: the key of the period to show
+  today: '2026-11-10', // default: today's local date
+  seed: 1, // another number gives another layout
+  editable: true, // false: no moving and no adding of points
+  pointsLocked: false, // true: points cannot be dragged
+  wavy: false, // true: a slight wave on the lines
+  animate: true, // false: no moving parts (also the default for users who prefer reduced motion)
+  orientation: 'horizontal', // 'horizontal-inverted' | 'vertical' | 'vertical-inverted' | 'auto'
+  locale: 'en-GB', // default: the language of the browser
+  shortcuts: true, // keys M (center) and E (fit)
+  background: {
+    // every value here is the default
+    fill: 'solid', // or 'gradient'
+    pattern: 'none', // or 'stars' | 'hex' | 'dots'
+    base: '#0e0f0c', // base color
+    color: '#edefe6', // color of the pattern
+    color2: '#1d3a4a', // second color of the gradient
+    angle: 180, // direction of the gradient in degrees
+    mid: 50, // middle of the gradient in percent
+    intensity: 0.5, // brightness of the pattern, 0 to 1
+    scale: 1, // size of the pattern, 0.5 to 2
+  },
+  // formatDate: (iso) => iso, // no default: write the date under a point yourself
+  // The events, all optional (see Events above):
+  // onSelect, onPointMove, onPointAdd, onError
+};
+```
+
+**What the demo editor starts with.** These are the values of the live demo when you open it for the first time. The demo keeps some of them in the browser (levels, direction, language, background and the place of the bars).
+
+```ts
+const demoEditorAtStart = {
+  mode: 'editor', // 'map' is read only, with few controls
+  view: 'year', // the first view; 'free' shows everything
+  levels: ['week', 'month', 'halfYear', 'year'], // the views in the menu; 'day' can be switched on in the settings
+  settings: {
+    wavy: false,
+    pointsLocked: false,
+    animate: true,
+    orientation: 'auto',
+    locale: 'the language of the browser', // fallback: 'en-GB'
+  },
+  background: { fill: 'gradient', base: '#3a1f6b', color2: '#1f5a9e', angle: 150, pattern: 'stars', intensity: 0.5 },
+  bars: { main: 'top-left', time: 'bottom-left' }, // the user can drag both bars to another place
+  seed: 1,
+  customColors: [], // colors the user saved in the color picker
+};
+```
+
+The `PointMenu` has options too. These are the defaults:
+
+```tsx
+<PointMenu
+  point={point}
+  path={path}
+  onUpdate={onUpdate}
+  onAddNext={onAddNext}
+  onPathColor={onPathColor}
+  onDelete={onDelete}
+  canComplete // true: false while earlier points are not done yet
+  importanceRange={[1, 5]}
+  placement="auto" // 'below' | 'above' | 'right' | 'left'
+  hide={[]} // tiles to leave out: 'status' | 'next' | 'connect' | 'kind' | 'color' | 'rename' | 'details' | 'remove'
+  // colors={PATH_PALETTE}, customColors, onCustomColor, onConnect, connecting, checkInCount: no default
+/>;
+```
+
 <details>
-<summary><b>All options of <code>PathWorld</code> and <code>createPathWorld</code></b> (click to open)</summary>
+<summary><b>The same options as a table, with an explanation of each</b> (click to open)</summary>
 
 | Option         | Default        | Meaning                                                                                                                                                                                                                             |
 | -------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -357,17 +431,17 @@ Ready-made controls are imported from `world-of-evolving-paths/react`. In the re
 <details>
 <summary><b>All controls</b> (click to open)</summary>
 
-| Control           | What it does                                                                                                                                                                                                                                                                                                                                                                                              |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ZoomControls`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                                                                                                              |
-| `ViewBar`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                                                                                                               |
-| `ControlBar`      | A bar fixed to the top or bottom edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). Bars on one edge sit side by side. With `onDockChange` the user drags it to another place, you store it; with `label` it can be folded.                                                                                                                                                              |
-| `TilePanel`       | One button (`▦`) that opens a small panel of buttons (tiles) in groups, like a number pad. You give the groups and tiles (glyph, label, `active`, `disabled`, `onClick`). It opens away from the edge of its `ControlBar` and stays open until the button is clicked again or Escape is pressed. `ViewBar` with `periodOnly` pairs with it: the period stays in the bar, everything else goes into tiles. |
-| `SidePanel`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                             |
-| `BackgroundPanel` | Fill (plain or gradient with two colors), pattern, brightness and size. Holds no state.                                                                                                                                                                                                                                                                                                                   |
-| `PointMenu`       | Menu with buttons at a selected point. Actions: next point, connect (needs `onConnect`), delete. Properties: status, kind, name, path color (with slots for your own colors) and details. `checkInCount` shows the check-ins of the path. It moves with the map and sits below the point, or above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`).                        |
-| `Toast`           | A short message at the top of the map that slides in and goes away by itself (`durationMs`, default 6 s) or when closed. For hints and problems of your app. Holds no state.                                                                                                                                                                                                                              |
-| `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                 |
+| Control           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ZoomControls`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                                                                                                                                         |
+| `ViewBar`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. Holds no state.                                                                                                                                                                                                                                                                                                                          |
+| `ControlBar`      | A bar fixed to the top or bottom edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). Bars on one edge sit side by side. With `onDockChange` the user drags it to another place, you store it; with `label` it can be folded.                                                                                                                                                                                         |
+| `TilePanel`       | One button (`▦`) that opens a small panel of buttons (tiles) in groups, like a number pad. You give the groups and tiles (glyph, label, `active`, `disabled`, `onClick`). It opens away from the edge of its `ControlBar` and stays open until the button is clicked again or Escape is pressed. `ViewBar` with `periodOnly` pairs with it: the period stays in the bar, everything else goes into tiles.                            |
+| `SidePanel`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                                                        |
+| `BackgroundPanel` | Fill (plain or gradient with two colors), pattern, brightness and size. Holds no state.                                                                                                                                                                                                                                                                                                                                              |
+| `PointMenu`       | Menu with buttons at a selected point. Actions: next point, connect (needs `onConnect`), delete. Properties: status, kind, name, path color (with slots for your own colors) and details. The menu shows the name of the path of the point. `checkInCount` shows the check-ins of the path. It moves with the map and sits below the point, or above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
+| `Toast`           | A short message at the top of the map that slides in and goes away by itself (`durationMs`, default 6 s) or when closed. For hints and problems of your app. Holds no state.                                                                                                                                                                                                                                                         |
+| `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                                            |
 
 </details>
 
