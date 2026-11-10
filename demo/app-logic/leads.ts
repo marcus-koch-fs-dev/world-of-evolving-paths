@@ -30,13 +30,13 @@ function firstOutside(
     if (!point || seen.has(id) || context.shown.has(id)) return [];
     seen.add(id);
     if (context.isInPeriod(point)) return firstOutside(neighbours(id), context, neighbours, seen);
-    return [{ title: point.title, date: point.date }];
+    return [{ id: point.id, title: point.title, date: point.date }];
   });
 }
 
 /** The same lead only once, oldest first. */
 function tidy(leads: Lead[]): Lead[] {
-  const unique = new Map(leads.map((lead) => [`${lead.date}|${lead.title}`, lead]));
+  const unique = new Map(leads.map((lead) => [lead.id ?? `${lead.date}|${lead.title}`, lead]));
   return [...unique.values()].sort(byDate);
 }
 

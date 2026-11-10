@@ -24,8 +24,8 @@ describe('Leads of a view', () => {
     it('tells where it comes from and where it goes, with title and date', () => {
       const leads = find(all, ['a'])(all[1]);
 
-      expect(leads.incoming).toEqual([{ title: '5 pull-ups', date: '2026-01-20' }]);
-      expect(leads.outgoing).toEqual([{ title: '10 pull-ups', date: '2026-03-23' }]);
+      expect(leads.incoming).toEqual([{ id: 'before', title: '5 pull-ups', date: '2026-01-20' }]);
+      expect(leads.outgoing).toEqual([{ id: 'after', title: '10 pull-ups', date: '2026-03-23' }]);
     });
   });
 
@@ -62,7 +62,7 @@ describe('Leads of a view', () => {
         makePoint({ id: 'far', title: 'May', date: '2026-05-05' }),
       ];
 
-      expect(find(all, ['a'])(all[0]).outgoing).toEqual([{ title: 'March', date: '2026-03-05' }]);
+      expect(find(all, ['a'])(all[0]).outgoing).toEqual([{ id: 'out', title: 'March', date: '2026-03-05' }]);
     });
   });
 
@@ -74,10 +74,10 @@ describe('Leads of a view', () => {
         makePoint({ id: 'out', title: 'Later', date: '2026-04-01' }),
       ];
 
-      expect(find(all, ['a', 'b'])(all[0]).outgoing).toEqual([{ title: 'Later', date: '2026-04-01' }]);
+      expect(find(all, ['a', 'b'])(all[0]).outgoing).toEqual([{ id: 'out', title: 'Later', date: '2026-04-01' }]);
     });
 
-    it('lists several leads oldest first and once each', () => {
+    it('lists several leads oldest first and once each point', () => {
       const all = [
         makePoint({ id: 'a', date: '2026-02-02', next: ['x', 'y', 'z'] }),
         makePoint({ id: 'x', title: 'X', date: '2026-05-01' }),
@@ -87,7 +87,7 @@ describe('Leads of a view', () => {
 
       const titles = find(all, ['a'])(all[0]).outgoing?.map((lead) => lead.title);
 
-      expect(titles).toEqual(['Y', 'X']);
+      expect(titles).toEqual(['Y', 'Y', 'X']);
     });
   });
 
