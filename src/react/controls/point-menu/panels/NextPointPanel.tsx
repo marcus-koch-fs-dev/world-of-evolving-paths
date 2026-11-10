@@ -25,7 +25,7 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
   const submit = () => {
     const missing = nextPointError(title, date);
     if (missing) return setError(missing);
-    const problem = onAddNext({ title: title.trim(), date, newPath, color, pathName: pathName.trim() });
+    const problem = onAddNext({ title: title.trim(), date, newPath, color, pathName: newPath ? pathName.trim() : '' });
     if (problem) return setError(problem);
     onDone();
   };

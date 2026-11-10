@@ -29,7 +29,10 @@ function toPoints(pathId: string, steps: Step[], today: number, year: string, is
   });
 }
 
-/** One check-in on the days a habit is practised, spread evenly over each week, from its start until yesterday, so every path can still be checked in today. */
+/**
+ * One check-in on the days a habit is practised, spread evenly over each week, from its start until yesterday,
+ * so every path can still be checked in today.
+ */
 function checkInsFor(pathId: string, habit: Habit, today: number, year: string): CheckIn[] {
   const start = dayOf(year, habit.from);
   const isPractised = (i: number) =>

@@ -5,7 +5,7 @@
 ### Library
 
 - `PointMenu` shows the name of the path of the selected point, so you can always see where a point belongs.
-- The "Next point" panel has a field for the name of a new path. `NextPointInput` has a new field `pathName` (empty when the user gave none).
+- The "Next point" panel has a field for the name of a new path. `NextPointInput` has a new optional field `pathName` (empty when the user gave none).
 
 ### Documentation
 

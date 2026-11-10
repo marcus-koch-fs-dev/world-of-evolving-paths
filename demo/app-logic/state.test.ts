@@ -126,6 +126,14 @@ describe('Demo app state', () => {
       expect(state.paths.at(-1)?.name).toBe('Dungeons');
     });
 
+    it('takes the title when the input has no path name at all', () => {
+      const input = { title: 'Side quest', date: '2026-11-10', newPath: true, color: '#123456' };
+
+      const state = reduce(base(), { type: 'addNext', fromId: 'b', input });
+
+      expect(state.paths.at(-1)?.name).toBe('Side quest');
+    });
+
     it('uses the name of the point when the path has no name', () => {
       const input = { title: 'Side quest', date: '2026-11-10', newPath: true, color: '#123456', pathName: '  ' };
 

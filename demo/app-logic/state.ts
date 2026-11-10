@@ -102,7 +102,7 @@ function addNextPoint(state: DemoState, { fromId, input }: Extract<DemoAction, {
   const newPath: PathInfo | null = input.newPath
     ? {
         id: `custom-path-${state.nextId}`,
-        name: input.pathName.trim() || input.title.trim(),
+        name: input.pathName?.trim() || input.title.trim(),
         color: input.color,
         lane: state.paths.length,
       }
