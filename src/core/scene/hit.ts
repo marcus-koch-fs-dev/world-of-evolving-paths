@@ -1,6 +1,6 @@
 import type { Position } from '../types.js';
 import { LEAD_FONT_SIZE } from './leads.js';
-import type { EdgeDraw, LeadDraw, NodeDraw } from './types.js';
+import type { LeadDraw, NodeDraw } from './types.js';
 
 /** The node under a world position. Later drawn nodes lie on top and are hit first. */
 export function hitNode(nodes: NodeDraw[], at: Position): NodeDraw | null {
@@ -31,17 +31,11 @@ function onLabel(lead: LeadDraw, at: Position): boolean {
   );
 }
 
-function onLine(lead: LeadDraw, edges: EdgeDraw[], at: Position): boolean {
-  const edge = edges.find(
-    (candidate) => candidate.id.startsWith(`${lead.id}->`) || candidate.id.endsWith(`->${lead.id}`),
-  );
-  if (!edge) return false;
-  return edge.points
-    .slice(1)
-    .some((point, index) => distanceToSegment(at, edge.points[index], point) <= LEAD_HIT_PADDING);
+function onLine(lead: LeadDraw, at: Position): boolean {
+  return lead.line.slice(1).some((point, index) => distanceToSegment(at, lead.line[index], point) <= LEAD_HIT_PADDING);
 }
 
 /** The line that leaves the view under a world position: on its label or on the line itself. */
-export function hitLead(leads: LeadDraw[], edges: EdgeDraw[], at: Position): LeadDraw | null {
-  return leads.find((lead) => onLabel(lead, at) || onLine(lead, edges, at)) ?? null;
+export function hitLead(leads: LeadDraw[], at: Position): LeadDraw | null {
+  return leads.find((lead) => onLabel(lead, at) || onLine(lead, at)) ?? null;
 }

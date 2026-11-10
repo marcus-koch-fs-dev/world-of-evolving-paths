@@ -66,7 +66,7 @@ export function createPointerHooks({
 
     onBackgroundClick: () => options().onSelect?.(null),
 
-    leadAt: (world) => hitLead(scene.current().leads, scene.current().edges, world)?.id ?? null,
+    leadAt: (world) => hitLead(scene.current().leads, world)?.id ?? null,
 
     onLeadDoubleClick(id) {
       const lead = scene.current().leads.find((candidate) => candidate.id === id);

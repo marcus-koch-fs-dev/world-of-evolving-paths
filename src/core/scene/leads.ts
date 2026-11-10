@@ -64,6 +64,7 @@ function leadsOfSide(
       x: stand.x + gap,
       y: stand.y,
       text: `${lead.title} · ${dateOf(lead.date)}`,
+      line: edge.points,
       end: { x: stand.x, y: stand.y },
       outward: { x: side === 'before' ? -1 : 1, y: 0 },
       color: edge.color,

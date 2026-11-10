@@ -26,6 +26,10 @@ const scene = {
       text: 'Next · 1.2.',
       side: 'after',
       anchor: { x: 0, y: 0.5 },
+      line: [
+        { x: 0, y: 8 },
+        { x: 1, y: 8 },
+      ],
       end: { x: 0, y: 8 },
       outward: { x: 1, y: 0 },
     },
@@ -59,6 +63,10 @@ describe('Turning the scene', () => {
     const [left] = turnScene(scene, TURNS['horizontal-inverted'].toScreen).leads;
 
     expect(down).toMatchObject({ end: { x: 8, y: 0 }, outward: { x: 0, y: 1 } });
+    expect(down.line).toEqual([
+      { x: 8, y: 0 },
+      { x: 8, y: 1 },
+    ]);
     expect(left.outward).toEqual({ x: -1, y: 0 });
   });
 

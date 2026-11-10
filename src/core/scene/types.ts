@@ -67,6 +67,8 @@ export type LeadDraw = {
   x: number;
   y: number;
   text: string;
+  /** The line itself, from the point to its end, so a click on it can be found. */
+  line: Position[];
   /** The end of the line, where the arrow sits. */
   end: Position;
   /** The direction out of the view, as a unit vector on the screen. The arrow points that way. */

@@ -9,13 +9,12 @@ import type { Scene } from './types.js';
 export function turnScene(scene: Scene, turn: Turn): Scene {
   // Where time points to on the screen, so a label grows away from its point in that direction
   const origin = turn({ x: 0, y: 0 });
-  const along = turn({ x: 1, y: 0 });
-  const direction = { x: along.x - origin.x, y: along.y - origin.y };
   // A direction is turned like a position, minus the turned origin
   const turnDirection = (vector: { x: number; y: number }) => {
     const turned = turn(vector);
     return { x: turned.x - origin.x, y: turned.y - origin.y };
   };
+  const direction = turnDirection({ x: 1, y: 0 });
   return {
     edges: scene.edges.map((edge) => ({
       ...edge,
@@ -27,6 +26,7 @@ export function turnScene(scene: Scene, turn: Turn): Scene {
     rings: scene.rings.map(turn),
     leads: scene.leads.map((lead) => ({
       ...turn(lead),
+      line: lead.line.map(turn),
       end: turn(lead.end),
       outward: turnDirection(lead.outward),
       anchor: leadAnchor(lead.side, direction),
