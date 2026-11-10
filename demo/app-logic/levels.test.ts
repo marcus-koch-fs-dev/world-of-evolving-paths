@@ -3,9 +3,9 @@ import { minImportanceOf, toggledLevels } from './levels';
 
 describe('Least importance of a view', () => {
   it('is higher the wider the view is', () => {
-    expect(minImportanceOf('week')).toBe(1);
-    expect(minImportanceOf('month')).toBe(2);
-    expect(minImportanceOf('year')).toBe(3);
+    expect(minImportanceOf({ level: 'week' })).toBe(1);
+    expect(minImportanceOf({ level: 'month' })).toBe(2);
+    expect(minImportanceOf({ level: 'year' })).toBe(3);
   });
 
   it('is 2 in the free view', () => {

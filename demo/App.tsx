@@ -105,7 +105,7 @@ export function App() {
         onPointMove={({ positions }) => dispatch({ type: 'move', viewKey: tileKey, positions })}
         onPointAdd={({ x, y, date }) => {
           // The new point is as important as the view needs, so it shows where it was added
-          const importance = minImportanceOf(period?.level ?? null);
+          const importance = minImportanceOf(period);
           dispatch({
             type: 'add',
             viewKey: tileKey,

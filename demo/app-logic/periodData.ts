@@ -115,7 +115,7 @@ export type ViewResult = { data: PeriodData; pages: number; page: number };
 
 /** Everything the library needs for one view, plus how many pages there are. */
 export function buildPeriodData({ paths, points, checkIns, asOf, period, page, pins }: ViewRequest): ViewResult {
-  const minImportance = minImportanceOf(period?.level ?? null);
+  const minImportance = minImportanceOf(period);
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
   const dated = asOf ? withStatusAsOf(points, asOf) : points;
   const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns, asOf);

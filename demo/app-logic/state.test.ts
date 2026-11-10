@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { periodOf } from 'world-of-evolving-paths';
 import { makePath, makePoint } from '../../tests/fixtures';
 import { minImportanceOf } from './levels';
+import { buildPeriodData } from './periodData';
 import { canComplete } from './rules';
 import { connectProblem, DEFAULT_SEED, type DemoState, initialState, nextPointProblem, reduce } from './state';
 
@@ -39,19 +41,28 @@ describe('Demo app state', () => {
     });
 
     it('is as important as the view needs, so the view still shows it', () => {
-      const importance = minImportanceOf('year');
+      const year = periodOf('year', '2026-07-02');
       const state = reduce(base(), {
         type: 'add',
-        viewKey: 'v',
+        viewKey: year.key,
         pathId: 'combat',
         x: 10,
         y: 20,
         date: '2026-07-02',
-        importance,
+        importance: minImportanceOf(year),
       });
 
-      const added = state.points.find((point) => point.id === 'custom-1');
-      expect(added?.importance).toBe(3);
+      const { data } = buildPeriodData({
+        paths: state.paths,
+        points: state.points,
+        checkIns: [],
+        period: year,
+        page: 0,
+        pins: {},
+      });
+
+      const shownIds = data.paths.flatMap((path) => path.points.map((point) => point.id));
+      expect(shownIds).toContain('custom-1');
     });
   });
 
