@@ -41,8 +41,15 @@ export function App() {
   // The settings slide in from the side the menu bar is not on
   const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
   const editing = mode === 'edit';
-  const onUndo = useCallback(() => dispatch({ type: 'undo' }), []);
-  const onRedo = useCallback(() => dispatch({ type: 'redo' }), []);
+  // A message describes the change just made, so stepping through the history closes it
+  const onUndo = useCallback(() => {
+    setNotice(null);
+    dispatch({ type: 'undo' });
+  }, []);
+  const onRedo = useCallback(() => {
+    setNotice(null);
+    dispatch({ type: 'redo' });
+  }, []);
   const undoRedo = { canUndo: canUndo(history), canRedo: canRedo(history), onUndo, onRedo };
   useUndoShortcuts({ enabled: editing, undo: onUndo, redo: onRedo });
 
