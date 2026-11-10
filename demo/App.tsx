@@ -52,6 +52,7 @@ export function App() {
   const visibleIds = new Set(result.data.paths.flatMap((path) => path.points.map((point) => point.id)));
   const selected = state.points.find((point) => point.id === selectedId && visibleIds.has(point.id));
   const selectedPath = state.paths.find((path) => path.id === selected?.pathId);
+  const checkedInToday = selectedPath !== undefined && hasCheckedIn(state.checkIns, selectedPath.id, today);
   const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
 
   const connecting = useConnectMode({
@@ -138,16 +139,14 @@ export function App() {
             <button
               type="button"
               className="pw-button"
-              disabled={hasCheckedIn(state.checkIns, selectedPath.id, today)}
+              disabled={checkedInToday}
               title="Count today for this path. It gets stronger the more days you check in."
               onClick={() => {
                 setNotice(checkInMessage(state.checkIns, selectedPath, today));
                 dispatch({ type: 'checkIn', pathId: selectedPath.id, date: today });
               }}
             >
-              {hasCheckedIn(state.checkIns, selectedPath.id, today)
-                ? `✓ Checked in today: ${selectedPath.name}`
-                : `Check in: ${selectedPath.name}`}
+              {checkedInToday ? `✓ Checked in today: ${selectedPath.name}` : `Check in: ${selectedPath.name}`}
             </button>
           </ControlBar>
         )}

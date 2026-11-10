@@ -45,7 +45,14 @@ describe('Check-in', () => {
     it('ignores the check-ins of other paths and days outside the window', () => {
       const old = { pathId: GYM.id, date: '2026-01-01' };
       expect(checkInMessage([...daysBefore(3, 'reading'), old], GYM, TODAY)).toBe(
-        'Gym: 0 → 1 active days in 12 weeks · Desire path. 5 more to Path.',
+        'Gym: 0 → 1 active day in 12 weeks · Desire path. 5 more to Path.',
+      );
+    });
+
+    it('uses the singular for one week', () => {
+      const oneWeek = { weeks: 1, minActiveDays: [0, 2] };
+      expect(checkInMessage([], GYM, TODAY, oneWeek)).toBe(
+        'Gym: 0 → 1 active day in 1 week · Desire path. 1 more to Path.',
       );
     });
   });

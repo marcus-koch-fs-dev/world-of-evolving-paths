@@ -64,7 +64,14 @@ export function Example() {
 ## Quick start (any framework, or none)
 
 ```ts
-import { createPathWorld, periodOf, type PathWorldOptions, type PeriodMap } from 'world-of-evolving-paths';
+import {
+  createPathWorld,
+  periodOf,
+  type PathWorldOptions,
+  type PeriodData,
+  type PeriodMap,
+  type Position,
+} from 'world-of-evolving-paths';
 
 const period = periodOf('week', '2026-11-04');
 let periods: PeriodMap = {
@@ -77,6 +84,14 @@ let periods: PeriodMap = {
 
 // The element needs a size, the map fills it
 const element = document.getElementById('map')!;
+
+// Pins every point where the user sees it, as a new object
+const pinned = (data: PeriodData, positions: Record<string, Position>): PeriodData => ({
+  paths: data.paths.map((path) => ({
+    ...path,
+    points: path.points.map((point) => ({ ...point, ...positions[point.id] })),
+  })),
+});
 
 const options = (): PathWorldOptions => ({
   periods,
@@ -94,7 +109,7 @@ const handle = createPathWorld(element, options());
 handle.destroy();
 ```
 
-**`handle.update(options)` replaces all options, it does not merge them.** Always pass the full set, callbacks included. An option you leave out is gone: without `onPointMove` a dragged point springs back. The easiest way is one function that builds the options, as above. (`pinned` stands for your own code that writes `x`/`y` into the points.)
+**`handle.update(options)` replaces all options, it does not merge them.** Always pass the full set, callbacks included. An option you leave out is gone: without `onPointMove` a dragged point springs back. The easiest way is one function that builds the options, as above.
 
 The stylesheet is only needed for the React binding and its controls. The map itself styles its element inline.
 
@@ -274,7 +289,7 @@ With React, import `world-of-evolving-paths/style.css` once for `PathWorld` and 
 
 ### More exports
 
-Besides what is shown above, the package exports helpers you may want for your own controls: `usePathWorldHandle`, `useCameraZoom` and `useWorldVersion` for React; `positionOf`, `getCamera` and `subscribeCamera` on the handle; and constants and functions such as `VIEW_LEVELS`, `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `tierOf`, `activeDaysIn`, `fromDay` and `todayLocal`. All of them are typed and documented in the source.
+Besides what is shown above, the package exports helpers you may want for your own controls: `usePathWorldHandle`, `useCameraZoom` and `useWorldVersion` for React; `positionOf`, `getCamera` and `subscribeCamera` on the handle; and constants and functions such as `VIEW_LEVELS`, `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `tierOf`, `activeDaysIn`, `fromDay` and `todayLocal`. All of them are typed, so your editor shows how to use them.
 
 ## Performance
 

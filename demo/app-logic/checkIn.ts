@@ -6,6 +6,8 @@ export function hasCheckedIn(checkIns: readonly CheckIn[], pathId: string, date:
   return checkIns.some((checkIn) => checkIn.pathId === pathId && checkIn.date === date);
 }
 
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
+
 /**
  * What a check-in on `date` does to a path, as a short message: active days before and after, the tier,
  * and how many days the next tier still needs. `checkIns` is the list before the check-in.
@@ -17,14 +19,15 @@ export function checkInMessage(
   rule: StrengthRule = STRENGTH_RULE,
 ): string {
   const day = toDay(date);
+  const window = plural(rule.weeks, 'week');
   const days = checkIns.filter((checkIn) => checkIn.pathId === path.id).map((checkIn) => toDay(checkIn.date));
   const before = activeDaysIn(days, day, rule);
   if (hasCheckedIn(checkIns, path.id, date)) {
-    return `${path.name}: already checked in today · ${before} active days in ${rule.weeks} weeks.`;
+    return `${path.name}: already checked in today · ${plural(before, 'active day')} in ${window}.`;
   }
   const after = activeDaysIn([...days, day], day, rule);
   const tier = tierOf(after, rule);
-  const counted = `${before} → ${after} active days in ${rule.weeks} weeks`;
+  const counted = `${before} → ${plural(after, 'active day')} in ${window}`;
   if (tier > tierOf(before, rule)) return `${path.name} is now a ${TIERS[tier].name}! ${counted}.`;
   const needed = rule.minActiveDays[tier + 1];
   if (needed === undefined) return `${path.name}: ${counted} · ${TIERS[tier].name}, the strongest tier.`;
