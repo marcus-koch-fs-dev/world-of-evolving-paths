@@ -10,13 +10,15 @@ export type ToastProps = {
   onDismiss: () => void;
   /** How long the message stays. Default 6 seconds. */
   durationMs?: number;
+  /** A button next to the message. Clicking it runs `onClick` and closes the toast. */
+  action?: { label: string; onClick: () => void };
 };
 
 /**
  * A short message at the top of the map that slides into view and goes away by itself.
  * Use it to tell the user about something that happened out of sight. It holds no state: the app owns the message.
  */
-export function Toast({ message, onDismiss, durationMs = DEFAULT_DURATION_MS }: ToastProps) {
+export function Toast({ message, onDismiss, durationMs = DEFAULT_DURATION_MS, action }: ToastProps) {
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
 
@@ -30,6 +32,18 @@ export function Toast({ message, onDismiss, durationMs = DEFAULT_DURATION_MS }: 
   return (
     <div className="pw-toast" role="status" key={message}>
       <span>{message}</span>
+      {action && (
+        <button
+          type="button"
+          className="pw-button is-active"
+          onClick={() => {
+            action.onClick();
+            onDismiss();
+          }}
+        >
+          {action.label}
+        </button>
+      )}
       <button type="button" className="pw-button" aria-label="Dismiss" onClick={onDismiss}>
         ×
       </button>
