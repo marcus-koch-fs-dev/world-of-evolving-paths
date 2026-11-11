@@ -29,7 +29,7 @@ describe('Widest level showing a point', () => {
 });
 
 describe('Level that shows a point', () => {
-  const offered = ['week', 'month', 'halfYear', 'year'] as const;
+  const offered = ['week', 'month', 'year'] as const;
 
   it('is the widest offered level that is fine enough', () => {
     expect(levelThatShows(1, 'year', offered)?.level).toBe('week');

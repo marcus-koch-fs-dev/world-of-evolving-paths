@@ -6,10 +6,8 @@ export const FREE_VIEW_MIN_IMPORTANCE = 2;
 // What each view shows is the app's decision, not the library's.
 // `minImportance`: points less important than this are left out. `graphsPerPage`: paths on one page.
 export const LEVEL_SETTINGS: Record<ViewLevel, { minImportance: number; graphsPerPage: number }> = {
-  day: { minImportance: 1, graphsPerPage: 2 },
   week: { minImportance: 1, graphsPerPage: 2 },
   month: { minImportance: 2, graphsPerPage: 2 },
-  halfYear: { minImportance: 3, graphsPerPage: 2 },
   year: { minImportance: 3, graphsPerPage: 2 },
 };
 
@@ -42,11 +40,9 @@ export function levelThatShows(
   return widestLevelShowing(importance, offered);
 }
 
-// The week is the smallest view the demo offers and the year the widest. The library knows day and half year too.
-export const DEMO_LEVELS: readonly ViewLevel[] = ['week', 'month', 'year'];
-
-// The levels the demo offers at first. The user can switch the others on in the settings.
-export const DEFAULT_LEVELS: ViewLevel[] = [...DEMO_LEVELS];
+// The levels the demo offers at first: the week is the finest view and the year the widest. The user can switch
+// levels off in the settings.
+export const DEFAULT_LEVELS: ViewLevel[] = VIEW_LEVELS.map((option) => option.level);
 
 // How many years the year view can span, in the steps of its counter
 export const YEAR_SPANS: readonly number[] = [1, 2, 5, 10];

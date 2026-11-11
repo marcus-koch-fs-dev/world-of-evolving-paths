@@ -14,7 +14,7 @@ type Props = {
   onPick: (level: ViewLevel, date: string) => void;
 };
 
-/** The period label as a drop-down: pick a day, a calendar week, a month, a half year or a year. */
+/** The period label as a drop-down: pick a calendar week, a month or a year. */
 export function PeriodPicker({ label, date, year: shownYear, locale, onPick }: Props) {
   const [open, setOpen] = useState(false);
   const [year, setYear] = useState(shownYear);
@@ -40,7 +40,7 @@ export function PeriodPicker({ label, date, year: shownYear, locale, onPick }: P
         type="button"
         className="pw-button pw-view-label"
         aria-expanded={open}
-        title="Jump to a day, week, month or year"
+        title="Jump to a week, month or year"
         onClick={() => {
           setYear(shownYear);
           setOpen((current) => !current);

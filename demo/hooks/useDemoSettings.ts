@@ -1,7 +1,13 @@
 import { useState } from 'react';
-import { type BackgroundOptions, isValidLocale, type Orientation, type ViewLevel } from 'world-of-evolving-paths';
+import {
+  type BackgroundOptions,
+  isValidLocale,
+  type Orientation,
+  VIEW_LEVELS,
+  type ViewLevel,
+} from 'world-of-evolving-paths';
 import type { DockSlot } from 'world-of-evolving-paths/react';
-import { DEFAULT_LEVELS, DEMO_LEVELS } from '../app-logic/levels';
+import { DEFAULT_LEVELS } from '../app-logic/levels';
 import { useStoredState } from './useStoredState';
 
 /** Where the user docked the two bars. */
@@ -37,9 +43,9 @@ function withoutImage(stored: BackgroundOptions): BackgroundOptions {
   return rest;
 }
 
-// Only the levels the demo offers count. Without any of them the defaults are used.
-function onlyDemoLevels(stored: ViewLevel[]): ViewLevel[] {
-  const kept = stored.filter((level) => DEMO_LEVELS.includes(level));
+// Only levels that exist count, an old setting may hold others. Without any of them the defaults are used.
+function onlyKnownLevels(stored: ViewLevel[]): ViewLevel[] {
+  const kept = stored.filter((level) => VIEW_LEVELS.some((option) => option.level === level));
   return kept.length > 0 ? kept : DEFAULT_LEVELS;
 }
 
@@ -49,7 +55,7 @@ export function useDemoSettings() {
   const [pointsLocked, setPointsLocked] = useState(false);
   const [snap, setSnap] = useState(false);
   const [animate, setAnimate] = useState(true);
-  const [levels, setLevels] = useStoredState<ViewLevel[]>('wep-demo:levels-v2', DEFAULT_LEVELS, onlyDemoLevels);
+  const [levels, setLevels] = useStoredState<ViewLevel[]>('wep-demo:levels-v2', DEFAULT_LEVELS, onlyKnownLevels);
   const [orientation, setOrientation] = useStoredState<Orientation>('wep-demo:orientation', 'auto');
   const [storedLocale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || FALLBACK_LOCALE);
   const [background, setBackground] = useStoredState<BackgroundOptions>(

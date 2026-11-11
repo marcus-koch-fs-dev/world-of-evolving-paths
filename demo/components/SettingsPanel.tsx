@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { type Orientation, VIEW_LEVELS } from 'world-of-evolving-paths';
-import { DEMO_LEVELS, toggledLevels } from '../app-logic/levels';
+import { toggledLevels } from '../app-logic/levels';
 import type { SettingsValues } from '../hooks/useDemoSettings';
 
 export const LOCALES = [
@@ -51,7 +51,7 @@ export function SettingsPanel({ values, onChange, children }: Props) {
 
       <fieldset>
         <legend>Levels in the view bar</legend>
-        {VIEW_LEVELS.filter((option) => DEMO_LEVELS.includes(option.level)).map((option) => (
+        {VIEW_LEVELS.map((option) => (
           <label key={option.level}>
             <input
               type="checkbox"

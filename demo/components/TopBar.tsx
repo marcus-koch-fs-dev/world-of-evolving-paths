@@ -9,7 +9,7 @@ import { PeriodPicker } from './PeriodPicker';
 import { UndoRedo, type UndoRedoProps } from './UndoRedo';
 import { YearsStepper } from './YearsStepper';
 
-const CHIP_LETTERS: Record<ViewLevel, string> = { day: 'D', week: 'W', month: 'M', halfYear: 'H', year: 'Y' };
+const CHIP_LETTERS: Record<ViewLevel, string> = { week: 'W', month: 'M', year: 'Y' };
 
 /** The level buttons as short chips with the full name as tooltip. The shown level is always among them. */
 function chipsOf(levels: readonly { level: ViewLevel; label: string }[], shown: ViewLevel | null) {

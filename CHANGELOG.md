@@ -4,6 +4,7 @@
 
 ### Library
 
+- **Breaking:** the levels `day` and `halfYear` are gone. `ViewLevel` is `'week' | 'month' | 'year'` and `VIEW_LEVELS` has these three. A key such as `day:2026-11-07` or `halfYear:2026-01-01` is no longer a period, so `periodFromKey` returns `null` for it. If you used them, show a week or a month instead.
 - A path can have `through`: the connections that span the whole period without a point inside. Each is drawn as a line across the view, with an arrow, title and date at both ends. A fork gives one line per branch. New type `PathThrough`.
 - Lines that run along the time axis keep apart from each other by themselves.
 - New event `onLineEndMove({ from, to, y })`: the user dragged the arrow at the end of a line up or down. Pass `y` back on the lead (`Lead.y`) or on the `through` entry to keep the line there.
@@ -22,7 +23,7 @@
 ### Demo
 
 - The top bar has level chips (W, M, Y, All), a counter for 1, 2, 5 or 10 years, the arrows around the period, a list to pick a period, and **Today**, which opens the week of today. Keys: W, M, Y, A, T, ← → and + −.
-- The demo offers week, month and year. Day and half year are gone from the demo, not from the library.
+- The demo offers week, month and year, the same levels as the library. Double-click goes from the year to the month and the week.
 - A legend in the corner shows from which view on a point of each importance appears. It starts closed.
 - If a changed importance hides a point, a message says where it shows, with a button to go there.
 - Points move only up and down and keep one height in every view. Where a line meets the edge is kept per period; without a dragged height it follows the heights of the two points.

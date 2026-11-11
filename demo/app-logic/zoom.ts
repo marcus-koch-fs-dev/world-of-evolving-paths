@@ -1,12 +1,10 @@
 import type { ViewLevel } from 'world-of-evolving-paths';
 
-// The next finer level for each level. The half year is skipped: a double-click goes from the year to the month.
+// The next finer level for each level. The week is the finest one.
 const FINER: Record<ViewLevel, ViewLevel | null> = {
   year: 'month',
-  halfYear: 'month',
   month: 'week',
-  week: 'day',
-  day: null,
+  week: null,
 };
 
 /** The first level of the chain that the app offers, starting with `level`. */

@@ -1,7 +1,7 @@
 import { formatDate, formatDayMonth, fromDay, isoWeekNumber, monthName, monthSpan, toDay, weekdayOf } from './dates.js';
 import { formatMonthYearLong, formatNumericDate, weekPrefix } from './format.js';
 
-export type ViewLevel = 'day' | 'week' | 'month' | 'halfYear' | 'year';
+export type ViewLevel = 'week' | 'month' | 'year';
 
 /** First and last day (day numbers, both included) of what a view shows. */
 export type Period = { level: ViewLevel; start: number; end: number; key: string; label: string };
@@ -17,10 +17,8 @@ export const MAX_YEARS = 10;
 const clampYears = (years: number | undefined) => Math.min(MAX_YEARS, Math.max(1, Math.round(years ?? 1)));
 
 export const VIEW_LEVELS: readonly { level: ViewLevel; label: string }[] = [
-  { level: 'day', label: 'Day' },
   { level: 'week', label: 'Week' },
   { level: 'month', label: 'Month' },
-  { level: 'halfYear', label: 'Half year' },
   { level: 'year', label: 'Year' },
 ];
 
@@ -35,9 +33,8 @@ type LevelRule = {
   shifted(period: Period, count: number): { iso: string; options: CalendarOptions };
 };
 
-const PERIOD_KEY = /^(day|week|month|halfYear|year):(\d{4}-\d{2}-\d{2})(?:\+(\d+))?$/;
+const PERIOD_KEY = /^(week|month|year):(\d{4}-\d{2}-\d{2})(?:\+(\d+))?$/;
 const DAYS_PER_WEEK = 7;
-const MONTHS_PER_HALF_YEAR = 6;
 const MONTHS_PER_YEAR = 12;
 
 const pad = (value: number) => String(value).padStart(2, '0');
@@ -52,11 +49,6 @@ function firstOfMonth(day: number, months: number): string {
 }
 
 const RULES: Record<ViewLevel, LevelRule> = {
-  day: {
-    span: (iso) => ({ start: toDay(iso), end: toDay(iso) }),
-    label: ({ start }, locale) => (locale ? formatNumericDate(fromDay(start), locale) : formatDate(fromDay(start))),
-    shifted: (period, count) => ({ iso: fromDay(period.start + count), options: {} }),
-  },
   week: {
     span: (iso, options) => {
       const day = toDay(iso);
@@ -85,21 +77,6 @@ const RULES: Record<ViewLevel, LevelRule> = {
       return locale ? formatMonthYearLong(fromDay(start), locale) : `${monthName(month)} ${year}`;
     },
     shifted: (period, count) => ({ iso: firstOfMonth(period.start, count), options: {} }),
-  },
-  halfYear: {
-    span: (iso) => {
-      const [year, month] = iso.split('-').map(Number);
-      const firstHalf = month <= MONTHS_PER_HALF_YEAR;
-      return {
-        start: toDay(`${year}-${firstHalf ? '01-01' : '07-01'}`),
-        end: toDay(`${year}-${firstHalf ? '06-30' : '12-31'}`),
-      };
-    },
-    label: ({ start }) => {
-      const [year, month] = yearAndMonth(start);
-      return `${month <= MONTHS_PER_HALF_YEAR ? 'H1' : 'H2'} ${year}`;
-    },
-    shifted: (period, count) => ({ iso: firstOfMonth(period.start, MONTHS_PER_HALF_YEAR * count), options: {} }),
   },
   year: {
     span: (iso, options) => {
@@ -144,6 +121,8 @@ export function periodFromKey(key: string): Period | null {
   if (!match) return null;
   try {
     const level = match[1] as ViewLevel;
+    // Only the year level has a length in years
+    if (level !== 'year' && match[3]) return null;
     const years = clampYears(match[3] ? Number(match[3]) : 1);
     // The key holds the first day, a period of several years is built from its last year
     const iso = level === 'year' ? `${Number(match[2].slice(0, 4)) + years - 1}${match[2].slice(4)}` : match[2];

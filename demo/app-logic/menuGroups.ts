@@ -5,7 +5,7 @@ export type DemoMode = 'edit' | 'map';
 
 export const ZOOM_STEP = 1.25;
 // A short sign for each level on its tile
-const LEVEL_GLYPHS: Record<ViewLevel, string> = { day: 'D', week: 'W', month: 'M', halfYear: 'H', year: 'Y' };
+const LEVEL_GLYPHS: Record<ViewLevel, string> = { week: 'W', month: 'M', year: 'Y' };
 
 export type MenuState = {
   /** The levels the menu offers. */

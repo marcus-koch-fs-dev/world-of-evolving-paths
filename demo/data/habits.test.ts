@@ -5,7 +5,7 @@ import { buildPeriodData, importanceOf } from '../app-logic/periodData';
 import { createHabits } from './habits';
 
 const TODAY = '2026-11-08';
-const LEVELS: ViewLevel[] = ['day', 'week', 'month', 'halfYear', 'year'];
+const LEVELS: ViewLevel[] = ['week', 'month', 'year'];
 
 describe('Demo habits', () => {
   describe('when the data is created for a day', () => {

@@ -16,13 +16,13 @@ A pannable, zoomable canvas for milestones, branches and goals. Think of a skill
 
 </div>
 
-|     |                                                                                                                                                                   |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 📚  | **A library, not an app.** It stores nothing and prepares no data. Your app gives it data, it draws the data and tells you what the user does.                    |
-| 🗓️  | **Time-aware views.** Show a day, a week, a month, half a year or one to ten years. Each view gets its own data, so a year view can show only the big milestones. |
-| 🛣️  | **Paths that evolve.** Lines you have reached get wider and start to shine the more often you walk the path: from a faint trail to a highway.                     |
-| 🧲  | **Points keep their distance.** A dragged point stops where there is room. Otherwise it moves back. The same data and seed always give the same layout.           |
-| 🧩  | **Framework-free core.** The map works on any element. A React binding and ready-made controls are included.                                                      |
+|     |                                                                                                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 📚  | **A library, not an app.** It stores nothing and prepares no data. Your app gives it data, it draws the data and tells you what the user does.          |
+| 🗓️  | **Time-aware views.** Show a week, a month or one to ten years. Each view gets its own data, so a year view can show only the big milestones.           |
+| 🛣️  | **Paths that evolve.** Lines you have reached get wider and start to shine the more often you walk the path: from a faint trail to a highway.           |
+| 🧲  | **Points keep their distance.** A dragged point stops where there is room. Otherwise it moves back. The same data and seed always give the same layout. |
+| 🧩  | **Framework-free core.** The map works on any element. A React binding and ready-made controls are included.                                            |
 
 > Status: early (0.x). The API can still change.
 
@@ -217,7 +217,7 @@ your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
 
 ### Show a view
 
-A view is a period of a level: `day`, `week`, `month`, `halfYear` or `year`. Its key is made by the calendar helpers, and `periods` holds the data of each key.
+A view is a period of a level: `week`, `month` or `year` (one to ten years). Its key is made by the calendar helpers, and `periods` holds the data of each key.
 
 ```ts
 import { periodOf, shiftPeriod, periodFromKey } from 'world-of-evolving-paths';
@@ -238,7 +238,7 @@ const periods: PeriodMap = {
 ```
 
 - The key decides the calendar span the points are spread over. Any other key (for example `'free'`) is a free view: the points are spread over the span of their own dates.
-- **What a view shows is up to your app.** The library does not filter. A year view typically gets only the important points, a day view all of them. The demo shows one way to do it (`demo/app-logic/`): filter by period and importance, connect across hidden points, split many paths into pages.
+- **What a view shows is up to your app.** The library does not filter. A year view typically gets only the important points, a week view all of them. The demo shows one way to do it (`demo/app-logic/`): filter by period and importance, connect across hidden points, split many paths into pages.
 - Typically `periods` holds only the view you show, and you load the next one when the user changes the view.
 - If `periods` has no entry for `view`, the map stays empty and reports nothing, so make sure the view you show has data.
 
