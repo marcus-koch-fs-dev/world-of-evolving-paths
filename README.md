@@ -12,7 +12,7 @@ A pannable, zoomable canvas for milestones, branches and goals. Think of a skill
 
 **[▶ Live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/)** · [Open in StackBlitz](https://stackblitz.com/github/marcus-koch-fs-dev/world-of-evolving-paths?view=preview) · [Changelog](CHANGELOG.md)
 
-<img src="docs/demo-all.png" alt="The view of everything: all paths with their points, from start to goal, and the bar with the levels at the top" width="49%"> <img src="docs/demo-month.png" alt="A month view: the points of one month, lines that leave the view at both edges and the markers for today" width="49%">
+<img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-all.jpg" alt="Everything at once: all paths with their points, from start to goal" width="360"> <img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-week.jpg" alt="One week: the points of the week, lines that leave the view and the marker for today" width="360">
 
 </div>
 
