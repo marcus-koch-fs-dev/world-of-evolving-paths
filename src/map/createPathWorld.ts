@@ -1,5 +1,6 @@
 import type { Bounds } from '../core/camera.js';
 import { contentBounds } from '../core/geometry.js';
+import { lanesOf } from '../core/layout.js';
 import { throughLines } from '../core/scene/through.js';
 import { lineTracks } from '../core/scene/tracks.js';
 import { viewEdges } from '../core/scene/viewEdges.js';
@@ -95,7 +96,8 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       signal.notify();
     },
     onMoved: (id, position) => {
-      options.onPointMove?.(buildMoveEvent(model.world()?.points ?? [], id, position));
+      const world = model.world();
+      options.onPointMove?.(buildMoveEvent(world?.points ?? [], id, position, world ? lanesOf(world) : {}));
     },
   });
 

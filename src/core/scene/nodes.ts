@@ -37,7 +37,8 @@ function nodeOf(world: PlacedWorld, point: PlacedPoint, state: SceneState): Node
     scale: state.dragging === point.id ? DRAG_SCALE : state.hovered === point.id ? HOVER_SCALE : 1,
     pulse: point.status === 'current',
     arrow: point.status === 'current',
-    glyph: point.kind === 'goal' && point.status === 'done' ? '✓' : null,
+    // A check in every point that was reached, so done is told from current (pulsing) and open (dashed) at a glance
+    glyph: point.status === 'done' ? '✓' : null,
     title: point.title,
     date: state.formatDate ? state.formatDate(point.date) : formatPointDate(point.date, world.today, state.locale),
   };

@@ -131,18 +131,20 @@ function placePinned(
  * The date decides the rough x position inside the calendar span. Each path starts on its lane and drifts
  * with it: upper paths up, middle ones straight, lower ones down. A new point only extends its path.
  * Forks push their branches sideways. Then points repel each other in date order: placed ones stay, the new one yields.
- * Points with `x` and `y` are pinned and stay where they are; with only `y` they keep their height.
+ * Points with `x` and `y` are pinned and stay where they are; with only `y` they keep that distance from their lane.
  */
 export function generateLayout(input: LayoutInput): LayoutResult {
   const { paths, seed } = input;
   const span = spanOf(input);
   const width = tileWidth(input.points);
-  // A point with only a height is pinned there and sits on its date along the time axis
+  const laneOf = laneOffsets(paths);
+  // A point with only a height sits on its date along the time axis, at that distance from the lane of its path
   const points = input.points.map((point) =>
-    point.y !== undefined && point.x === undefined ? { ...point, x: xOfDate(point.date, span, width) } : point,
+    point.y !== undefined && point.x === undefined
+      ? { ...point, x: xOfDate(point.date, span, width), y: (laneOf.get(point.pathId) ?? 0) + point.y }
+      : point,
   );
   const byId = new Map(points.map((point) => [point.id, point]));
-  const laneOf = laneOffsets(paths);
   const ordered = [...points].sort(compareByDate);
   const parentOf = parentsOf(ordered, byId);
   const placements = createPlacements();
@@ -171,6 +173,11 @@ export function generateLayout(input: LayoutInput): LayoutResult {
         });
     });
   return { positions: placements.positions, width };
+}
+
+/** The y of the lane of every path of a world, by path id. Heights in the data are distances from it. */
+export function lanesOf(world: Pick<PlacedWorld, 'paths'>): Record<string, number> {
+  return Object.fromEntries(laneOffsets(world.paths));
 }
 
 /** The paths and points of a view together with where each point is. It does not depend on today. */

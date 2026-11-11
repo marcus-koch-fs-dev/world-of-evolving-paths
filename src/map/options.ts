@@ -16,7 +16,10 @@ export type LineEndMoveEvent = {
   /** The two points the line leads from and to. Keep the height for this connection. */
   from: LineEnd;
   to: LineEnd;
-  /** The height, in the positions the data uses. Pass it back as `y` of the lead or of the `through` of the path. */
+  /**
+   * The height as a distance from the lane of the path of the line (0 = on the lane), so it fits every view. Pass it
+   * back as `y` of the lead or of the `through` of the path.
+   */
   y: number;
 };
 
@@ -24,10 +27,21 @@ export type PointMoveEvent = {
   id: string;
   x: number;
   y: number;
+  /**
+   * The height as a distance from the lane of the path of the point. Pass it back as `y` alone (without `x`) to keep
+   * the point at this height in every view, on its date.
+   */
+  offset: number;
   /** Where every point of the view is right now. Pin them all to keep the layout exactly as the user sees it. */
   positions: Record<string, Position>;
 };
-export type PointAddEvent = { x: number; y: number; date: string };
+export type PointAddEvent = {
+  x: number;
+  y: number;
+  date: string;
+  /** The y of the lane of every path in this view, by path id. `y` minus the lane of a path is the height to keep. */
+  lanes: Record<string, number>;
+};
 export type PointDoubleClickEvent = { id: string; date: string };
 /** A line that leaves the view was double-clicked: the point it leaves from, the side and what the app told about the point out there. */
 export type LeadDoubleClickEvent = {
@@ -48,6 +62,8 @@ export type LineSelectEvent = {
   x: number;
   y: number;
   date: string;
+  /** The y of the lane of every path in this view, by path id. `y` minus the lane of a path is the height to keep. */
+  lanes: Record<string, number>;
   /** Where the click was on the map, in the coordinates of the overlay. A menu placed there moves with the camera. */
   at: Position;
 };
@@ -66,7 +82,10 @@ export type PathWorldEvents = {
    * height and pass it back as `y` on the lead (or on the `through` of the path), so the line stays there.
    */
   onLineEndMove?: (event: LineEndMoveEvent) => void;
-  /** A dragged point was released. Pass `x` and `y` back on the point to keep it there. */
+  /**
+   * A dragged point was released. Pass `offset` back as `y` to keep its height in every view, or `x` and `y` to pin it
+   * exactly here in this view.
+   */
   onPointMove?: (event: PointMoveEvent) => void;
   /** The empty area was double-clicked. The app decides whether and how to add a point. */
   onPointAdd?: (event: PointAddEvent) => void;

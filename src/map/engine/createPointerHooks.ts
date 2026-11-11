@@ -1,7 +1,9 @@
 import { layoutOf, nearestFree } from '../../core/collision.js';
+import { lanesOf } from '../../core/layout.js';
 import type { Turn } from '../../core/orientation.js';
 import { hitLead, hitLeadEnd, hitNode, reachAt } from '../../core/scene/hit.js';
 import { lineTargetAt, targetOfLead } from '../../core/scene/lineTarget.js';
+import { laneOfTrack } from '../../core/scene/tracks.js';
 import { dateAxisX } from '../../core/scene/viewEdges.js';
 import { snapToGrid } from '../../core/snap.js';
 import { dateAtX } from '../../core/timeAxis.js';
@@ -99,7 +101,9 @@ export function createPointerHooks({
       const points = new Map((model.world()?.points ?? []).map((point) => [point.id, point]));
       const target = lead && targetOfLead(lead, points);
       // The line stays where it was dragged until the app answers with new data that holds the height
-      if (y !== undefined && target) options().onLineEndMove?.({ ...target, y });
+      const world = model.world();
+      if (y !== undefined && target && world)
+        options().onLineEndMove?.({ ...target, y: y - Math.round(laneOfTrack(world, key)) });
       else interaction.dropLine(key);
       scene.rebuild();
     },
@@ -111,7 +115,8 @@ export function createPointerHooks({
       if (!current.onLineSelect || !target) return false;
       const place = rounded(toLayout(at));
       const date = dateAtX(place.x, model.periodData(), current.view, today(current));
-      current.onLineSelect({ ...target, ...place, date, at });
+      const world = model.world();
+      current.onLineSelect({ ...target, ...place, date, lanes: world ? lanesOf(world) : {}, at });
       return true;
     },
 
@@ -132,7 +137,9 @@ export function createPointerHooks({
       const points = model.world()?.points ?? [];
       const target = snapToGrid(toLayout(onScreen), current.snap);
       const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, target));
-      current.onPointAdd?.({ ...free, date: dateAtX(free.x, model.periodData(), current.view, today(current)) });
+      const date = dateAtX(free.x, model.periodData(), current.view, today(current));
+      const world = model.world();
+      current.onPointAdd?.({ ...free, date, lanes: world ? lanesOf(world) : {} });
     },
   };
 }

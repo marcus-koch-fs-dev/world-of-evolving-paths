@@ -9,6 +9,7 @@ const INK = '#edefe6';
 const MUTED = '#8a8f80';
 const BELOW_GAP = 8;
 const LINE_HEIGHT = 15.6;
+const GLYPH_SIZE = 32; // in symbol units: the check fills most of the circle
 export const ARROW_LIFT = 24;
 export const ARROW_X = -5;
 
@@ -128,12 +129,13 @@ function paintGlyph(slot: NodeSlot, texts: TextPool): void {
     return;
   }
   if (!slot.glyph) {
-    slot.glyph = texts.make(node.glyph, 22, node.stroke);
+    slot.glyph = texts.make(node.glyph, GLYPH_SIZE, node.stroke);
     slot.glyph.anchor.set(0.5);
     slot.marker.addChild(slot.glyph);
   }
   slot.glyph.text = node.glyph;
   slot.glyph.style.fill = node.stroke;
+  slot.glyph.style.fontSize = GLYPH_SIZE;
   slot.glyph.position.set(0, 1);
 }
 

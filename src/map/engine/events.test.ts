@@ -15,6 +15,20 @@ describe('Move events', () => {
 
     const event = buildMoveEvent(points, 'a', { x: 55.5, y: 66.4 });
 
-    expect(event).toEqual({ id: 'a', x: 56, y: 66, positions: { a: { x: 56, y: 66 }, b: { x: 30, y: 40 } } });
+    expect(event).toEqual({
+      id: 'a',
+      x: 56,
+      y: 66,
+      offset: 66,
+      positions: { a: { x: 56, y: 66 }, b: { x: 30, y: 40 } },
+    });
+  });
+
+  it('reports the height as a distance from the lane of the path of the point', () => {
+    const points = [{ ...placed('a', 10, 20), pathId: 'gym' }];
+
+    const event = buildMoveEvent(points, 'a', { x: 10, y: -80 }, { gym: -100 });
+
+    expect(event.offset).toBe(20);
   });
 });

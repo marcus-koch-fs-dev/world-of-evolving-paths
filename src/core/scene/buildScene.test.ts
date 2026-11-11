@@ -109,6 +109,24 @@ describe('Scene', () => {
       expect(node.glyph).toBe('✓');
     });
 
+    it('marks every point that is done with a check, whatever its kind', () => {
+      const kinds = ['start', 'milestone', 'crossroad', 'goal'] as const;
+      const points = kinds.map((kind, index) => placed({ id: kind, kind, status: 'done' }, index * 100));
+
+      const nodes = buildScene(worldOf(points), calm).nodes;
+
+      expect(nodes.map((node) => node.glyph)).toEqual(['✓', '✓', '✓', '✓']);
+    });
+
+    it('leaves the others without a check: current, open and abandoned', () => {
+      const statuses = ['current', 'open', 'abandoned'] as const;
+      const points = statuses.map((status, index) => placed({ id: status, status }, index * 100));
+
+      const nodes = buildScene(worldOf(points), calm).nodes;
+
+      expect(nodes.map((node) => node.glyph)).toEqual([null, null, null]);
+    });
+
     it('pulses at the current point', () => {
       const [node] = buildScene(worldOf([placed({ id: 'c', status: 'current' }, 0)]), calm).nodes;
 

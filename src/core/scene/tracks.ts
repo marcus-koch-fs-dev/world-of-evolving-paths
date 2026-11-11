@@ -23,7 +23,8 @@ const rank = (track: Track) => (track.exact ? 0 : track.fixed ? 1 : 2);
  * Puts the lines that run along the time axis (the lines that leave a view or span it) on tracks of their own:
  * lines that cover the same stretch of time keep at least `LINE_GAP` between them. They are placed from top to
  * bottom; a line that would lie too close to one already placed moves down to the next free place.
- * Lines the user put at a height (`exact`) keep it. Lines that span the whole view (`fixed`) come next, the rest yields.
+ * Lines the user put at a height (`exact`) keep it, unless two of them lie on top of each other. Lines that span the
+ * whole view (`fixed`) come next, the rest yields.
  */
 export function separateTracks(tracks: readonly Track[], gap = LINE_GAP): Map<string, number> {
   const ordered = [...tracks].sort((a, b) => rank(a) - rank(b) || a.y - b.y || a.key.localeCompare(b.key));
@@ -32,7 +33,8 @@ export function separateTracks(tracks: readonly Track[], gap = LINE_GAP): Map<st
       const clash = done.find((other) => overlapsInX(track, other) && Math.abs(other.y - y) < gap);
       return clash ? free(clash.y + gap) : y;
     };
-    done.push({ ...track, y: track.exact ? track.y : free(track.y) });
+    // Lines put at a height come first, so they only yield to each other when two lie on top of each other
+    done.push({ ...track, y: free(track.y) });
     return done;
   }, []);
   return new Map(placed.map((track) => [track.key, track.y]));
@@ -44,15 +46,19 @@ function wantedTracks(world: PlacedWorld, overrides: TrackOverrides): Track[] {
   if (!edges) return [];
   const withPoints = new Set(world.points.map((point) => point.pathId));
   const lanes = laneOffsets(world.paths);
-  /** The height the user chose for a line, while dragging or kept in the data. */
-  const chosen = (key: string, kept: number | undefined) => overrides.get(key) ?? kept;
+  /**
+   * The height the user chose for a line: while dragging (in the world) or kept in the data (a distance from the lane
+   * of its path).
+   */
+  const chosen = (key: string, kept: number | undefined, pathId: string) =>
+    overrides.get(key) ?? (kept === undefined ? undefined : (lanes.get(pathId) ?? 0) + kept);
   const spanning = world.paths.flatMap((path) => {
     const throughs = path.through ?? [];
     const places = throughs.length + (withPoints.has(path.id) ? 1 : 0);
     const first = places - throughs.length;
     return throughs.map((through, index): Track => {
       const key = throughKey(path.id, index);
-      const picked = chosen(key, through.y);
+      const picked = chosen(key, through.y, path.id);
       return {
         key,
         x0: edges.left,
@@ -69,7 +75,7 @@ function wantedTracks(world: PlacedWorld, overrides: TrackOverrides): Track[] {
       const end = leadEndX(world, point, side);
       return leads.map((lead, index): Track => {
         const key = leadKey(side, point.id, index);
-        const picked = chosen(key, lead.y);
+        const picked = chosen(key, lead.y, point.pathId);
         return {
           key,
           x0: Math.min(point.x, end),
@@ -82,6 +88,20 @@ function wantedTracks(world: PlacedWorld, overrides: TrackOverrides): Track[] {
     }),
   );
   return [...spanning, ...leaving];
+}
+
+/**
+ * The y of the lane of the path a line belongs to, by the key of the line (`leadKey` or `throughKey`). Heights in the
+ * data are distances from it. 0 when the line is not in the world.
+ */
+export function laneOfTrack(world: PlacedWorld, key: string): number {
+  const lanes = laneOffsets(world.paths);
+  const inner = key.slice(key.indexOf(':') + 1, key.lastIndexOf(':'));
+  if (key.startsWith('through:')) return lanes.get(inner) ?? 0;
+  // A lead key holds the side, then the id of its point, which may itself contain a colon
+  const pointId = inner.slice(inner.indexOf(':') + 1);
+  const pathId = world.points.find((point) => point.id === pointId)?.pathId;
+  return pathId === undefined ? 0 : (lanes.get(pathId) ?? 0);
 }
 
 /** The y of every line that runs along the time axis in a world, keyed by `leadKey` and `throughKey`. */
