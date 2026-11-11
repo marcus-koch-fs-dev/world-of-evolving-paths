@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makePath, makePoint } from '../../../tests/fixtures.js';
+import { toDay } from '../dates.js';
 import { TIERS } from '../strength.js';
 import type { PlacedPoint, PlacedWorld } from '../types.js';
 import { buildScene } from './buildScene.js';
@@ -139,6 +140,91 @@ describe('Scene', () => {
       const { heres } = buildScene(worldOf(points, '2026-12-01'), calm);
 
       expect(heres[0]).toMatchObject({ x: 400, y: 0 });
+    });
+
+    describe('when the line to the goal comes in from outside the view', () => {
+      const november = { start: toDay('2026-11-01'), end: toDay('2026-11-30') };
+      const goal = placed(
+        {
+          id: 'goal',
+          kind: 'goal',
+          status: 'open',
+          date: '2026-11-15',
+          incoming: [{ title: 'Start', date: '2026-10-15' }],
+        },
+        60 + (14.5 / 30) * 2080, // where 15 November lies on the axis
+        40,
+      );
+
+      it('sits on that line, shortly before the goal, not on the goal', () => {
+        const world = { ...worldOf([goal], '2026-11-11'), period: november };
+
+        const [here] = buildScene(world, calm).heres;
+
+        // The line runs from the left edge of the view to the goal. Day 11 of 30 on a tile 2200 wide, 60 padding
+        expect(here.x).toBeCloseTo(60 + (10.5 / 30) * 2080, 0);
+        expect(here.x).toBeLessThan(60 + (14.5 / 30) * 2080);
+        // The line leaves the lane of the path at the edge and bends to the goal, so the marker is on the way
+        expect(here.y).toBeGreaterThan(0);
+        expect(here.y).toBeLessThan(40);
+        expect(here.onPoint).toBe(false);
+      });
+
+      it('meets the edge of the view on the lane of the path, whatever the height of the goal', () => {
+        const high = { ...goal, y: -300 };
+        const low = { ...goal, y: 300 };
+
+        const [fromHigh] = buildScene({ ...worldOf([high], '2026-11-11'), period: november }, calm).leads;
+        const [fromLow] = buildScene({ ...worldOf([low], '2026-11-11'), period: november }, calm).leads;
+
+        expect(fromHigh.end.y).toBe(fromLow.end.y);
+      });
+
+      it('is lit only up to the marker for today, not beyond it', () => {
+        const world = { ...worldOf([goal], '2026-11-11'), period: november };
+
+        const scene = buildScene(world, calm);
+        const lit = scene.edges.find((edge) => edge.to === 'goal')?.lit;
+
+        expect(lit?.points.at(-1)?.x).toBeCloseTo(scene.heres[0].x, 0);
+      });
+
+      it('runs from the left edge of the view, not a short stretch', () => {
+        const world = { ...worldOf([goal], '2026-11-11'), period: november };
+
+        const [lead] = buildScene(world, calm).leads;
+
+        expect(lead.end.x).toBeCloseTo(60 + (0.5 / 30) * 2080, 0);
+      });
+
+      it('keeps a short stretch when the point is at the edge', () => {
+        const atEdge = { ...goal, x: 70 };
+        const world = { ...worldOf([atEdge], '2026-11-11'), period: november };
+
+        const [lead] = buildScene(world, calm).leads;
+
+        expect(lead.end.x).toBeLessThan(70);
+      });
+    });
+
+    describe('in a view that does not cover today', () => {
+      const points = [
+        placed({ id: 'a', status: 'done', date: '2026-11-02', next: ['b'] }, 0),
+        placed({ id: 'b', status: 'done', date: '2026-11-05' }, 400),
+      ];
+      const lastWeek = { start: toDay('2026-11-02'), end: toDay('2026-11-08') };
+
+      it('shows no marker, not even on the nearest point', () => {
+        const world = { ...worldOf(points, '2026-11-11'), period: lastWeek };
+
+        expect(buildScene(world, calm).heres).toEqual([]);
+      });
+
+      it('shows the marker when the view covers today', () => {
+        const world = { ...worldOf(points, '2026-11-08'), period: lastWeek };
+
+        expect(buildScene(world, calm).heres).toHaveLength(1);
+      });
     });
   });
 

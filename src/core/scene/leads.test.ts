@@ -173,13 +173,32 @@ describe('Lines that leave the view', () => {
   });
 
   describe('when the marker for today is placed', () => {
-    it('ignores the lines that leave the view', () => {
-      const withLead = placed({ id: 'a', status: 'current', outgoing: [{ title: 'Goal', date: '2026-12-01' }] });
-      const without = placed({ id: 'a', status: 'current' });
+    it('moves along a line that leaves the view when today lies on it', () => {
+      const point = placed({
+        id: 'a',
+        status: 'done',
+        date: '2026-11-04',
+        outgoing: [{ title: 'Goal', date: '2026-11-24' }],
+      });
 
-      const marked = buildScene(worldOf([withLead]), calm).heres;
+      const [marked] = buildScene(worldOf([point], '2026-11-14'), calm).heres;
 
-      expect(marked).toEqual(buildScene(worldOf([without]), calm).heres);
+      // Halfway between the point and the end of the line, which is 220 away
+      expect(marked.x).toBeCloseTo(400 + 110, 0);
+      expect(marked.y).toBeCloseTo(100, 0);
+    });
+
+    it('rests on the point when no line spans today', () => {
+      const point = placed({
+        id: 'a',
+        status: 'done',
+        date: '2026-11-04',
+        outgoing: [{ title: 'Goal', date: '2026-11-08' }],
+      });
+
+      const [marked] = buildScene(worldOf([point], '2026-11-14'), calm).heres;
+
+      expect(marked).toMatchObject({ x: 400, y: 100 });
     });
   });
 

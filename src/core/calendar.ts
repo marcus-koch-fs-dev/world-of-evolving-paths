@@ -9,7 +9,12 @@ export type Period = { level: ViewLevel; start: number; end: number; key: string
 export type CalendarOptions = {
   /** Weekday a week starts on: 0 = Monday ... 6 = Sunday. Default 0. */
   weekStart?: number;
+  /** For the year level: how many years the period spans, 1 to 10. It ends with the year of the date. Default 1. */
+  years?: number;
 };
+
+export const MAX_YEARS = 10;
+const clampYears = (years: number | undefined) => Math.min(MAX_YEARS, Math.max(1, Math.round(years ?? 1)));
 
 export const VIEW_LEVELS: readonly { level: ViewLevel; label: string }[] = [
   { level: 'day', label: 'Day' },
@@ -30,7 +35,7 @@ type LevelRule = {
   shifted(period: Period, count: number): { iso: string; options: CalendarOptions };
 };
 
-const PERIOD_KEY = /^(day|week|month|halfYear|year):(\d{4}-\d{2}-\d{2})$/;
+const PERIOD_KEY = /^(day|week|month|halfYear|year):(\d{4}-\d{2}-\d{2})(?:\+(\d+))?$/;
 const DAYS_PER_WEEK = 7;
 const MONTHS_PER_HALF_YEAR = 6;
 const MONTHS_PER_YEAR = 12;
@@ -97,17 +102,30 @@ const RULES: Record<ViewLevel, LevelRule> = {
     shifted: (period, count) => ({ iso: firstOfMonth(period.start, MONTHS_PER_HALF_YEAR * count), options: {} }),
   },
   year: {
-    span: (iso) => {
-      const year = iso.slice(0, 4);
-      return { start: toDay(`${year}-01-01`), end: toDay(`${year}-12-31`) };
+    span: (iso, options) => {
+      const last = Number(iso.slice(0, 4));
+      const first = last - clampYears(options.years) + 1;
+      return { start: toDay(`${first}-01-01`), end: toDay(`${last}-12-31`) };
     },
-    label: ({ start }) => String(yearAndMonth(start)[0]),
-    shifted: (period, count) => ({ iso: firstOfMonth(period.start, MONTHS_PER_YEAR * count), options: {} }),
+    label: ({ start, end }) => {
+      const [first, last] = [yearAndMonth(start)[0], yearAndMonth(end)[0]];
+      return first === last ? String(first) : `${first}–${last}`;
+    },
+    // A period of several years moves by its whole length
+    shifted: (period, count) => {
+      const years = yearsOf(period);
+      return { iso: firstOfMonth(period.end, MONTHS_PER_YEAR * years * count), options: { years } };
+    },
   },
 };
 
+/** How many years a period of the year level spans. */
+const yearsOf = ({ start, end }: Span) => yearAndMonth(end)[0] - yearAndMonth(start)[0] + 1;
+
 function periodFromSpan(level: ViewLevel, span: Span): Period {
-  return { level, ...span, key: `${level}:${fromDay(span.start)}`, label: RULES[level].label(span) };
+  const years = level === 'year' ? yearsOf(span) : 1;
+  const key = `${level}:${fromDay(span.start)}${years > 1 ? `+${years}` : ''}`;
+  return { level, ...span, key, label: RULES[level].label(span) };
 }
 
 /** The name of a period in the numeric form of a language, such as KW 45, 2.11. – 8.11.2026. period.label is the English one. */
@@ -125,7 +143,11 @@ export function periodFromKey(key: string): Period | null {
   const match = PERIOD_KEY.exec(key);
   if (!match) return null;
   try {
-    return periodOf(match[1] as ViewLevel, match[2], { weekStart: weekdayOf(toDay(match[2])) });
+    const level = match[1] as ViewLevel;
+    const years = clampYears(match[3] ? Number(match[3]) : 1);
+    // The key holds the first day, a period of several years is built from its last year
+    const iso = level === 'year' ? `${Number(match[2].slice(0, 4)) + years - 1}${match[2].slice(4)}` : match[2];
+    return periodOf(level, iso, { weekStart: weekdayOf(toDay(match[2])), years });
   } catch {
     return null;
   }

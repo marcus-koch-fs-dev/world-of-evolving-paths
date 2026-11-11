@@ -17,11 +17,13 @@ export { rotateDirection } from './orientation.js';
 export { PATH_PALETTE } from './scene/paths.js';
 export type { StrengthRule, Tier } from './strength.js';
 export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength.js';
+export { symbolSize } from './symbol.js';
 export type {
   Lead,
   Path,
   PathInfo,
   PathPoint,
+  PathThrough,
   PeriodData,
   PeriodMap,
   PlacedPoint,

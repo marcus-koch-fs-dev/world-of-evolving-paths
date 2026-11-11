@@ -18,17 +18,38 @@ const isRecord = (value: unknown): value is UnknownRecord =>
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value !== '';
 
+function oneLeadErrors(lead: unknown, where: string): string[] {
+  if (!isRecord(lead) || typeof lead.title !== 'string') return [`${where}.title must be a string.`];
+  if (typeof lead.date !== 'string' || !isIsoDate(lead.date)) return [`${where}.date must be a valid YYYY-MM-DD date.`];
+  if (lead.id !== undefined && !isNonEmptyString(lead.id)) return [`${where}.id must be a non-empty string.`];
+  if (lead.y !== undefined && !isFiniteNumber(lead.y)) return [`${where}.y must be a number.`];
+  return [];
+}
+
 function leadErrors(leads: unknown, where: string): string[] {
   if (leads === undefined) return [];
   if (!Array.isArray(leads)) return [`${where} must be a list of { title, date }.`];
-  return leads.flatMap((lead, index) => {
-    if (!isRecord(lead) || typeof lead.title !== 'string') return [`${where}[${index}].title must be a string.`];
-    if (typeof lead.date !== 'string' || !isIsoDate(lead.date))
-      return [`${where}[${index}].date must be a valid YYYY-MM-DD date.`];
-    if (lead.id !== undefined && !isNonEmptyString(lead.id))
-      return [`${where}[${index}].id must be a non-empty string.`];
-    return [];
-  });
+  return leads.flatMap((lead, index) => oneLeadErrors(lead, `${where}[${index}]`));
+}
+
+function throughErrors(throughs: unknown, where: string): string[] {
+  if (throughs === undefined) return [];
+  if (!Array.isArray(throughs)) return [`${where} must be a list of { from, to }.`];
+  return throughs.flatMap((through, index) => oneThroughErrors(through, `${where}[${index}]`));
+}
+
+function oneThroughErrors(through: unknown, where: string): string[] {
+  if (!isRecord(through)) return [`${where} must be an object with from and to.`];
+  const { strength } = through;
+  const strengthOk =
+    strength === undefined ||
+    (Number.isInteger(strength) && (strength as number) >= 0 && (strength as number) <= MAX_STRENGTH);
+  return [
+    ...oneLeadErrors(through.from, `${where}.from`),
+    ...oneLeadErrors(through.to, `${where}.to`),
+    ...(strengthOk ? [] : [`${where}.strength must be a whole number from 0 to ${MAX_STRENGTH}.`]),
+    ...(through.y === undefined || isFiniteNumber(through.y) ? [] : [`${where}.y must be a number.`]),
+  ];
 }
 
 function pointErrors(point: unknown, where: string): string[] {
@@ -58,8 +79,9 @@ function pointErrors(point: unknown, where: string): string[] {
     errors.push(`${where}.strength must be a whole number from 0 to ${MAX_STRENGTH}.`);
   }
   errors.push(...leadErrors(point.incoming, `${where}.incoming`), ...leadErrors(point.outgoing, `${where}.outgoing`));
-  if ((point.x === undefined) !== (point.y === undefined)) errors.push(`${where} needs both x and y, or neither.`);
-  if (point.x !== undefined && !(isFiniteNumber(point.x) && isFiniteNumber(point.y)))
+  if (point.x !== undefined && point.y === undefined)
+    errors.push(`${where}.x needs y. Set both to pin the point, or only y to keep its height.`);
+  if ((point.x !== undefined && !isFiniteNumber(point.x)) || (point.y !== undefined && !isFiniteNumber(point.y)))
     errors.push(`${where}.x and y must be numbers.`);
   return errors;
 }
@@ -72,6 +94,7 @@ function pathErrors(path: unknown, index: number): string[] {
   if (typeof path.name !== 'string') errors.push(`${where}.name must be a string.`);
   if (typeof path.color !== 'string' || !COLOR.test(path.color)) errors.push(`${where}.color must look like #rrggbb.`);
   if (path.lane !== undefined && !isFiniteNumber(path.lane)) errors.push(`${where}.lane must be a number.`);
+  errors.push(...throughErrors(path.through, `${where}.through`));
   if (!Array.isArray(path.points)) return [...errors, `${where}.points must be a list.`];
   return [...errors, ...path.points.flatMap((point, i) => pointErrors(point, `${where}.points[${i}]`))];
 }

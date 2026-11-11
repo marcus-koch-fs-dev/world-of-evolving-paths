@@ -131,13 +131,17 @@ function placePinned(
  * The date decides the rough x position inside the calendar span. Each path starts on its lane and drifts
  * with it: upper paths up, middle ones straight, lower ones down. A new point only extends its path.
  * Forks push their branches sideways. Then points repel each other in date order: placed ones stay, the new one yields.
- * Points with `x` and `y` are pinned and stay where they are.
+ * Points with `x` and `y` are pinned and stay where they are; with only `y` they keep their height.
  */
 export function generateLayout(input: LayoutInput): LayoutResult {
-  const { paths, points, seed } = input;
-  const byId = new Map(points.map((point) => [point.id, point]));
+  const { paths, seed } = input;
   const span = spanOf(input);
-  const width = tileWidth(points);
+  const width = tileWidth(input.points);
+  // A point with only a height is pinned there and sits on its date along the time axis
+  const points = input.points.map((point) =>
+    point.y !== undefined && point.x === undefined ? { ...point, x: xOfDate(point.date, span, width) } : point,
+  );
+  const byId = new Map(points.map((point) => [point.id, point]));
   const laneOf = laneOffsets(paths);
   const ordered = [...points].sort(compareByDate);
   const parentOf = parentsOf(ordered, byId);
@@ -170,7 +174,13 @@ export function generateLayout(input: LayoutInput): LayoutResult {
 }
 
 /** The paths and points of a view together with where each point is. It does not depend on today. */
-export type PeriodLayout = { paths: PathInfo[]; points: FlatPoint[]; positions: Record<string, Position> };
+export type PeriodLayout = {
+  paths: PathInfo[];
+  points: FlatPoint[];
+  positions: Record<string, Position>;
+  /** The days the view covers. Null for a free view. */
+  period?: Span | null;
+};
 
 /**
  * Lays out the points of a view. The view key decides the calendar span;
@@ -178,8 +188,9 @@ export type PeriodLayout = { paths: PathInfo[]; points: FlatPoint[]; positions: 
  */
 export function layoutPeriod(data: PeriodData, view: string, seed: number): PeriodLayout {
   const flat = flattenPeriod(data);
-  const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period: periodFromKey(view), seed });
-  return { ...flat, positions };
+  const period = periodFromKey(view);
+  const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period, seed });
+  return { ...flat, positions, period: period && { start: period.start, end: period.end } };
 }
 
 /**
@@ -192,7 +203,7 @@ export function placeWorld(layout: PeriodLayout, today: string): PlacedWorld {
     const { x: _x, y: _y, ...rest } = point;
     return { ...rest, ...positions[point.id], next: point.next.filter((id) => positions[id]) };
   });
-  return { today, paths: layout.paths, points };
+  return { today, period: layout.period ?? null, paths: layout.paths, points };
 }
 
 /** Lays a view out and places it in one go. */

@@ -69,6 +69,17 @@ describe('Layout', () => {
 
       expect(positions.c2).toEqual({ x: 1234, y: -567 });
     });
+
+    it('keeps only its height when there is only a y, and sits on its date', () => {
+      const plain = flattenPeriod(makePeriodData());
+      const heightOnly = flattenPeriod(editPoint(makePeriodData(), 'c2', { y: -567 }));
+
+      const free = generateLayout({ paths: plain.paths, points: plain.points, period: week, seed: 1 });
+      const kept = generateLayout({ paths: heightOnly.paths, points: heightOnly.points, period: week, seed: 1 });
+
+      expect(kept.positions.c2.y).toBe(-567);
+      expect(kept.positions.c2.x).toBeGreaterThan(free.positions.c1.x);
+    });
   });
 
   describe('when a fork has several branches', () => {

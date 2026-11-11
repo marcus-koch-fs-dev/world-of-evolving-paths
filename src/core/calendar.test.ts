@@ -81,4 +81,40 @@ describe('Calendar', () => {
       expect(fromDay(next.start)).toBe('2026-11-06');
     });
   });
+
+  describe('when building a period of several years', () => {
+    it('ends with the year of the date', () => {
+      const period = periodOf('year', '2026-11-04', { years: 2 });
+
+      expect(fromDay(period.start)).toBe('2025-01-01');
+      expect(fromDay(period.end)).toBe('2026-12-31');
+      expect(period.label).toBe('2025–2026');
+    });
+
+    it('is a plain year by default and keeps its short key', () => {
+      const period = periodOf('year', '2026-11-04');
+
+      expect(period.label).toBe('2026');
+      expect(period.key).toBe('year:2026-01-01');
+    });
+
+    it('limits the length to 1 to 10 years', () => {
+      expect(periodOf('year', '2026-11-04', { years: 0 }).label).toBe('2026');
+      expect(periodOf('year', '2026-11-04', { years: 99 }).label).toBe('2017–2026');
+    });
+
+    it('moves by its whole length', () => {
+      const period = periodOf('year', '2026-11-04', { years: 2 });
+
+      expect(shiftPeriod(period, -1).label).toBe('2023–2024');
+      expect(shiftPeriod(period, 1).label).toBe('2027–2028');
+    });
+
+    it('can be read back from its key', () => {
+      const period = periodOf('year', '2026-11-04', { years: 5 });
+
+      expect(period.key).toBe('year:2022-01-01+5');
+      expect(periodFromKey(period.key)).toEqual(period);
+    });
+  });
 });

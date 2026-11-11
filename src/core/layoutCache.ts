@@ -27,5 +27,5 @@ export function layoutSignature(data: PeriodData): string {
 
 /** The layout of earlier data for new data with the same signature: new details on the points, same positions. */
 export function reuseLayout(data: PeriodData, previous: PeriodLayout): PeriodLayout {
-  return { ...flattenPeriod(data), positions: previous.positions };
+  return { ...flattenPeriod(data), positions: previous.positions, period: previous.period };
 }

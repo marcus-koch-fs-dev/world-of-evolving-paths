@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hitLead } from './hit.js';
+import { hitLead, hitLeadEnd } from './hit.js';
 import type { LeadDraw } from './types.js';
 
 const after: LeadDraw = {
@@ -20,6 +20,7 @@ const after: LeadDraw = {
   outward: { x: 1, y: 0 },
   color: '#fff',
   hovered: false,
+  trackKey: 'lead:after:a:0',
 };
 
 const before: LeadDraw = {
@@ -40,7 +41,18 @@ const before: LeadDraw = {
   outward: { x: -1, y: 0 },
   color: '#fff',
   hovered: false,
+  trackKey: 'lead:before:a:0',
 };
+
+describe('Hit test of the end of a line', () => {
+  it('finds the line whose arrow is under the position', () => {
+    expect(hitLeadEnd([before, after], { x: 616, y: 108 })?.trackKey).toBe('lead:after:a:0');
+  });
+
+  it('finds nothing on the line itself, away from its arrow', () => {
+    expect(hitLeadEnd([before, after], { x: 500, y: 100 })).toBeNull();
+  });
+});
 
 describe('Hit test of the lines that leave the view', () => {
   describe('when the pointer is on a label', () => {
