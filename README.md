@@ -12,19 +12,19 @@ A pannable, zoomable canvas for milestones, branches and goals. Think of a skill
 
 **[▶ Live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/)** · [Open in StackBlitz](https://stackblitz.com/github/marcus-koch-fs-dev/world-of-evolving-paths?view=preview) · [Changelog](CHANGELOG.md)
 
-![The year view with paths that grow from thin to wide, a slim bar at the top and the time slider at the bottom](docs/demo-year.jpg)
+<img src="docs/demo-all.png" alt="The view of everything: all paths with their points, from start to goal, and the bar with the levels at the top" width="49%"> <img src="docs/demo-month.png" alt="A month view: the points of one month, lines that leave the view at both edges and the markers for today" width="49%">
 
 </div>
 
-|     |                                                                                                                                                         |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 📚  | **A library, not an app.** It stores nothing and prepares no data. Your app gives it data, it draws the data and tells you what the user does.          |
-| 🗓️  | **Time-aware views.** Show a day, a week, a month, half a year or a year. Each view gets its own data, so a year view can show only the big milestones. |
-| 🛣️  | **Paths that evolve.** Lines you have reached get wider and start to shine the more often you walk the path: from a faint trail to a highway.           |
-| 🧲  | **Points keep their distance.** A dragged point stops where there is room. Otherwise it moves back. The same data and seed always give the same layout. |
-| 🧩  | **Framework-free core.** The map works on any element. A React binding and ready-made controls are included.                                            |
+|     |                                                                                                                                                                   |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 📚  | **A library, not an app.** It stores nothing and prepares no data. Your app gives it data, it draws the data and tells you what the user does.                    |
+| 🗓️  | **Time-aware views.** Show a day, a week, a month, half a year or one to ten years. Each view gets its own data, so a year view can show only the big milestones. |
+| 🛣️  | **Paths that evolve.** Lines you have reached get wider and start to shine the more often you walk the path: from a faint trail to a highway.                     |
+| 🧲  | **Points keep their distance.** A dragged point stops where there is room. Otherwise it moves back. The same data and seed always give the same layout.           |
+| 🧩  | **Framework-free core.** The map works on any element. A React binding and ready-made controls are included.                                                      |
 
-> Status: early (0.0.x). The API can still change.
+> Status: early (0.x). The API can still change.
 
 ## 📑 Contents
 
@@ -150,13 +150,24 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | I want to …                      | Do this                                                                                                                                                                      |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Select a point and open its menu | Click it. Click the empty area to deselect.                                                                                                                                  |
-| Move a point                     | Drag it. It stops where there is room. Otherwise it moves back.                                                                                                              |
+| Move a point                     | Drag it up or down. It stays on its date, so it only moves across the time axis. It keeps that height in every view. It stops where there is room, otherwise it moves back.  |
 | Add a point                      | Double-click the empty area. It joins the path of the selected point, or the first path. The new point gets the importance the current view needs, so you see it right away. |
 | Add the next point               | Point menu → **Next point** → name and date → **Create**.                                                                                                                    |
 | Start a **new path**             | Point menu → **Next point** → tick **On a new path (own color)**, give the path a name (optional) and pick a color → **Create**.                                             |
 | Connect two points               | Point menu → **Connect**, then click the point to connect to. Escape cancels.                                                                                                |
 | Change status, kind, name, color | Point menu → **Properties**: Status, Kind, Name, Path color.                                                                                                                 |
-| Delete a point                   | Point menu → **Delete**.                                                                                                                                                     |
+| Delete a point                   | Point menu → **Delete**. The path stays connected: the point before and the point after are joined.                                                                          |
+| Point hidden after a change      | If you lower the importance of a point, the view may no longer show it. A message says which view shows it, and its button goes there.                                       |
+
+**Lines**
+
+| I want to …                  | Do this                                                                                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Insert a point into a line   | Click or right-click the line → **Insert point**. The new point sits between the two points, on the date where you clicked.                                                  |
+| Move a line                  | Drag the arrow at its end, at the edge of the view, up or down. A line without a point in the view moves as a whole. A line from a point moves only its end at the edge.     |
+| Keep the height of a line    | Nothing to do. The height is kept for that connection, in every view.                                                                                                        |
+| See a path that skips a view | A path with points before and after the period, but none inside, runs across the whole view, with the names and dates at both ends. At a fork each branch gets its own line. |
+| Keep lines apart             | Nothing to do. Lines that would lie on top of each other move apart by themselves.                                                                                           |
 
 **Paths grow**
 
@@ -173,9 +184,13 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | Zoom                     | Mouse wheel or pinch.                                                                                                                                                                                               |
 | Pan                      | Drag the empty area.                                                                                                                                                                                                |
 | Center / fit everything  | Keys **M** and **E** while the pointer is over the map, or the buttons (tiles) in the menu.                                                                                                                         |
-| Change the period        | The arrows and **Today** in the top bar. The levels (Free, Week, Month, Half year, Year) are in the menu (▦) under **View**.                                                                                        |
-| Pick a date directly     | Click the period in the top bar (for example "2026" or "KW 2"). A date picker opens. The view jumps to the period that has that date.                                                                               |
-| Go one level deeper      | Double-click a point. From the year you go to the month, then the week (and the day, if you switched it on in the settings).                                                                                        |
+| Change the level         | The chips **W** (week), **M** (month), **Y** (year) and **All** in the top bar, or the keys W, M, Y and A.                                                                                                          |
+| Show several years       | In the year view, the counter **− 1 +** next to the chips: 1, 2, 5 or 10 years. The keys + and − do the same.                                                                                                       |
+| Change the period        | The arrows ◀ ▶ on both sides of the period, or the arrow keys ← →. **Today** (key T) goes to the week of today.                                                                                                     |
+| Pick a period directly   | Click the period in the top bar (for example "2026 ▾"). A list opens with the weeks, months and years. The view jumps to the one you pick.                                                                          |
+| See which points show    | The **Legend** in the corner (closed at first). It shows, for each importance, from which view on such a point appears.                                                                                             |
+| Snap to a grid           | Menu (▦) → **Mode** → Settings → **Snap to grid**. Dragged and added points then sit on a grid.                                                                                                                     |
+| Go one level deeper      | Double-click a point. From the year you go to the month, then the week.                                                                                                                                             |
 | See where a path goes on | At the start and end of a view, a line leaves the point towards the edge. At its end you read the name and date of the next or earlier point. Double-click the line or its text to go there. **⤴** brings you back. |
 | Go back                  | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                                                                                               |
 | Travel through time      | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view.                                                                            |
@@ -211,6 +226,7 @@ const nextWeek = shiftPeriod(week, 1);
 const sameWeek = periodFromKey('week:2026-11-02'); // back from a key
 
 periodOf('week', '2026-11-04', { weekStart: 4 }); // weeks that start on a Friday (0 = Monday ... 6 = Sunday)
+periodOf('year', '2026-11-04', { years: 5 }); // key 'year:2022-01-01+5', label '2022–2026': 1 to 10 years, ending with the year of the date
 ```
 
 ```ts
@@ -248,6 +264,8 @@ The map draws a line from the point towards the edge of the view. At its end sit
 
 A double-click on the line or its text calls `onLeadDoubleClick({ pointId, side, title, date, id })`. Your app decides what happens. The demo goes to the period of that date, in the same level, and selects the point out there. The **Back** button returns.
 
+Sometimes a path has points before and after the period, but none inside it. Pass such a connection in `through` on the path: `{ from, to, strength?, y? }`, where `from` and `to` look like an entry of `incoming`. The map draws a line across the whole view, with an arrow, the title and the date at each end. At a fork, give one entry per branch.
+
 The map does not look for these points itself, because it only knows the points of this view. Your app finds them when it builds the view. The demo does it in `demo/app-logic/leads.ts`: it follows the connections over hidden points until it reaches the first point outside the period.
 
 ### Keep the layout
@@ -260,7 +278,13 @@ You give points without positions and the library lays them out:
 - Points keep `radius + radius` from each other and stay off foreign lines. Lines may cross.
 - The same input and `seed` always give the same layout. Change `seed` for another one.
 
-**Fixing a position (pinning).** A point with `x` and `y` stays exactly there, the others make room around it. When the user drops a dragged point, `onPointMove` tells you where it ended up, and `positions` holds every point of the view. Store them and pass them back as `x`/`y` to keep the layout as the user sees it.
+**Fixing a position (pinning).** A point with `x` and `y` stays exactly there, the others make room around it. A point with only `y` keeps its height and sits on its date along the time axis. That is the way to keep a height in every view, because the date gives a different `x` in a week than in a year. When the user drops a dragged point, `onPointMove` tells you where it ended up, and `positions` holds every point of the view. Store them and pass them back to keep the layout as the user sees it.
+
+By default a dragged point moves only across the time axis (`timeLocked: true`), so it always stays on its date and agrees with the marker for today. Set `timeLocked: false` to let it move freely. With `snap` (a distance in world units) dragged and added points sit on a grid.
+
+**Lines the user moves.** Lines that run along the time axis (the lines that leave the view and the ones in `through`) keep apart from each other by themselves. The user can drag the arrow at the end of such a line up or down. `onLineEndMove({ from, to, y })` then tells you the two points of that connection and the new height. Store it and pass it back as `y` on the lead (in `incoming` or `outgoing`) or on the entry in `through`. The line stays where it was dragged until your new data arrives.
+
+**Clicking a line.** `onLineSelect({ from, to, x, y, date, at })` comes when the user clicks or right-clicks a line: a connection between two points, a line that leaves the view, or one that spans it. `from` and `to` are its two ends (`{ id?, title, date }`), `date` is the date where it was clicked. Show a `LineMenu` at `at`, for example with **Insert point**. The demo inserts a point there and puts it between the two points in `next`.
 
 > [!WARNING]
 > Answer a move with a **new** `PeriodData` object within 80 ms, otherwise the point moves back. Changing the old object in place does not count, the map compares by reference. See [Events](#events).
@@ -334,11 +358,11 @@ The option `orientation` sets which way time runs: `horizontal` (left to right),
 | `importance` | `number` (1–5, optional)                          | Bigger points keep more distance.                                                                                                                                                               |
 | `note`       | `string` (optional)                               | Free text for your app.                                                                                                                                                                         |
 | `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Make paths stronger](#make-paths-stronger).                                                                                                  |
-| `incoming`   | `{ title, date, id? }[]` (optional)               | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
-| `outgoing`   | `{ title, date, id? }[]` (optional)               | Points outside this view that this point leads to. The map draws a line to the edge, with title and date.                                                                                       |
-| `x`, `y`     | `number` (optional)                               | Pins the point. Set both or neither.                                                                                                                                                            |
+| `incoming`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
+| `outgoing`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that this point leads to. The map draws a line to the edge, with title and date. `y` is the height of the line at the edge (see `onLineEndMove`).                      |
+| `x`, `y`     | `number` (optional)                               | Pins the point. Both: exactly there. Only `y`: at this height, on its date. `x` needs `y`.                                                                                                      |
 
-**`Path`** is one graph with its points: `{ id, name, color, lane?, points }`. `color` is `#rrggbb` and stays the same along the whole path. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order.
+**`Path`** is one graph with its points: `{ id, name, color, lane?, points, through? }`. `through` lists the connections that span the whole period without a point inside (`PathThrough`, see [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes)). `color` is `#rrggbb` and stays the same along the whole path. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order.
 
 **`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` to a point that is not in the view is dropped. Connections never form a circle: such data is rejected with a message. Point ids may not contain `->`, it separates the ids in the id of a line.
 
@@ -357,6 +381,8 @@ All events are options of `PathWorld` and `createPathWorld`.
 | `onPointAdd({ x, y, date })`                            | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot.                                             |
 | `onPointDoubleClick({ id, date })`                      | A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view.                                                                                                                           |
 | `onLeadDoubleClick({ pointId, side, title, date, id })` | A line that leaves the view was double-clicked, on its text or on the line. `side` is `'before'` for a line that comes from outside and `'after'` for one that goes on. `title`, `date` and `id` are what you gave in `incoming` or `outgoing`. |
+| `onLineSelect({ from, to, x, y, date, at })`            | A line was clicked or right-clicked. `from` and `to` are its ends, `x`/`y`/`date` the place on the line, `at` the place for a `LineMenu`. See [Keep the layout](#keep-the-layout).                                                              |
+| `onLineEndMove({ from, to, y })`                        | The arrow at the end of a line that leaves or spans the view was dragged and let go. Pass `y` back on the lead or on the `through` entry.                                                                                                       |
 | `onError(errors)`                                       | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                                                                          |
 
 Update your data in these callbacks and pass the new objects back in. The data is yours. If you do not answer a move within 80 ms with a **new** `PeriodData` object for the current view, the point moves back to where it was. Changing the old object in place does not count, the map compares by reference. Sometimes a point cannot stay where it was dropped (no room, or on a foreign line). Then it moves back along its way until it finds a free spot. That spot is what `onPointMove` reports.
@@ -375,6 +401,8 @@ const options: PathWorldOptions = {
   seed: 1, // another number gives another layout
   editable: true, // false: no moving and no adding of points
   pointsLocked: false, // true: points cannot be dragged
+  timeLocked: true, // false: a dragged point may leave its date
+  // snap: 40, // no default: dragged and added points snap to a grid with this distance
   wavy: false, // true: a slight wave on the lines
   animate: true, // false: no moving parts (also the default for users who prefer reduced motion)
   orientation: 'horizontal', // 'horizontal-inverted' | 'vertical' | 'vertical-inverted' | 'auto'
@@ -394,7 +422,7 @@ const options: PathWorldOptions = {
   },
   // formatDate: (iso) => iso, // no default: write the date under a point yourself
   // The events, all optional (see Events above):
-  // onSelect, onPointMove, onPointAdd, onPointDoubleClick, onLeadDoubleClick, onError
+  // onSelect, onPointMove, onPointAdd, onPointDoubleClick, onLeadDoubleClick, onLineSelect, onLineEndMove, onError
 };
 ```
 
@@ -404,10 +432,12 @@ const options: PathWorldOptions = {
 const demoEditorAtStart = {
   mode: 'editor', // 'map' is read only, with few controls
   view: 'year', // the first view; 'free' shows everything
-  levels: ['week', 'month', 'halfYear', 'year'], // the views in the menu; 'day' can be switched on in the settings
+  levels: ['week', 'month', 'year'], // the chips in the top bar
+  years: 1, // how many years the year view spans: 1, 2, 5 or 10
   settings: {
     wavy: false,
     pointsLocked: false,
+    snap: false,
     animate: true,
     orientation: 'auto',
     locale: 'the language of the browser', // fallback: 'en-GB'
@@ -444,10 +474,12 @@ The `PointMenu` has options too. These are the defaults:
 | -------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `periods`      | —              | The `PeriodMap`.                                                                                                                                                                                                                    |
 | `view`         | —              | Key of the period to show.                                                                                                                                                                                                          |
-| `today`        | local date     | Today as `YYYY-MM-DD`. Marks "today" on every path.                                                                                                                                                                                 |
+| `today`        | local date     | Today as `YYYY-MM-DD`. Marks "today" on the lines, only in a view that holds it.                                                                                                                                                    |
 | `seed`         | `1`            | Changes the generated layout.                                                                                                                                                                                                       |
 | `editable`     | `true`         | Allow moving and adding points.                                                                                                                                                                                                     |
 | `pointsLocked` | `false`        | Points cannot be dragged.                                                                                                                                                                                                           |
+| `timeLocked`   | `true`         | A dragged point moves only across the time axis and stays on its date.                                                                                                                                                              |
+| `snap`         | —              | Distance of a grid in world units. Dragged and added points snap to it.                                                                                                                                                             |
 | `wavy`         | `false`        | A slight wave on the lines.                                                                                                                                                                                                         |
 | `background`   | dark, plain    | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }`.                                                                                                |
 | `orientation`  | `'horizontal'` | Which way time runs: `horizontal`, `horizontal-inverted`, `vertical`, `vertical-inverted` or `auto`. See [Camera and direction of time](#camera-and-direction-of-time). Only the picture turns, your data and events stay the same. |
@@ -468,13 +500,14 @@ Ready-made controls are imported from `world-of-evolving-paths/react`. In the re
 | Control           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ZoomControls`    | Zoom out, zoom in, center, fit. Place it inside `PathWorld`.                                                                                                                                                                                                                                                                                                                                                                         |
-| `ViewBar`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. With `onDateChange` (and `date`) a click on the period opens a date picker. Holds no state.                                                                                                                                                                                                                                              |
+| `ViewBar`         | Level buttons (or one dropdown with `compact`), previous/next period, today, pages, reroll. With `onDateChange` (and `date`) a click on the period opens a date picker. Holds no state. `levelChips` keeps the level buttons with `periodOnly`, `freeLast` puts the free view after the levels, `afterLevels` and `periodSlot` take your own controls (for example a counter of years and a period picker).                          |
 | `ControlBar`      | A bar fixed to the top or bottom edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). Bars on one edge sit side by side. With `onDockChange` the user drags it to another place, you store it; with `label` it can be folded.                                                                                                                                                                                         |
 | `TilePanel`       | One button (`▦`) that opens a small panel of buttons (tiles) in groups, like a number pad. You give the groups and tiles (glyph, label, `active`, `disabled`, `onClick`). It opens away from the edge of its `ControlBar` and stays open until the button is clicked again or Escape is pressed. `ViewBar` with `periodOnly` pairs with it: the period stays in the bar, everything else goes into tiles.                            |
 | `SidePanel`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                                                        |
 | `BackgroundPanel` | Fill (plain or gradient with two colors), pattern, brightness and size. Holds no state.                                                                                                                                                                                                                                                                                                                                              |
 | `PointMenu`       | Menu with buttons at a selected point. Actions: next point, connect (needs `onConnect`), delete. Properties: status, kind, name, path color (with slots for your own colors) and details. The menu shows the name of the path of the point. `checkInCount` shows the check-ins of the path. It moves with the map and sits below the point, or above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
-| `Toast`           | A short message at the top of the map that slides in and goes away by itself (`durationMs`, default 6 s) or when closed. For hints and problems of your app. Holds no state.                                                                                                                                                                                                                                                         |
+| `Toast`           | A short message at the top of the map that slides in and goes away by itself (`durationMs`, default 6 s) or when closed. For hints and problems of your app. With `action` it shows a button. Holds no state.                                                                                                                                                                                                                        |
+| `LineMenu`        | Tile menu at a clicked line, in the look of `PointMenu`. Place it inside `PathWorld` at `at` of `onLineSelect`; you give the title and the tiles.                                                                                                                                                                                                                                                                                    |
 | `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                                            |
 
 </details>
@@ -487,7 +520,7 @@ Ready-made controls are imported from `world-of-evolving-paths/react`. In the re
 
 ### More exports
 
-Besides what is shown above, the package exports helpers you may want for your own controls: `usePathWorldHandle`, `useCameraZoom` and `useWorldVersion` for React; `positionOf`, `getCamera` and `subscribeCamera` on the handle; and constants and functions such as `VIEW_LEVELS`, `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `tierOf`, `activeDaysIn`, `fromDay` and `todayLocal`. All of them are typed, so your editor shows how to use them.
+Besides what is shown above, the package exports helpers you may want for your own controls: `usePathWorldHandle`, `useCameraZoom` and `useWorldVersion` for React; `positionOf`, `getCamera` and `subscribeCamera` on the handle; and constants and functions such as `VIEW_LEVELS`, `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `tierOf`, `activeDaysIn`, `fromDay`, `todayLocal` and `symbolSize`. All of them are typed, so your editor shows how to use them.
 
 ## 📈 Performance and limits
 

@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0 (unreleased)
+
+### Library
+
+- A path can have `through`: the connections that span the whole period without a point inside. Each is drawn as a line across the view, with an arrow, title and date at both ends. A fork gives one line per branch. New type `PathThrough`.
+- Lines that run along the time axis keep apart from each other by themselves.
+- New event `onLineEndMove({ from, to, y })`: the user dragged the arrow at the end of a line up or down. Pass `y` back on the lead (`Lead.y`) or on the `through` entry to keep the line there.
+- New event `onLineSelect({ from, to, x, y, date, at })`: a line was clicked or right-clicked. New React control `LineMenu` for a tile menu at that place.
+- New option `timeLocked` (default `true`): a dragged point stays on its date and only moves across the time axis.
+- A point with only `y` keeps its height and sits on its date, so a height can hold in every view.
+- New option `snap`: dragged and added points snap to a grid.
+- The marker for today shows only in a view that holds today, on the right day of each line.
+- The year level can span 1 to 10 years: `periodOf('year', date, { years })`, key `year:YYYY-01-01+N`.
+- `ViewBar`: new props `levelChips`, `freeLast`, `afterLevels` and `periodSlot`. Level buttons can have a `title`.
+- `Toast` can show a button (`action`).
+- Lines are easier to hit when the view is zoomed out.
+
+### Demo
+
+- The top bar has level chips (W, M, Y, All), a counter for 1, 2, 5 or 10 years, the arrows around the period, a list to pick a period, and **Today**, which opens the week of today. Keys: W, M, Y, A, T, ← → and + −.
+- The demo offers week, month and year. Day and half year are gone from the demo, not from the library.
+- A legend in the corner shows from which view on a point of each importance appears. It starts closed.
+- If a changed importance hides a point, a message says where it shows, with a button to go there.
+- Points move only up and down and keep their height in every view. Line heights are kept per connection.
+- Click or right-click a line to insert a point there. Deleting a point keeps its path connected.
+- Snap to grid in the settings.
+
 ## 0.0.6 (2026-11-10)
 
 ### Library
