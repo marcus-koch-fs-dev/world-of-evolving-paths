@@ -8,6 +8,7 @@ import {
   toDay,
 } from 'world-of-evolving-paths';
 import { connectionKey } from './connection';
+import { type HeightAt, heightBetween } from './edgeHeight';
 import { groupBy } from './groupBy';
 import { createLeadFinder } from './leads';
 import { LEVEL_SETTINGS, minImportanceOf } from './levels';
@@ -117,26 +118,29 @@ export type ViewRequest = {
   /** The period to show, or null for the free view with everything. */
   period: Period | null;
   page: number;
-  /** Heights the user has pinned in this view. The place along the time axis follows the date. */
-  pins: Record<string, { y: number }>;
-  /** Heights the user dragged points to in any view. A pin of this view wins over them. */
+  /** The height of each point, as a distance from the lane of its path. It holds in every view. */
   heights?: Record<string, number>;
-  /** Heights the user dragged the ends of lines to, per connection (`connectionKey`). */
-  lineHeights?: Record<string, number>;
+  /** Where the paths enter and leave this period, per connection (`connectionKey`), dragged by the user. */
+  edgeHeights?: Record<string, number>;
 };
 
-/** The leads with the height the user gave their lines, found by the connection each belongs to. */
-function withLineHeights(
-  leads: Lead[] | undefined,
-  lineHeights: Record<string, number>,
-  keyOf: (lead: Lead) => string | null,
-): Lead[] | undefined {
-  return leads?.map((lead) => {
-    const key = keyOf(lead);
-    const y = key === null ? undefined : lineHeights[key];
-    return y === undefined ? lead : { ...lead, y };
+/**
+ * The height where a connection crosses the edge of the period: the one the user dragged it to in this period, or the
+ * one on the straight line between its two points.
+ */
+function createEdgeHeights(heights: Record<string, number>, edgeHeights: Record<string, number>) {
+  const end = (id: string | undefined, date: string): HeightAt => ({
+    day: toDay(date),
+    height: id === undefined ? undefined : heights[id],
   });
+  return (from: Lead, to: Lead, day: number): number | undefined => {
+    const kept = from.id && to.id ? edgeHeights[connectionKey(from.id, to.id)] : undefined;
+    return kept ?? heightBetween(end(from.id, from.date), end(to.id, to.date), day);
+  };
 }
+
+/** A lead with a height, or as it is when there is none. */
+const withHeight = (lead: Lead, y: number | undefined): Lead => (y === undefined ? lead : { ...lead, y });
 
 export type ViewResult = { data: PeriodData; pages: number; page: number };
 
@@ -148,10 +152,10 @@ export function buildPeriodData({
   asOf,
   period,
   page,
-  pins,
   heights = {},
-  lineHeights = {},
+  edgeHeights = {},
 }: ViewRequest): ViewResult {
+  const edgeHeightOf = createEdgeHeights(heights, edgeHeights);
   const minImportance = minImportanceOf(period);
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
   const dated = asOf ? withStatusAsOf(points, asOf) : points;
@@ -174,22 +178,27 @@ export function buildPeriodData({
     if (!found) return {};
     // Like any connection: its strength is the one the path had when it reached the point at its end
     const days = checkInDaysByPath.get(path.id) ?? [];
+    // A line across the period is level: its height in the middle of the period
+    const middle = period ? Math.round((period.start + period.end) / 2) : 0;
     return {
-      through: found.map((connection) => ({
-        ...connection,
-        strength: tierAt(days, toDay(connection.to.date)),
-        y: lineHeights[connectionKey(connection.from.id ?? '', connection.to.id ?? '')],
-      })),
+      through: found.map((connection) => {
+        const y = edgeHeightOf(connection.from, connection.to, middle);
+        return {
+          ...connection,
+          strength: tierAt(days, toDay(connection.to.date)),
+          ...(y === undefined ? {} : { y }),
+        };
+      }),
     };
   };
-  const leadsOf = (point: Pick<DemoPoint, 'id' | 'incoming' | 'outgoing'>) => ({
-    incoming: withLineHeights(point.incoming, lineHeights, (lead) =>
-      lead.id ? connectionKey(lead.id, point.id) : null,
-    ),
-    outgoing: withLineHeights(point.outgoing, lineHeights, (lead) =>
-      lead.id ? connectionKey(point.id, lead.id) : null,
-    ),
-  });
+  // A line that leaves a point meets the edge on the first or the last day of the period
+  const leadsOf = (point: Pick<DemoPoint, 'id' | 'date' | 'incoming' | 'outgoing'>) => {
+    const self: Lead = { id: point.id, title: '', date: point.date };
+    return {
+      incoming: point.incoming?.map((lead) => withHeight(lead, edgeHeightOf(lead, self, period?.start ?? 0))),
+      outgoing: point.outgoing?.map((lead) => withHeight(lead, edgeHeightOf(self, lead, period?.end ?? 0))),
+    };
+  };
   const nest = (path: PathInfo) => ({
     ...path,
     ...throughOf(path),
@@ -197,9 +206,8 @@ export function buildPeriodData({
       ...point,
       next: point.next.filter((id) => ids.has(id)),
       ...(point.incoming || point.outgoing ? leadsOf(point) : {}),
-      // A height the user chose holds in every view; a pin of this view also fixes the place on the time axis
+      // A height the user chose holds in every view, and the place on the time axis follows the date
       ...(heights[point.id] === undefined ? {} : { y: heights[point.id] }),
-      ...pins[point.id],
     })),
   });
   return {

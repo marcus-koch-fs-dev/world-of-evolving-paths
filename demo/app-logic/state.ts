@@ -1,11 +1,8 @@
-import { isIsoDate, type PathInfo, type Position } from 'world-of-evolving-paths';
+import { isIsoDate, type PathInfo } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
 import { hasCheckedIn } from './checkIn';
 import { connectionKey, involves } from './connection';
 import type { CheckIn, DemoPoint } from './types';
-
-/** A pinned point keeps its height. */
-export type Pin = { y: number };
 
 /** What the demo app keeps. The library keeps none of it. */
 export type DemoState = {
@@ -13,41 +10,35 @@ export type DemoState = {
   points: DemoPoint[];
   checkIns: CheckIn[];
   /**
-   * The heights pinned in a view, per view key, then per point id. Only the height: where a point sits along the time
-   * axis is always its date, so the lines and the marker for today agree with it.
+   * The height of a point, per point id, as a distance from the lane of its path. One height for every view: where the
+   * point sits along the time axis is always its date.
    */
-  pins: Record<string, Record<string, Pin>>;
-  /** The height a point was dragged to, per point id. It holds in every view, unlike a pin. */
   heights: Record<string, number>;
-  /** The height a line meets the edge of a view at, per connection (`connectionKey`). It holds in every view. */
-  lineHeights: Record<string, number>;
+  /**
+   * Where a path enters and leaves a period: per period key, then per connection (`connectionKey`), as a distance from
+   * the lane. The edge of a week lies on another date than the edge of a month, so each period keeps its own.
+   * Without an entry the height follows from the heights of the two points of the connection.
+   */
+  edgeHeights: Record<string, Record<string, number>>;
   /** Layout seed per view key. */
   seeds: Record<string, number>;
   nextId: number;
 };
 
 export type DemoAction =
-  // `id` and `y` name the point that was dragged and the height it was dragged to
-  | { type: 'move'; viewKey: string; positions: Record<string, Position>; id?: string; y?: number }
-  | { type: 'add'; viewKey: string; pathId: string; x: number; y: number; date: string; importance: number }
+  // A point was dragged to a height: its distance from the lane of its path
+  | { type: 'move'; id: string; height: number }
+  | { type: 'add'; pathId: string; height: number; date: string; importance: number }
   | { type: 'addNext'; fromId: string; input: NextPointInput }
   // A point in the middle of a line: the line from `fromId` to `toId` now runs through it
-  | {
-      type: 'insert';
-      viewKey: string;
-      fromId: string;
-      toId: string;
-      x: number;
-      y: number;
-      date: string;
-      importance: number;
-    }
-  // The end of a line that leaves a view or spans it was dragged: the connection and the height it was let go at
-  | { type: 'lineHeight'; fromId: string; toId: string; y: number }
+  | { type: 'insert'; fromId: string; toId: string; height: number; date: string; importance: number }
+  // The end of a line that leaves a period or spans it was dragged: the period, the connection and the height
+  | { type: 'edgeHeight'; periodKey: string; fromId: string; toId: string; height: number }
   | { type: 'update'; id: string; patch: PointPatch }
   | { type: 'pathColor'; pathId: string; color: string }
   | { type: 'delete'; id: string }
-  | { type: 'reroll'; viewKey: string }
+  // Another layout for a view: `pointIds` are the points it shows, they let go of their heights
+  | { type: 'reroll'; viewKey: string; pointIds: readonly string[] }
   | { type: 'checkIn'; pathId: string; date: string }
   | { type: 'connect'; fromId: string; toId: string };
 
@@ -55,7 +46,7 @@ export const DEFAULT_SEED = 1;
 
 /** The state the demo starts with. */
 export function initialState(paths: PathInfo[], points: DemoPoint[], checkIns: CheckIn[] = []): DemoState {
-  return { paths, points, checkIns, pins: {}, heights: {}, lineHeights: {}, seeds: {}, nextId: 1 };
+  return { paths, points, checkIns, heights: {}, edgeHeights: {}, seeds: {}, nextId: 1 };
 }
 
 /** The message to show when a new point cannot be created, or null when the input is fine. */
@@ -111,11 +102,10 @@ function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>
     importance: action.importance,
     next: [],
   };
-  const pins = { ...state.pins[action.viewKey], [id]: { y: action.y } };
   return {
     ...state,
     points: [...state.points, point],
-    pins: { ...state.pins, [action.viewKey]: pins },
+    heights: { ...state.heights, [id]: action.height },
     nextId: state.nextId + 1,
   };
 }
@@ -154,8 +144,7 @@ function insertPoint(state: DemoState, action: Extract<DemoAction, { type: 'inse
       ),
       point,
     ],
-    pins: { ...state.pins, [action.viewKey]: { ...state.pins[action.viewKey], [id]: { y: action.y } } },
-    heights: { ...state.heights, [id]: action.y },
+    heights: { ...state.heights, [id]: action.height },
     nextId: state.nextId + 1,
   };
 }
@@ -215,10 +204,10 @@ function bridged(point: DemoPoint, removedId: string, successors: readonly strin
 
 function deletePoint(state: DemoState, id: string): DemoState {
   const successors = state.points.find((point) => point.id === id)?.next ?? [];
-  const pins = Object.fromEntries(
-    Object.entries(state.pins).map(([viewKey, positions]) => [
-      viewKey,
-      Object.fromEntries(Object.entries(positions).filter(([pinned]) => pinned !== id)),
+  const edgeHeights = Object.fromEntries(
+    Object.entries(state.edgeHeights).map(([periodKey, heights]) => [
+      periodKey,
+      Object.fromEntries(Object.entries(heights).filter(([key]) => !involves(key, id))),
     ]),
   );
   return {
@@ -226,9 +215,8 @@ function deletePoint(state: DemoState, id: string): DemoState {
     points: state.points
       .filter((point) => point.id !== id)
       .map((point) => ({ ...point, next: bridged(point, id, successors) })),
-    pins,
     heights: omit(state.heights, [id]),
-    lineHeights: Object.fromEntries(Object.entries(state.lineHeights).filter(([key]) => !involves(key, id))),
+    edgeHeights,
   };
 }
 
@@ -237,29 +225,29 @@ function omit<T>(record: Record<string, T>, keys: readonly string[]): Record<str
   return Object.fromEntries(Object.entries(record).filter(([key]) => !keys.includes(key)));
 }
 
-/** A drag keeps the positions of the view, and the height of the dragged point in every other view too. */
-function movePoint(state: DemoState, action: Extract<DemoAction, { type: 'move' }>): DemoState {
-  const { id, y } = action;
-  const heights = id !== undefined && y !== undefined ? { ...state.heights, [id]: y } : state.heights;
-  const heightsOfView = Object.fromEntries(
-    Object.entries(action.positions).map(([pointId, { y: height }]) => [pointId, { y: height }]),
-  );
-  return { ...state, pins: { ...state.pins, [action.viewKey]: heightsOfView }, heights };
+/** The height where a path enters or leaves one period, for one connection. Other periods keep theirs. */
+function setEdgeHeight(state: DemoState, action: Extract<DemoAction, { type: 'edgeHeight' }>): DemoState {
+  const ofPeriod = {
+    ...state.edgeHeights[action.periodKey],
+    [connectionKey(action.fromId, action.toId)]: action.height,
+  };
+  return { ...state, edgeHeights: { ...state.edgeHeights, [action.periodKey]: ofPeriod } };
 }
 
 /** The app's rules for how its data changes. Pure, so it is easy to test. */
 export function reduce(state: DemoState, action: DemoAction): DemoState {
   switch (action.type) {
     case 'move':
-      return movePoint(state, action);
+      // One height for the point, in every view
+      return { ...state, heights: { ...state.heights, [action.id]: action.height } };
     case 'add':
       return addPoint(state, action);
     case 'addNext':
       return addNextPoint(state, action);
     case 'insert':
       return insertPoint(state, action);
-    case 'lineHeight':
-      return { ...state, lineHeights: { ...state.lineHeights, [connectionKey(action.fromId, action.toId)]: action.y } };
+    case 'edgeHeight':
+      return setEdgeHeight(state, action);
     case 'update':
       return {
         ...state,
@@ -279,9 +267,8 @@ export function reduce(state: DemoState, action: DemoAction): DemoState {
     case 'reroll':
       return {
         ...state,
-        pins: { ...state.pins, [action.viewKey]: {} },
         // Another layout also lets go of the heights the user chose for the points of this view
-        heights: omit(state.heights, Object.keys(state.pins[action.viewKey] ?? {})),
+        heights: omit(state.heights, action.pointIds),
         seeds: { ...state.seeds, [action.viewKey]: (state.seeds[action.viewKey] ?? DEFAULT_SEED) + 1 },
       };
   }

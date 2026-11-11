@@ -133,7 +133,6 @@ describe('Period data for the demo', () => {
         period: week,
         page: 0,
         checkIns: [],
-        pins: {},
       });
 
       expect(result.data.paths.map((path) => path.id)).toEqual(['a']);
@@ -146,7 +145,6 @@ describe('Period data for the demo', () => {
         period: week,
         page: 0,
         checkIns: [],
-        pins: {},
       });
       const second = buildPeriodData({
         paths: [...paths, makePath('d')],
@@ -154,7 +152,6 @@ describe('Period data for the demo', () => {
         period: week,
         page: 1,
         checkIns: [],
-        pins: {},
       });
 
       const size = LEVEL_SETTINGS.week.graphsPerPage;
@@ -164,19 +161,19 @@ describe('Period data for the demo', () => {
     });
 
     it('keeps the page inside the range', () => {
-      const result = buildPeriodData({ paths, points, period: week, page: 99, checkIns: [], pins: {} });
+      const result = buildPeriodData({ paths, points, period: week, page: 99, checkIns: [] });
 
       expect(result.page).toBe(result.pages - 1);
     });
 
-    it('pins points at the height the user chose, and leaves their place on the time axis to the date', () => {
+    it('keeps points at the height the user chose, and leaves their place on the time axis to the date', () => {
       const result = buildPeriodData({
         paths,
         points,
         period: week,
         page: 0,
         checkIns: [],
-        pins: { a1: { y: 6 } },
+        heights: { a1: 6 },
       });
 
       const pinned = result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1');

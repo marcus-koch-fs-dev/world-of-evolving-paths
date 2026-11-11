@@ -14,24 +14,14 @@ const base = (): DemoState =>
 
 describe('Demo app state', () => {
   describe('when a point is moved', () => {
-    it('pins the heights of all points of that view, not their place on the time axis', () => {
-      const positions = { a: { x: 1, y: 2 }, b: { x: 3, y: 4 } };
-
-      const state = reduce(base(), { type: 'move', viewKey: 'week:p0', positions });
-
-      expect(state.pins['week:p0']).toEqual({ a: { y: 2 }, b: { y: 4 } });
-    });
-
-    it('remembers the height of the dragged point for every view', () => {
-      const positions = { a: { x: 1, y: 2 }, b: { x: 3, y: 4 } };
-
-      const state = reduce(base(), { type: 'move', viewKey: 'week:p0', positions, id: 'b', y: 4 });
+    it('remembers the height of the dragged point for every view, and only that one', () => {
+      const state = reduce(base(), { type: 'move', id: 'b', height: 4 });
 
       expect(state.heights).toEqual({ b: 4 });
     });
 
-    it('lets that height reach the data of another view', () => {
-      const moved = reduce(base(), { type: 'move', viewKey: 'week:p0', positions: {}, id: 'b', y: 321 });
+    it('lets that height reach the data of another view, without a place on the time axis', () => {
+      const moved = reduce(base(), { type: 'move', id: 'b', height: 321 });
       const period = periodOf('week', '2026-11-04');
 
       const { data } = buildPeriodData({
@@ -40,7 +30,6 @@ describe('Demo app state', () => {
         checkIns: [],
         period,
         page: 0,
-        pins: {},
         heights: moved.heights,
       });
 
@@ -51,13 +40,13 @@ describe('Demo app state', () => {
   });
 
   describe('when the end of a line is dragged', () => {
-    it('remembers the height for that connection', () => {
-      const state = reduce(base(), { type: 'lineHeight', fromId: 'a', toId: 'b', y: -150 });
+    it('remembers the height for that connection in that period only', () => {
+      const state = reduce(base(), { type: 'edgeHeight', periodKey: 'week:x', fromId: 'a', toId: 'b', height: -150 });
 
-      expect(state.lineHeights).toEqual({ 'a>b': -150 });
+      expect(state.edgeHeights).toEqual({ 'week:x': { 'a>b': -150 } });
     });
 
-    it('gives that height to the line in any view, as a lead and as a line across', () => {
+    it('gives that height to the line in that period, as a lead and as a line across', () => {
       const points = [
         makePoint({ id: 'out', date: '2026-10-01', importance: 3, next: ['in'] }),
         makePoint({ id: 'in', date: '2026-11-20', importance: 3, next: ['far'] }),
@@ -73,14 +62,33 @@ describe('Demo app state', () => {
         checkIns: [],
         period: month,
         page: 0,
-        pins: {},
-        lineHeights: { 'out>in': -90, 'mid>end': 45 },
+        edgeHeights: { 'out>in': -90, 'mid>end': 45 },
       });
 
       const combat = data.paths.find((path) => path.id === 'combat');
       const other = data.paths.find((path) => path.id === 'other');
       expect(combat?.points[0].incoming?.[0].y).toBe(-90);
       expect(other?.through?.[0].y).toBe(45);
+    });
+
+    it('without a dragged height puts the edge on the straight line between the heights of the two points', () => {
+      const points = [
+        makePoint({ id: 'out', date: '2026-10-22', importance: 3, next: ['in'] }),
+        makePoint({ id: 'in', date: '2026-11-11', importance: 3 }),
+      ];
+      const month = periodOf('month', '2026-11-11');
+
+      const { data } = buildPeriodData({
+        paths: [makePath('combat')],
+        points,
+        checkIns: [],
+        period: month,
+        page: 0,
+        heights: { out: 0, in: 100 },
+      });
+
+      // 1 November is 10 of the 20 days from 22 October to 11 November
+      expect(data.paths[0].points[0].incoming?.[0].y).toBe(50);
     });
   });
 
@@ -103,16 +111,7 @@ describe('Demo app state', () => {
         ],
       );
     const insert = (state: DemoState, date: string) =>
-      reduce(state, {
-        type: 'insert',
-        viewKey: 'week:p0',
-        fromId: 'a',
-        toId: 'b',
-        x: 500,
-        y: 40,
-        date,
-        importance: 2,
-      });
+      reduce(state, { type: 'insert', fromId: 'a', toId: 'b', height: 40, date, importance: 2 });
 
     it('leads from the start of the line to the new point and on to what the line led to', () => {
       const state = insert(direct(), '2026-11-05');
@@ -139,18 +138,15 @@ describe('Demo app state', () => {
       const state = insert(direct(), '2026-11-05');
 
       expect(state.points.find((point) => point.id === 'custom-1')?.pathId).toBe('combat');
-      expect(state.pins['week:p0']['custom-1']).toEqual({ y: 40 });
       expect(state.heights['custom-1']).toBe(40);
     });
 
     it('does nothing when the two points are not connected', () => {
       const state = reduce(base(), {
         type: 'insert',
-        viewKey: 'v',
         fromId: 'b',
         toId: 'a',
-        x: 0,
-        y: 0,
+        height: 0,
         date: '2026-11-05',
         importance: 2,
       });
@@ -160,30 +156,20 @@ describe('Demo app state', () => {
   });
 
   describe('when a point is added by double-click', () => {
-    it('creates an open milestone pinned where the user clicked', () => {
-      const state = reduce(base(), {
-        type: 'add',
-        viewKey: 'v',
-        pathId: 'combat',
-        x: 10,
-        y: 20,
-        date: '2026-11-09',
-        importance: 1,
-      });
+    it('creates an open milestone at the height where the user clicked', () => {
+      const state = reduce(base(), { type: 'add', pathId: 'combat', height: 20, date: '2026-11-09', importance: 1 });
 
       const added = state.points.find((point) => point.id === 'custom-1');
       expect(added).toMatchObject({ kind: 'milestone', status: 'open', date: '2026-11-09' });
-      expect(state.pins.v['custom-1']).toEqual({ y: 20 });
+      expect(state.heights['custom-1']).toBe(20);
     });
 
     it('is as important as the view needs, so the view still shows it', () => {
       const year = periodOf('year', '2026-07-02');
       const state = reduce(base(), {
         type: 'add',
-        viewKey: year.key,
         pathId: 'combat',
-        x: 10,
-        y: 20,
+        height: 20,
         date: '2026-07-02',
         importance: minImportanceOf(year),
       });
@@ -194,7 +180,6 @@ describe('Demo app state', () => {
         checkIns: [],
         period: year,
         page: 0,
-        pins: {},
       });
 
       const shownIds = data.paths.flatMap((path) => path.points.map((point) => point.id));
@@ -329,39 +314,30 @@ describe('Demo app state', () => {
     });
 
     it('forgets the height that was chosen for it', () => {
-      const moved = reduce(base(), { type: 'move', viewKey: 'v', positions: {}, id: 'b', y: 9 });
+      const moved = reduce(base(), { type: 'move', id: 'b', height: 9 });
 
       expect(reduce(moved, { type: 'delete', id: 'b' }).heights).toEqual({});
     });
 
-    it('forgets the heights of the lines that led to it or from it', () => {
-      const dragged = reduce(base(), { type: 'lineHeight', fromId: 'a', toId: 'b', y: 7 });
-      const other = reduce(dragged, { type: 'lineHeight', fromId: 'c', toId: 'd', y: 8 });
+    it('forgets the heights of the lines that led to it or from it, in every period', () => {
+      const dragged = reduce(base(), { type: 'edgeHeight', periodKey: 'w', fromId: 'a', toId: 'b', height: 7 });
+      const other = reduce(dragged, { type: 'edgeHeight', periodKey: 'm', fromId: 'c', toId: 'd', height: 8 });
 
-      expect(reduce(other, { type: 'delete', id: 'b' }).lineHeights).toEqual({ 'c>d': 8 });
+      expect(reduce(other, { type: 'delete', id: 'b' }).edgeHeights).toEqual({ w: {}, m: { 'c>d': 8 } });
     });
   });
 
   describe('when the layout is rerolled', () => {
-    it('clears the pins of that view and moves to the next seed', () => {
-      const moved = reduce(base(), { type: 'move', viewKey: 'v', positions: { a: { x: 1, y: 1 } } });
+    it('moves to the next seed', () => {
+      const state = reduce(base(), { type: 'reroll', viewKey: 'v', pointIds: [] });
 
-      const state = reduce(moved, { type: 'reroll', viewKey: 'v' });
-
-      expect(state.pins.v).toEqual({});
       expect(state.seeds.v).toBe(DEFAULT_SEED + 1);
     });
 
-    it('lets go of the heights of the points of that view', () => {
-      const moved = reduce(base(), {
-        type: 'move',
-        viewKey: 'v',
-        positions: { a: { x: 1, y: 1 } },
-        id: 'a',
-        y: 1,
-      });
+    it('lets go of the heights of the points of that view, and keeps the others', () => {
+      const moved = reduce(reduce(base(), { type: 'move', id: 'a', height: 1 }), { type: 'move', id: 'b', height: 2 });
 
-      expect(reduce(moved, { type: 'reroll', viewKey: 'v' }).heights).toEqual({});
+      expect(reduce(moved, { type: 'reroll', viewKey: 'v', pointIds: ['a'] }).heights).toEqual({ b: 2 });
     });
   });
 

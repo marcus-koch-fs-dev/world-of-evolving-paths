@@ -68,7 +68,7 @@ describe('Demo habits', () => {
       const { paths, points, checkIns } = createHabits(TODAY);
       const period = periodOf(level, TODAY);
 
-      const view = buildPeriodData({ paths, points, checkIns, period, page: 0, pins: {} });
+      const view = buildPeriodData({ paths, points, checkIns, period, page: 0 });
 
       expect(validatePeriodData(view.data).ok).toBe(true);
       expect(view.data.paths.length).toBeLessThanOrEqual(2);
@@ -79,7 +79,7 @@ describe('Demo habits', () => {
       const { paths, points, checkIns } = createHabits(TODAY);
       const minImportance = LEVEL_SETTINGS.year.minImportance;
 
-      const year = buildPeriodData({ paths, points, checkIns, period: periodOf('year', TODAY), page: 0, pins: {} });
+      const year = buildPeriodData({ paths, points, checkIns, period: periodOf('year', TODAY), page: 0 });
 
       const shown = year.data.paths.flatMap((path) => path.points);
       expect(year.pages).toBe(3);

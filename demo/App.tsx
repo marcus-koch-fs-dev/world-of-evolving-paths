@@ -121,14 +121,14 @@ export function App() {
   const insertIntoLine = () => {
     const { line } = lineSelection;
     if (!line?.from.id || !line.to.id) return;
-    const { x, y, date } = line;
+    const { y, date, lanes } = line;
+    // The new point joins the path of the first point of the line, at the height of the click above its lane
+    const pathId = state.points.find((point) => point.id === line.from.id)?.pathId ?? '';
     dispatch({
       type: 'insert',
-      viewKey: tileKey,
       fromId: line.from.id,
       toId: line.to.id,
-      x,
-      y,
+      height: y - (lanes[pathId] ?? 0),
       date,
       importance: minImportanceOf(period),
     });
@@ -166,8 +166,9 @@ export function App() {
           connecting.handleSelect(id);
         }}
         onLineEndMove={({ from, to, y }) => {
-          // The height belongs to the connection, so the line meets the edge there in every view
-          if (from.id && to.id) dispatch({ type: 'lineHeight', fromId: from.id, toId: to.id, y });
+          // The height belongs to this period: the edge of a week lies on another day than the edge of a month
+          if (from.id && to.id)
+            dispatch({ type: 'edgeHeight', periodKey: view, fromId: from.id, toId: to.id, height: y });
         }}
         onLineSelect={(line) => {
           // While waiting for the point to connect to, a line is not a choice
@@ -175,19 +176,12 @@ export function App() {
           setSelectedId(null);
           lineSelection.select(line);
         }}
-        onPointMove={({ id, y, positions }) => dispatch({ type: 'move', viewKey: tileKey, positions, id, y })}
-        onPointAdd={({ x, y, date }) => {
+        onPointMove={({ id, offset }) => dispatch({ type: 'move', id, height: offset })}
+        onPointAdd={({ y, date, lanes }) => {
           // The new point is as important as the view needs, so it shows where it was added
           const importance = minImportanceOf(period);
-          dispatch({
-            type: 'add',
-            viewKey: tileKey,
-            pathId: selected?.pathId ?? state.paths[0].id,
-            x,
-            y,
-            date,
-            importance,
-          });
+          const pathId = selected?.pathId ?? state.paths[0].id;
+          dispatch({ type: 'add', pathId, height: y - (lanes[pathId] ?? 0), date, importance });
           setSelectedId(customPointId(state.nextId));
         }}
         onPointDoubleClick={({ date }) => {
@@ -210,7 +204,7 @@ export function App() {
           paging={result}
           locale={values.locale}
           levels={offeredLevels}
-          onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey })}
+          onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey, pointIds: [...visibleIds] })}
           onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
           onModeChange={setMode}
