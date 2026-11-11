@@ -59,6 +59,7 @@ function setup(
     lineEndAt: vi.fn(options.lineEndAt ?? (() => null)),
     onLineEndMove: vi.fn(),
     onLineEndRelease: vi.fn(),
+    onLineEndCancel: vi.fn(),
     leadAt: vi.fn(options.leadAt ?? (() => null)),
     onPointDoubleClick: vi.fn(),
     onLeadDoubleClick: vi.fn(),
@@ -154,6 +155,29 @@ describe('Pointer controller', () => {
       expect(hooks.onLineEndMove).toHaveBeenCalledWith('lead:after:a:0', expect.anything());
       expect(hooks.onLineEndRelease).toHaveBeenCalledWith('lead:after:a:0');
       expect(camera.get()).toEqual(before);
+    });
+
+    it('lets the line go back when the pointer is cancelled, and a later move does not carry it on', () => {
+      const { fire, hooks } = setup({ lineEndAt: () => 'lead:after:a:0' });
+
+      fire('pointerdown', { clientX: 0, clientY: 0 });
+      fire('pointermove', { clientX: 0, clientY: 50, buttons: 1 });
+      fire('pointercancel');
+      fire('pointermove', { clientX: 0, clientY: 90, buttons: 0 });
+
+      expect(hooks.onLineEndCancel).toHaveBeenCalledWith('lead:after:a:0');
+      expect(hooks.onLineEndMove).toHaveBeenCalledOnce();
+      expect(hooks.onLineEndRelease).not.toHaveBeenCalled();
+    });
+
+    it('lets the line go back when a second finger touches down', () => {
+      const { fire, hooks } = setup({ lineEndAt: () => 'lead:after:a:0' });
+
+      fire('pointerdown', { pointerId: 1, clientX: 0, clientY: 0 });
+      fire('pointermove', { pointerId: 1, clientX: 0, clientY: 50, buttons: 1 });
+      fire('pointerdown', { pointerId: 2, clientX: 80, clientY: 80 });
+
+      expect(hooks.onLineEndCancel).toHaveBeenCalledWith('lead:after:a:0');
     });
 
     it('is a click on the line when it did not move', () => {

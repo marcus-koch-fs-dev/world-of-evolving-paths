@@ -87,11 +87,19 @@ export function createPointerHooks({
 
     leadAt: (world) => hitLead(scene.current().leads, world, reachAt(zoom()))?.id ?? null,
 
+    // The end of a line is only taken when the app listens, otherwise the height would be shown but never kept
     lineEndAt: (world) =>
-      canDrag() ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null) : null,
+      canDrag() && options().onLineEndMove
+        ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null)
+        : null,
 
     onLineEndMove(key, position) {
       interaction.dragLine(key, Math.round(toLayout(position).y));
+      scene.rebuild();
+    },
+
+    onLineEndCancel(key) {
+      interaction.dropLine(key);
       scene.rebuild();
     },
 

@@ -11,6 +11,7 @@ import {
 } from 'world-of-evolving-paths/react';
 import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
 import { rememberColor } from './app-logic/customColors';
+import { heightOnPath } from './app-logic/heightOnPath';
 import { canRedo, canUndo } from './app-logic/history';
 import { levelThatShows, minImportanceOf, steppedYears } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
@@ -124,11 +125,13 @@ export function App() {
     const { y, date, lanes } = line;
     // The new point joins the path of the first point of the line, at the height of the click above its lane
     const pathId = state.points.find((point) => point.id === line.from.id)?.pathId ?? '';
+    const height = heightOnPath(y, lanes, pathId);
+    if (height === null) return;
     dispatch({
       type: 'insert',
       fromId: line.from.id,
       toId: line.to.id,
-      height: y - (lanes[pathId] ?? 0),
+      height,
       date,
       importance: minImportanceOf(period),
     });
@@ -180,8 +183,11 @@ export function App() {
         onPointAdd={({ y, date, lanes }) => {
           // The new point is as important as the view needs, so it shows where it was added
           const importance = minImportanceOf(period);
-          const pathId = selected?.pathId ?? state.paths[0].id;
-          dispatch({ type: 'add', pathId, height: y - (lanes[pathId] ?? 0), date, importance });
+          // A path that is not on this page has no lane here, so the point goes to the selected path or the first one shown
+          const pathId = selected?.pathId ?? result.data.paths[0]?.id;
+          const height = pathId === undefined ? null : heightOnPath(y, lanes, pathId);
+          if (pathId === undefined || height === null) return;
+          dispatch({ type: 'add', pathId, height, date, importance });
           setSelectedId(customPointId(state.nextId));
         }}
         onPointDoubleClick={({ date }) => {

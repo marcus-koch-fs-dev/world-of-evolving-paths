@@ -26,6 +26,8 @@ export type PointerHooks = {
   onLineEndMove(key: string, world: Position): void;
   /** The end of a line was let go after it was dragged. */
   onLineEndRelease(key: string): void;
+  /** The drag of the end of a line was cancelled, for example by the system. The line goes back to where it was. */
+  onLineEndCancel(key: string): void;
   /** The id of the line that leaves the view at a world position, if any. */
   leadAt(world: Position): string | null;
   /** A point was double-clicked. */
@@ -86,6 +88,13 @@ export function createPointerController(
     if (ended) hooks.onDragEnd(ended.id);
   };
 
+  /** A drag of the end of a line that is cut short: the line returns, and no later move may carry on with it. */
+  const cancelLineEnd = () => {
+    const grabbed = lineEnd;
+    lineEnd = null;
+    if (grabbed !== null) hooks.onLineEndCancel(grabbed);
+  };
+
   /** A finger that is left continues to pan from where it is, without a jump. Pan positions are client coordinates. */
   const continueWithRemainingFinger = () => {
     const rest = fingers.onlyOne();
@@ -115,6 +124,7 @@ export function createPointerController(
     if (fingers.count() >= 2) {
       pan.stop();
       endDrag();
+      cancelLineEnd();
       return;
     }
     const at = world(event);
@@ -186,6 +196,7 @@ export function createPointerController(
   const onCancel = (event: PointerEvent) => {
     fingers.release(event.pointerId);
     endDrag();
+    cancelLineEnd();
     continueWithRemainingFinger();
   };
 
