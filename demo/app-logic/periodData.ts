@@ -1,15 +1,18 @@
 import {
+  type Lead,
   type PathInfo,
   type PathPoint,
   type Period,
   type PeriodData,
-  type Position,
   tierAt,
   toDay,
 } from 'world-of-evolving-paths';
+import { connectionKey } from './connection';
+import { type HeightAt, heightBetween } from './edgeHeight';
 import { groupBy } from './groupBy';
 import { createLeadFinder } from './leads';
 import { LEVEL_SETTINGS, minImportanceOf } from './levels';
+import { throughConnections } from './throughPaths';
 import type { CheckIn, DemoPoint } from './types';
 
 const MIN_IMPORTANCE_OF_ENDS = 3;
@@ -61,17 +64,22 @@ export function visiblePoints(all: DemoPoint[], period: Period | null, minImport
     });
 }
 
-/**
- * Strength tier of every reached point, counted over all check-ins of its path, also those the view hides.
- * With `asOf` the point still being walked to counts on that day, so its line grows stronger while time plays.
- */
-export function withStrength(visible: DemoPoint[], checkIns: CheckIn[], asOf?: string): DemoPoint[] {
-  const daysByPath = checkIns.reduce((groups, checkIn) => {
+/** The days of the check-ins of every path. */
+function checkInDays(checkIns: CheckIn[]): Map<string, number[]> {
+  return checkIns.reduce((groups, checkIn) => {
     const days = groups.get(checkIn.pathId);
     if (days) days.push(toDay(checkIn.date));
     else groups.set(checkIn.pathId, [toDay(checkIn.date)]);
     return groups;
   }, new Map<string, number[]>());
+}
+
+/**
+ * Strength tier of every reached point, counted over all check-ins of its path, also those the view hides.
+ * With `asOf` the point still being walked to counts on that day, so its line grows stronger while time plays.
+ */
+export function withStrength(visible: DemoPoint[], checkIns: CheckIn[], asOf?: string): DemoPoint[] {
+  const daysByPath = checkInDays(checkIns);
   const countedDay = (point: DemoPoint) => (asOf && point.status === 'current' ? toDay(asOf) : toDay(point.date));
   return visible.map((point) =>
     point.status === 'done' || point.status === 'current'
@@ -110,20 +118,80 @@ export type ViewRequest = {
   /** The period to show, or null for the free view with everything. */
   period: Period | null;
   page: number;
-  /** Positions the user has pinned in this view. */
-  pins: Record<string, Position>;
+  /** The height of each point, as a distance from the lane of its path. It holds in every view. */
+  heights?: Record<string, number>;
+  /** Where the paths enter and leave this period, per connection (`connectionKey`), dragged by the user. */
+  edgeHeights?: Record<string, number>;
 };
+
+/** The height where a connection crosses the edge: the one the user dragged it to in this period, or the derived one. */
+type EdgeHeight = { kept?: number; derived?: number };
+
+/**
+ * Where a connection crosses the edge of the period: the height the user dragged it to in this period, and the one on
+ * the straight line between its two points.
+ */
+function createEdgeHeights(heights: Record<string, number>, edgeHeights: Record<string, number>) {
+  const end = (id: string | undefined, date: string): HeightAt => ({
+    day: toDay(date),
+    height: id === undefined ? undefined : heights[id],
+  });
+  return (from: Lead, to: Lead, day: number): EdgeHeight => ({
+    kept: from.id && to.id ? edgeHeights[connectionKey(from.id, to.id)] : undefined,
+    derived: heightBetween(end(from.id, from.date), end(to.id, to.date), day),
+  });
+}
+
+/**
+ * The height of each of several lines that leave one point on one side, or run across one path. A dragged height always
+ * counts. A derived height counts only when no other line has the same: lines that would lie on top of each other
+ * get none, so the map spreads them as it does without heights.
+ */
+function heightsOfSiblings<T>(items: readonly T[], heightOf: (item: T) => EdgeHeight): (number | undefined)[] {
+  const found = items.map(heightOf);
+  const counts = found.reduce(
+    (all, { derived }) => (derived === undefined ? all : all.set(derived, (all.get(derived) ?? 0) + 1)),
+    new Map<number, number>(),
+  );
+  return found.map(
+    ({ kept, derived }) => kept ?? (derived !== undefined && counts.get(derived) === 1 ? derived : undefined),
+  );
+}
+
+/** A lead with a height, or as it is when there is none. */
+const withHeight = (lead: Lead, y: number | undefined): Lead => (y === undefined ? lead : { ...lead, y });
+
+/** The leads with the heights found for them, in the same order. */
+function withHeights(leads: Lead[] | undefined, heightOf: (lead: Lead) => EdgeHeight): Lead[] | undefined {
+  if (!leads) return undefined;
+  const found = heightsOfSiblings(leads, heightOf);
+  return leads.map((lead, index) => withHeight(lead, found[index]));
+}
 
 export type ViewResult = { data: PeriodData; pages: number; page: number };
 
 /** Everything the library needs for one view, plus how many pages there are. */
-export function buildPeriodData({ paths, points, checkIns, asOf, period, page, pins }: ViewRequest): ViewResult {
+export function buildPeriodData({
+  paths,
+  points,
+  checkIns,
+  asOf,
+  period,
+  page,
+  heights = {},
+  edgeHeights = {},
+}: ViewRequest): ViewResult {
+  const edgeHeightOf = createEdgeHeights(heights, edgeHeights);
   const minImportance = minImportanceOf(period);
   const pageSize = period ? LEVEL_SETTINGS[period.level].graphsPerPage : Number.MAX_SAFE_INTEGER;
   const dated = asOf ? withStatusAsOf(points, asOf) : points;
   const shown = withStrength(visiblePoints(dated, period, minImportance), checkIns, asOf);
   const shownByPath = groupBy(shown, (point) => point.pathId);
-  const usedPaths = paths.filter((path) => shownByPath.has(path.id));
+  // A connection from a point before the period to one after it spans the view, also when its path has other
+  // points in it: a fork has one for each branch
+  const through = throughConnections(points, period, (point) => importanceOf(point) >= minImportance);
+  const checkInDaysByPath = checkInDays(checkIns);
+  const usedPaths = paths.filter((path) => shownByPath.has(path.id) || through.has(path.id));
   const pages = pagesOf(
     usedPaths.map((path) => path.id),
     pageSize,
@@ -131,12 +199,41 @@ export function buildPeriodData({ paths, points, checkIns, asOf, period, page, p
   const current = Math.min(Math.max(0, page), Math.max(0, pages.length - 1));
   const onPage = new Set(pages[current] ?? []);
   const ids = new Set(shown.filter((point) => onPage.has(point.pathId)).map((point) => point.id));
+  const throughOf = (path: PathInfo) => {
+    const found = through.get(path.id);
+    if (!found) return {};
+    // Like any connection: its strength is the one the path had when it reached the point at its end
+    const days = checkInDaysByPath.get(path.id) ?? [];
+    // A line across the period is level: its height in the middle of the period
+    const middle = period ? Math.round((period.start + period.end) / 2) : 0;
+    return {
+      through: (() => {
+        const ys = heightsOfSiblings(found, (connection) => edgeHeightOf(connection.from, connection.to, middle));
+        return found.map((connection, index) => ({
+          ...connection,
+          strength: tierAt(days, toDay(connection.to.date)),
+          ...(ys[index] === undefined ? {} : { y: ys[index] }),
+        }));
+      })(),
+    };
+  };
+  // A line that leaves a point meets the edge on the first or the last day of the period
+  const leadsOf = (point: Pick<DemoPoint, 'id' | 'date' | 'incoming' | 'outgoing'>) => {
+    const self: Lead = { id: point.id, title: '', date: point.date };
+    return {
+      incoming: withHeights(point.incoming, (lead) => edgeHeightOf(lead, self, period?.start ?? 0)),
+      outgoing: withHeights(point.outgoing, (lead) => edgeHeightOf(self, lead, period?.end ?? 0)),
+    };
+  };
   const nest = (path: PathInfo) => ({
     ...path,
+    ...throughOf(path),
     points: (shownByPath.get(path.id) ?? []).map(({ pathId: _pathId, ...point }) => ({
       ...point,
       next: point.next.filter((id) => ids.has(id)),
-      ...pins[point.id],
+      ...(point.incoming || point.outgoing ? leadsOf(point) : {}),
+      // A height the user chose holds in every view, and the place on the time axis follows the date
+      ...(heights[point.id] === undefined ? {} : { y: heights[point.id] }),
     })),
   });
   return {

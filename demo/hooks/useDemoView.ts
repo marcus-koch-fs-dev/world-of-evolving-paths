@@ -7,18 +7,18 @@ import { useTimeTravel } from './useTimeTravel';
 import type { ViewNavigation } from './useViewNavigation';
 
 const FREE_VIEW = 'free';
-const NO_PINS = {};
+const NO_EDGES = {};
 
 /**
  * Everything the map needs for the view that is shown: its key, the days the time slider reaches, time travel,
- * and the `PeriodMap` built from the app's data (with the positions the user pinned in this view).
+ * and the `PeriodMap` built from the app's data (with the heights the user chose).
  */
 export function useDemoView(state: DemoState, navigation: ViewNavigation, today: string) {
   const period = navigation.level === null ? null : navigation.period;
   const view = period ? period.key : FREE_VIEW;
-  // Pins and seeds are kept per view and page
+  // Seeds are kept per view and page, the heights where paths cross the edge per period
   const tileKey = `${view}:p${navigation.page}`;
-  const pins = state.pins[tileKey] ?? NO_PINS;
+  const edgeHeights = state.edgeHeights[view] ?? NO_EDGES;
 
   const range = useMemo(
     () =>
@@ -40,9 +40,10 @@ export function useDemoView(state: DemoState, navigation: ViewNavigation, today:
         asOf: travel.day === null ? undefined : fromDay(travel.day),
         period,
         page: navigation.page,
-        pins,
+        heights: state.heights,
+        edgeHeights,
       }),
-    [state.paths, state.points, state.checkIns, travel.day, period, navigation.page, pins],
+    [state.paths, state.points, state.checkIns, state.heights, edgeHeights, travel.day, period, navigation.page],
   );
   const periods = useMemo<PeriodMap>(() => ({ [view]: result.data }), [view, result.data]);
 

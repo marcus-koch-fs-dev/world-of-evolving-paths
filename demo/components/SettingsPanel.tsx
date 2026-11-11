@@ -25,11 +25,12 @@ type Props = {
   children?: ReactNode;
 };
 
-type FlagKey = 'wavy' | 'pointsLocked' | 'animate';
+type FlagKey = 'wavy' | 'pointsLocked' | 'snap' | 'animate';
 
 const FLAGS: { key: FlagKey; label: string }[] = [
   { key: 'wavy', label: 'Wave on the lines' },
   { key: 'pointsLocked', label: 'Lock points' },
+  { key: 'snap', label: 'Snap to grid' },
   { key: 'animate', label: 'Animate' },
 ];
 

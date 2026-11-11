@@ -53,10 +53,16 @@ describe('Period data validation', () => {
       expect(errorsFor(data)[0]).toContain('importance');
     });
 
-    it('rejects a pin with only one coordinate', () => {
+    it('rejects an x without a y', () => {
       const data = editPoint(makePeriodData(), 'c1', { x: 10 });
 
-      expect(errorsFor(data)[0]).toContain('both x and y');
+      expect(errorsFor(data)[0]).toContain('x needs y');
+    });
+
+    it('accepts a y alone, which keeps the height of the point', () => {
+      const data = editPoint(makePeriodData(), 'c1', { y: 10 });
+
+      expect(errorsFor(data)).toEqual([]);
     });
   });
 

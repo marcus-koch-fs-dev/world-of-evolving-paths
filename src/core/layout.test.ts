@@ -4,7 +4,7 @@ import { periodOf } from './calendar.js';
 import { collisionRadius } from './collision.js';
 import { toDay } from './dates.js';
 import { flattenPeriod } from './flatten.js';
-import { generateLayout, placePeriod } from './layout.js';
+import { generateLayout, laneOffsets, placePeriod } from './layout.js';
 import { dateAtX, dayAtX, tileWidth } from './timeAxis.js';
 
 const week = periodOf('week', '2026-11-04');
@@ -68,6 +68,31 @@ describe('Layout', () => {
       const { positions } = generateLayout({ paths: flat.paths, points: flat.points, period: week, seed: 1 });
 
       expect(positions.c2).toEqual({ x: 1234, y: -567 });
+    });
+
+    it('keeps only its height when there is only a y, and sits on its date', () => {
+      const plain = flattenPeriod(makePeriodData());
+      const heightOnly = flattenPeriod(editPoint(makePeriodData(), 'c2', { y: -567 }));
+
+      const free = generateLayout({ paths: plain.paths, points: plain.points, period: week, seed: 1 });
+      const kept = generateLayout({ paths: heightOnly.paths, points: heightOnly.points, period: week, seed: 1 });
+
+      const pathId = heightOnly.points.find((point) => point.id === 'c2')?.pathId ?? '';
+      expect(kept.positions.c2.y).toBe((laneOffsets(heightOnly.paths).get(pathId) ?? 0) - 567);
+      expect(kept.positions.c2.x).toBeGreaterThan(free.positions.c1.x);
+    });
+
+    it('keeps the same distance from its lane however many paths the view has', () => {
+      const point = makePoint({ id: 'p', pathId: 'b', date: '2026-11-04', y: 30 });
+      const path = (id: string, lane: number) => ({ id, name: id, color: '#ff0000', lane });
+      const two = [path('a', 0), path('b', 1)];
+      const six = [...two, path('c', 2), path('d', 3), path('e', 4), path('f', 5)];
+
+      const inTwo = generateLayout({ paths: two, points: [point], period: week, seed: 1 });
+      const inSix = generateLayout({ paths: six, points: [point], period: week, seed: 1 });
+
+      expect(inTwo.positions.p.y - (laneOffsets(two).get('b') ?? 0)).toBe(30);
+      expect(inSix.positions.p.y - (laneOffsets(six).get('b') ?? 0)).toBe(30);
     });
   });
 

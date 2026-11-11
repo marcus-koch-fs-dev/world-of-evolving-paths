@@ -2,7 +2,16 @@
  * A connection to a point that is not in the shown view: the title and the date of that point, and its id if the
  * app wants to go there (see `onLeadDoubleClick`).
  */
-export type Lead = { title: string; date: string; id?: string };
+export type Lead = {
+  title: string;
+  date: string;
+  id?: string;
+  /**
+   * The height where the line meets the edge of the view, as a distance from the lane of its path (0 = on the
+   * lane). Set it to keep a line where the user put it (see `onLineEndMove`). Without it the line comes in near the lane.
+   */
+  y?: number;
+};
 
 export type PointKind = 'start' | 'milestone' | 'crossroad' | 'goal';
 export type PointStatus = 'done' | 'current' | 'open' | 'abandoned';
@@ -27,8 +36,28 @@ export type PathPoint = {
   note?: string;
   /** Strength tier of the segment leading to this point, 0 to 4. See `TIERS`. */
   strength?: number;
-  /** Pins the point at this position. Both `x` and `y` must be set. Without them the layout places the point. */
+  /**
+   * Pins the point. With `x` and `y` it stays exactly at this world position of this view. With only `y` it sits
+   * on its date along the time axis, `y` away from the lane of its path: a height that holds in every view (see
+   * `offset` of `onPointMove`). `x` needs `y`. Without them the layout places the point.
+   */
   x?: number;
+  y?: number;
+};
+
+/**
+ * A connection that spans the whole period without a point in it: the point before and the point after.
+ * The map draws a line across the view with an arrow and the title and date at each end.
+ */
+export type PathThrough = {
+  from: Lead;
+  to: Lead;
+  /** Strength tier of the line, 0 to 4. See `TIERS`. */
+  strength?: number;
+  /**
+   * The height of the line across the view, as a distance from the lane of its path. Set it to keep a line where the
+   * user put it (see `onLineEndMove`).
+   */
   y?: number;
 };
 
@@ -40,6 +69,11 @@ export type PathInfo = {
   color: string;
   /** Paths are stacked by `lane`, lowest first. Defaults to the order in the list. */
   lane?: number;
+  /**
+   * The connections of this path that span the whole period: from a point before it to a point after it, with no
+   * point of theirs inside. A fork gives several. Each is drawn as a line across the view.
+   */
+  through?: PathThrough[];
 };
 
 export type Path = PathInfo & { points: PathPoint[] };
@@ -57,6 +91,8 @@ export type PlacedPoint = Omit<FlatPoint, 'x' | 'y'> & Position;
 
 export type PlacedWorld = {
   today: string;
+  /** The days the view covers, or null for a free view. Today is only marked when it lies inside. */
+  period?: { start: number; end: number } | null;
   paths: PathInfo[];
   points: PlacedPoint[];
 };

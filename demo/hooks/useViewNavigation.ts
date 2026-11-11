@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { fromDay, isIsoDate, type Period, periodOf, shiftPeriod, toDay, type ViewLevel } from 'world-of-evolving-paths';
 
 import { popStep, pushStep } from '../app-logic/viewTrail';
+import { useStoredState } from './useStoredState';
 
 type View = { level: ViewLevel | null; period: Period };
 // Where the user was before going into a finer view, so Back can return there
@@ -12,7 +13,11 @@ const START_LEVEL: ViewLevel = 'year';
 
 /** Which view is shown: the free view or a level, the period within it, and the page. */
 export function useViewNavigation(today: string) {
-  const [view, setView] = useState<View>(() => ({ level: START_LEVEL, period: periodOf(START_LEVEL, today) }));
+  // How many years the year view spans. It is remembered, so the view comes back as the user left it.
+  const [years, setStoredYears] = useStoredState<number>('wep-demo:years', 1);
+  const build = (level: ViewLevel, date: string) => periodOf(level, date, level === 'year' ? { years } : {});
+
+  const [view, setView] = useState<View>(() => ({ level: START_LEVEL, period: build(START_LEVEL, today) }));
   const [page, setPage] = useState(0);
   const [trail, setTrail] = useState<Step[]>([]);
 
@@ -23,7 +28,7 @@ export function useViewNavigation(today: string) {
     setView((current) => {
       const day = toDay(today);
       const keepsToday = current.level === null || (day >= current.period.start && day <= current.period.end);
-      return { level, period: periodOf(level, keepsToday ? today : fromDay(current.period.start)) };
+      return { level, period: build(level, keepsToday ? today : fromDay(current.period.start)) };
     });
   };
 
@@ -32,23 +37,41 @@ export function useViewNavigation(today: string) {
     setView((current) => ({ ...current, period: shiftPeriod(current.period, count) }));
   };
 
+  /** Today opens the week of today, whichever view was shown. */
   const goToToday = () => {
     setPage(0);
-    setView((current) => (current.level === null ? current : { ...current, period: periodOf(current.level, today) }));
+    setView({ level: 'week', period: build('week', today) });
+  };
+
+  /** Shows a level at a date, for example a week picked from a list. */
+  const pick = (level: ViewLevel, date: string) => {
+    if (!isIsoDate(date)) return;
+    setPage(0);
+    setView({ level, period: build(level, date) });
   };
 
   /** Shows the period of the same level that contains the date. */
   const goToDate = (date: string) => {
     if (view.level === null || !isIsoDate(date)) return;
     setPage(0);
-    setView({ level: view.level, period: periodOf(view.level, date) });
+    setView({ level: view.level, period: build(view.level, date) });
+  };
+
+  /** Changes how many years the year view spans. The shown year view keeps its last year. */
+  const setYears = (count: number) => {
+    setStoredYears(count);
+    setView((current) =>
+      current.level === 'year'
+        ? { level: 'year', period: periodOf('year', fromDay(current.period.end), { years: count }) }
+        : current,
+    );
   };
 
   /** Goes into a finer level at a date, and remembers the view it came from. */
   const zoomInto = (level: ViewLevel, date: string) => {
     setTrail((steps) => pushStep(steps, { view, page }));
     setPage(0);
-    setView({ level, period: periodOf(level, date) });
+    setView({ level, period: build(level, date) });
   };
 
   /** Returns to the view before the last zoom. */
@@ -63,12 +86,15 @@ export function useViewNavigation(today: string) {
   return {
     level: view.level,
     period: view.period,
+    years,
     page,
     setPage,
+    setYears,
     chooseLevel,
     move,
     goToToday,
     goToDate,
+    pick,
     zoomInto,
     back,
     canGoBack: trail.length > 0,

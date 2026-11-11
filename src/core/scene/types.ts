@@ -81,6 +81,12 @@ export type LeadDraw = {
   side: 'before' | 'after';
   /** Which spot of the text sits on x and y, 0 to 1 each, so the text grows away from the point. */
   anchor: Position;
+  /** For a line that spans the whole view: both points it leads from and to, as `pointId` is empty then. */
+  span?: { from: Lead; to: Lead };
+  /** The key of the line among the lines that run along the time axis. The end of the line can be dragged by it. */
+  trackKey: string;
+  /** The y of the lane of the path the line belongs to. A height in the data is a distance from it. */
+  lane: number;
 };
 
 export type SceneState = {
@@ -92,6 +98,8 @@ export type SceneState = {
   locale?: string;
   /** Writes the date under a point instead of the built-in short form. */
   formatDate?: (iso: string) => string;
+  /** Heights the user is dragging lines to right now, by `trackKey` of the line. */
+  lineOverrides?: ReadonlyMap<string, number>;
 };
 
 export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[]; leads: LeadDraw[] };

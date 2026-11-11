@@ -133,7 +133,6 @@ describe('Period data for the demo', () => {
         period: week,
         page: 0,
         checkIns: [],
-        pins: {},
       });
 
       expect(result.data.paths.map((path) => path.id)).toEqual(['a']);
@@ -146,7 +145,6 @@ describe('Period data for the demo', () => {
         period: week,
         page: 0,
         checkIns: [],
-        pins: {},
       });
       const second = buildPeriodData({
         paths: [...paths, makePath('d')],
@@ -154,7 +152,6 @@ describe('Period data for the demo', () => {
         period: week,
         page: 1,
         checkIns: [],
-        pins: {},
       });
 
       const size = LEVEL_SETTINGS.week.graphsPerPage;
@@ -164,25 +161,64 @@ describe('Period data for the demo', () => {
     });
 
     it('keeps the page inside the range', () => {
-      const result = buildPeriodData({ paths, points, period: week, page: 99, checkIns: [], pins: {} });
+      const result = buildPeriodData({ paths, points, period: week, page: 99, checkIns: [] });
 
       expect(result.page).toBe(result.pages - 1);
     });
 
-    it('pins points at the positions the user chose', () => {
+    it('keeps points at the height the user chose, and leaves their place on the time axis to the date', () => {
       const result = buildPeriodData({
         paths,
         points,
         period: week,
         page: 0,
         checkIns: [],
-        pins: { a1: { x: 5, y: 6 } },
+        heights: { a1: 6 },
       });
 
-      expect(result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1')).toMatchObject({
-        x: 5,
-        y: 6,
-      });
+      const pinned = result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1');
+      expect(pinned?.y).toBe(6);
+      expect(pinned?.x).toBeUndefined();
     });
+  });
+});
+
+describe('Heights of the lines of a fork', () => {
+  const month = periodOf('month', '2026-11-11');
+  const fork = (dateOfSecond: string): DemoPoint[] => [
+    makePoint({ id: 'a', date: '2026-11-10', importance: 3, next: ['b', 'c'] }),
+    makePoint({ id: 'b', date: '2026-12-20', importance: 3 }),
+    makePoint({ id: 'c', date: dateOfSecond, importance: 3 }),
+  ];
+  const outgoingOf = (points: DemoPoint[], heights: Record<string, number>) =>
+    buildPeriodData({ paths: [makePath('combat')], points, checkIns: [], period: month, page: 0, heights }).data
+      .paths[0].points[0].outgoing;
+
+  it('leaves lines that would get the same height to the map, so it spreads them', () => {
+    const lines = outgoingOf(fork('2026-12-20'), { a: 40 });
+
+    expect(lines).toHaveLength(2);
+    expect(lines?.map((line) => line.y)).toEqual([undefined, undefined]);
+  });
+
+  it('gives each line its own height when they differ', () => {
+    const lines = outgoingOf(fork('2026-12-20'), { a: 40, b: 100, c: -100 });
+
+    expect(lines?.map((line) => line.y)).toEqual([expect.any(Number), expect.any(Number)]);
+    expect(lines?.[0].y).not.toBe(lines?.[1].y);
+  });
+
+  it('always keeps a height the user dragged a line to', () => {
+    const lines = buildPeriodData({
+      paths: [makePath('combat')],
+      points: fork('2026-12-20'),
+      checkIns: [],
+      period: month,
+      page: 0,
+      heights: { a: 40 },
+      edgeHeights: { 'a>b': 77, 'a>c': 77 },
+    }).data.paths[0].points[0].outgoing;
+
+    expect(lines?.map((line) => line.y)).toEqual([77, 77]);
   });
 });

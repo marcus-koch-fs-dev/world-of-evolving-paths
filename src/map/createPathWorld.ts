@@ -1,5 +1,9 @@
 import type { Bounds } from '../core/camera.js';
 import { contentBounds } from '../core/geometry.js';
+import { lanesOf } from '../core/layout.js';
+import { throughLines } from '../core/scene/through.js';
+import { lineTracks } from '../core/scene/tracks.js';
+import { viewEdges } from '../core/scene/viewEdges.js';
 import { createCameraController } from './camera/createCameraController.js';
 import { createViewport } from './dom/createViewport.js';
 import { createBoundaryChecks } from './engine/boundary.js';
@@ -51,7 +55,23 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
   const signal = createWorldSignal();
   let background = boundary.backgroundOf(initialOptions);
 
-  const bounds = (): Bounds | null => contentBounds((model.world()?.points ?? []).map(orientation.toScreen));
+  // The content is the points, the lines that run through the view without a point, and the left and right edge of
+  // the view that the lines of the points reach
+  const bounds = (): Bounds | null => {
+    const world = model.world();
+    if (!world) return null;
+    const lineEnds = throughLines(world, lineTracks(world)).flatMap((line) => [line.from, line.to]);
+    const content = [...world.points, ...lineEnds];
+    const edges = viewEdges(world);
+    const edgeEnds =
+      edges && content.length > 0
+        ? [
+            { x: edges.left, y: content[0].y },
+            { x: edges.right, y: content[0].y },
+          ]
+        : [];
+    return contentBounds([...content, ...edgeEnds].map(orientation.toScreen));
+  };
   const frame = () => framing.apply(bounds(), viewport.size(), camera);
   const show = (kind: Shortcut) => {
     const content = bounds();
@@ -76,7 +96,8 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       signal.notify();
     },
     onMoved: (id, position) => {
-      options.onPointMove?.(buildMoveEvent(model.world()?.points ?? [], id, position));
+      const world = model.world();
+      options.onPointMove?.(buildMoveEvent(world?.points ?? [], id, position, world ? lanesOf(world) : {}));
     },
   });
 
@@ -91,6 +112,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       dragger,
       viewport,
       toLayout: orientation.toLayout,
+      zoom: () => camera.get().zoom,
       today: boundary.todayOf,
     }),
     (id) => orientation.toScreen(model.positionOf(id)),
@@ -139,6 +161,8 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       pointer.cancel();
     } else if (dataChanged) {
       dragger.acknowledge();
+      // The data now holds the heights the user dragged the lines to
+      interaction.dropLines();
     }
     // A new direction needs the whole content in view again, also when the view changed at the same time
     if (orientationChanged) framing.requestFit();

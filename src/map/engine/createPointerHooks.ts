@@ -1,6 +1,10 @@
 import { layoutOf, nearestFree } from '../../core/collision.js';
+import { lanesOf } from '../../core/layout.js';
 import type { Turn } from '../../core/orientation.js';
-import { hitLead, hitNode } from '../../core/scene/hit.js';
+import { hitLead, hitLeadEnd, hitNode, reachAt } from '../../core/scene/hit.js';
+import { lineTargetAt, targetOfLead } from '../../core/scene/lineTarget.js';
+import { dateAxisX } from '../../core/scene/viewEdges.js';
+import { snapToGrid } from '../../core/snap.js';
 import { dateAtX } from '../../core/timeAxis.js';
 import type { Position } from '../../core/types.js';
 import type { Viewport } from '../dom/createViewport.js';
@@ -20,6 +24,8 @@ type Dependencies = {
   dragger: PointDragger;
   viewport: Pick<Viewport, 'setCursor'>;
   toLayout: Turn;
+  /** The zoom of the camera now: lines are as easy to hit when the view is small. */
+  zoom(): number;
   /** Today, already checked. */
   today(options: PathWorldOptions): string;
 };
@@ -33,9 +39,24 @@ export function createPointerHooks({
   dragger,
   viewport,
   toLayout,
+  zoom,
   today,
 }: Dependencies): PointerHooks {
   const canDrag = () => options().editable !== false && options().pointsLocked !== true;
+
+  /** The position with its place along the time axis put back to the date of the point. */
+  const onItsDate = (id: string, position: Position): Position => {
+    const world = model.world();
+    const date = world?.points.find((point) => point.id === id)?.date;
+    const x = world && date ? dateAxisX(world, date) : null;
+    return x === null ? position : { x, y: position.y };
+  };
+
+  // The end of a line is only taken when the app listens, otherwise the height would be shown but never kept
+  const grabbableEnd = (world: Position): string | null =>
+    canDrag() && options().onLineEndMove
+      ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null)
+      : null;
 
   return {
     pointAt: (world) => hitNode(scene.current().nodes, world)?.id ?? null,
@@ -43,8 +64,27 @@ export function createPointerHooks({
     onHover(id) {
       if (id === interaction.hovered()) return;
       interaction.hover(id);
-      viewport.setCursor(id ? 'pointer' : 'grab');
       scene.rebuild();
+    },
+
+    // A hand over what can be clicked, a cross over the end of a line that can be moved, otherwise the hand that pans
+    onCursor(world) {
+      const reach = reachAt(zoom());
+      const current = scene.current();
+      const onLine =
+        hitLead(current.leads, world, reach) !== null ||
+        (options().onLineSelect !== undefined &&
+          lineTargetAt(current, model.world()?.points ?? [], world, reach) !== null);
+      // A point wins over the end of a line, as when it is pressed
+      const cursor =
+        hitNode(current.nodes, world) !== null
+          ? 'pointer'
+          : grabbableEnd(world) !== null
+            ? 'move'
+            : onLine
+              ? 'pointer'
+              : 'grab';
+      viewport.setCursor(cursor);
     },
 
     onPointPress(id) {
@@ -56,7 +96,10 @@ export function createPointerHooks({
       return true;
     },
 
-    onDragMove: (id, position) => dragger.move(id, toLayout(position)),
+    onDragMove(id, position) {
+      const target = snapToGrid(toLayout(position), options().snap);
+      dragger.move(id, options().timeLocked === false ? target : onItsDate(id, target));
+    },
 
     onDragEnd(id) {
       interaction.drag(null);
@@ -66,7 +109,43 @@ export function createPointerHooks({
 
     onBackgroundClick: () => options().onSelect?.(null),
 
-    leadAt: (world) => hitLead(scene.current().leads, world)?.id ?? null,
+    leadAt: (world) => hitLead(scene.current().leads, world, reachAt(zoom()))?.id ?? null,
+
+    lineEndAt: grabbableEnd,
+
+    onLineEndMove(key, position) {
+      interaction.dragLine(key, Math.round(toLayout(position).y));
+      scene.rebuild();
+    },
+
+    onLineEndCancel(key) {
+      interaction.dropLine(key);
+      scene.rebuild();
+    },
+
+    onLineEndRelease(key) {
+      const y = interaction.lineHeights().get(key);
+      const lead = scene.current().leads.find((candidate) => candidate.trackKey === key);
+      const points = new Map((model.world()?.points ?? []).map((point) => [point.id, point]));
+      const target = lead && targetOfLead(lead, points);
+      // The line stays where it was dragged until the app answers with new data that holds the height
+      // The height goes to the app as a distance from the lane of the path of the line
+      if (y !== undefined && lead && target) options().onLineEndMove?.({ ...target, y: y - Math.round(lead.lane) });
+      else interaction.dropLine(key);
+      scene.rebuild();
+    },
+
+    onLineClick(at) {
+      const current = options();
+      const points = model.world()?.points ?? [];
+      const target = current.onLineSelect ? lineTargetAt(scene.current(), points, at, reachAt(zoom())) : null;
+      if (!current.onLineSelect || !target) return false;
+      const place = rounded(toLayout(at));
+      const date = dateAtX(place.x, model.periodData(), current.view, today(current));
+      const world = model.world();
+      current.onLineSelect({ ...target, ...place, date, lanes: world ? lanesOf(world) : {}, at });
+      return true;
+    },
 
     onLeadDoubleClick(id) {
       const lead = scene.current().leads.find((candidate) => candidate.id === id);
@@ -83,8 +162,11 @@ export function createPointerHooks({
       const current = options();
       if (current.editable === false) return;
       const points = model.world()?.points ?? [];
-      const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, toLayout(onScreen)));
-      current.onPointAdd?.({ ...free, date: dateAtX(free.x, model.periodData(), current.view, today(current)) });
+      const target = snapToGrid(toLayout(onScreen), current.snap);
+      const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, target));
+      const date = dateAtX(free.x, model.periodData(), current.view, today(current));
+      const world = model.world();
+      current.onPointAdd?.({ ...free, date, lanes: world ? lanesOf(world) : {} });
     },
   };
 }

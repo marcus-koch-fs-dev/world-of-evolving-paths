@@ -1,10 +1,25 @@
-import { fromDay, type Orientation, periodLabel, type ViewLevel } from 'world-of-evolving-paths';
+import { fromDay, type Orientation, periodLabel, VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
 import { ControlBar, type DockSlot, ViewBar } from 'world-of-evolving-paths/react';
 import type { DemoMode } from '../app-logic/menuGroups';
+import { yearOfDay } from '../app-logic/periodChoices';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import { BackButton } from './BackButton';
 import { MainMenu } from './MainMenu';
+import { PeriodPicker } from './PeriodPicker';
 import { UndoRedo, type UndoRedoProps } from './UndoRedo';
+import { YearsStepper } from './YearsStepper';
+
+const CHIP_LETTERS: Record<ViewLevel, string> = { week: 'W', month: 'M', year: 'Y' };
+
+/** The level buttons as short chips with the full name as tooltip. The shown level is always among them. */
+function chipsOf(levels: readonly { level: ViewLevel; label: string }[], shown: ViewLevel | null) {
+  const wanted = new Set([...levels.map((option) => option.level), ...(shown ? [shown] : [])]);
+  return VIEW_LEVELS.filter((option) => wanted.has(option.level)).map((option) => ({
+    level: option.level,
+    label: CHIP_LETTERS[option.level],
+    title: `${option.label} (${CHIP_LETTERS[option.level]})`,
+  }));
+}
 
 type Props = {
   dock: DockSlot;
@@ -45,11 +60,24 @@ export function TopBar({
     <ControlBar dock={dock} onDockChange={onDockChange}>
       <ViewBar
         periodOnly
+        levelChips
+        levels={chipsOf(levels, navigation.level)}
+        freeLabel="All"
+        freeLast
         level={navigation.level}
         onLevelChange={navigation.chooseLevel}
-        periodLabel={periodLabel(navigation.period, locale)}
-        date={fromDay(navigation.period.start)}
-        onDateChange={navigation.goToDate}
+        afterLevels={
+          navigation.level === 'year' && <YearsStepper years={navigation.years} onChange={navigation.setYears} />
+        }
+        periodSlot={
+          <PeriodPicker
+            label={periodLabel(navigation.period, locale)}
+            date={fromDay(navigation.period.start)}
+            year={yearOfDay(navigation.period.end)}
+            locale={locale}
+            onPick={navigation.pick}
+          />
+        }
         onPrevious={() => navigation.move(-1)}
         onNext={() => navigation.move(1)}
         onToday={navigation.goToToday}
