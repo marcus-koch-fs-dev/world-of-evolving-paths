@@ -165,17 +165,18 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Insert a point into a line   | Click or right-click the line → **Insert point**. The new point sits between the two points, on the date where you clicked.                                                  |
 | Move a line                  | Drag the arrow at its end, at the edge of the view, up or down. A line without a point in the view moves as a whole. A line from a point moves only its end at the edge.     |
-| Keep the height of a line    | Nothing to do. The height is kept for that connection, in every view.                                                                                                        |
+| Keep the height of a line    | Nothing to do. A dragged end is kept for that period. Without one, the line runs straight to the heights of its points, in week and month alike.                             |
 | See a path that skips a view | A path with points before and after the period, but none inside, runs across the whole view, with the names and dates at both ends. At a fork each branch gets its own line. |
 | Keep lines apart             | Nothing to do. Lines that would lie on top of each other move apart by themselves.                                                                                           |
 
 **Paths grow**
 
-| I want to …             | Do this                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------- |
-| Check in on a path      | Select a point of the path, then the **Check in** button at the bottom right. Once per day. |
-| See what a check-in did | A message at the top shows the active days before and after and what the next tier needs.   |
-| Undo or redo            | The arrow buttons in the top bar, or Ctrl+Z and Ctrl+Y. Up to 100 steps, kept in memory.    |
+| I want to …             | Do this                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Check in on a path      | Select a point of the path, then the **Check in** button at the bottom right. Once per day.                                               |
+| Tell done from open     | A point you reached has a check mark in its symbol. The point you are walking to pulses with an arrow, and a point still ahead is dashed. |
+| See what a check-in did | A message at the top shows the active days before and after and what the next tier needs.                                                 |
+| Undo or redo            | The arrow buttons in the top bar, or Ctrl+Z and Ctrl+Y. Up to 100 steps, kept in memory.                                                  |
 
 **Moving around**
 
@@ -278,20 +279,22 @@ You give points without positions and the library lays them out:
 - Points keep `radius + radius` from each other and stay off foreign lines. Lines may cross.
 - The same input and `seed` always give the same layout. Change `seed` for another one.
 
-**Fixing a position (pinning).** A point with `x` and `y` stays exactly there, the others make room around it. A point with only `y` keeps its height and sits on its date along the time axis. That is the way to keep a height in every view, because the date gives a different `x` in a week than in a year. When the user drops a dragged point, `onPointMove` tells you where it ended up, and `positions` holds every point of the view. Store them and pass them back to keep the layout as the user sees it.
+**Heights.** Every path has a lane, and where the lane lies depends on how many paths the view shows: a path can be the first of two in a week and the third of six in the overview. So heights in your data are **distances from the lane of the path** (0 = on the lane, negative = above when time runs left to right). The same number puts a point or a line at the same place next to its path in every view and on every page.
+
+**Fixing a position (pinning).** A point with only `y` sits on its date along the time axis, `y` away from its lane. That is the way to keep a height in every view. When the user drops a dragged point, `onPointMove` gives that height as `offset`: store it per point and pass it back as `y`. A point with `x` and `y` is different: it stays exactly at that place of this one view, and the others make room around it. `positions` in `onPointMove` holds every point of the view for that case.
 
 By default a dragged point moves only across the time axis (`timeLocked: true`), so it always stays on its date and agrees with the marker for today. Set `timeLocked: false` to let it move freely. With `snap` (a distance in world units) dragged and added points sit on a grid.
 
-**Lines the user moves.** Lines that run along the time axis (the lines that leave the view and the ones in `through`) keep apart from each other by themselves. The user can drag the arrow at the end of such a line up or down. `onLineEndMove({ from, to, y })` then tells you the two points of that connection and the new height. Store it and pass it back as `y` on the lead (in `incoming` or `outgoing`) or on the entry in `through`. The line stays where it was dragged until your new data arrives.
+**Lines the user moves.** Lines that run along the time axis (the lines that leave the view and the ones in `through`) keep apart from each other by themselves. The user can drag the arrow at the end of such a line up or down. `onLineEndMove({ from, to, y })` then tells you the two points of that connection and the new height, as a distance from the lane. Store it and pass it back as `y` on the lead (in `incoming` or `outgoing`) or on the entry in `through`. The line stays where it was dragged until your new data arrives. The edge of a week lies on another day than the edge of a month, so keep this height per period. The demo does, and without a stored height it puts the edge on the straight line between the heights of the two points (`demo/app-logic/edgeHeight.ts`), so week and month agree.
 
-**Clicking a line.** `onLineSelect({ from, to, x, y, date, at })` comes when the user clicks or right-clicks a line: a connection between two points, a line that leaves the view, or one that spans it. `from` and `to` are its two ends (`{ id?, title, date }`), `date` is the date where it was clicked. Show a `LineMenu` at `at`, for example with **Insert point**. The demo inserts a point there and puts it between the two points in `next`.
+**Clicking a line.** `onLineSelect({ from, to, x, y, date, lanes, at })` comes when the user clicks or right-clicks a line: a connection between two points, a line that leaves the view, or one that spans it. `from` and `to` are its two ends (`{ id?, title, date }`), `date` is the date where it was clicked, and `lanes` the lane of every path, so `y - lanes[pathId]` is the height for a new point. Show a `LineMenu` at `at`, for example with **Insert point**. The demo inserts a point there and puts it between the two points in `next`.
 
 > [!WARNING]
 > Answer a move with a **new** `PeriodData` object within 80 ms, otherwise the point moves back. Changing the old object in place does not count, the map compares by reference. See [Events](#events).
 
 ### Add points and paths
 
-- The user double-clicks the empty area: `onPointAdd({ x, y, date })` tells you where. You decide whether and how to add a point.
+- The user double-clicks the empty area: `onPointAdd({ x, y, date, lanes })` tells you where. You decide whether and how to add a point. `y - lanes[pathId]` is its height for the path you put it on.
 - The user double-clicks a point: `onPointDoubleClick({ id, date })` tells you which one. The demo uses it to go one level deeper, to the period of that date.
 - The `PointMenu` control has a **Next point** panel. It calls your `onAddNext({ title, date, newPath, color, pathName })`. With `newPath` you create a new `Path` with that color and `pathName` (if empty, use the title) and put the point on it. Without it, the point joins the path of the selected point.
 - A new path is just another entry in `paths`. Give it an `id`, a `name`, a `color` and its points.
@@ -359,8 +362,8 @@ The option `orientation` sets which way time runs: `horizontal` (left to right),
 | `note`       | `string` (optional)                               | Free text for your app.                                                                                                                                                                         |
 | `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Make paths stronger](#make-paths-stronger).                                                                                                  |
 | `incoming`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
-| `outgoing`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that this point leads to. The map draws a line to the edge, with title and date. `y` is the height of the line at the edge (see `onLineEndMove`).                      |
-| `x`, `y`     | `number` (optional)                               | Pins the point. Both: exactly there. Only `y`: at this height, on its date. `x` needs `y`.                                                                                                      |
+| `outgoing`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that this point leads to. The map draws a line to the edge, with title and date. `y` is the height of the line at the edge, from the lane (see `onLineEndMove`).       |
+| `x`, `y`     | `number` (optional)                               | Only `y`: the height from the lane of the path, on its date, in every view. Both: exactly there in this view. `x` needs `y`.                                                                    |
 
 **`Path`** is one graph with its points: `{ id, name, color, lane?, points, through? }`. `through` lists the connections that span the whole period without a point inside (`PathThrough`, see [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes)). `color` is `#rrggbb` and stays the same along the whole path. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order.
 
@@ -377,12 +380,12 @@ All events are options of `PathWorld` and `createPathWorld`.
 | Callback                                                | When                                                                                                                                                                                                                                            |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `onSelect(id \| null)`                                  | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                                                                                     |
-| `onPointMove({ id, x, y, positions })`                  | A dragged point was released at its final position.                                                                                                                                                                                             |
-| `onPointAdd({ x, y, date })`                            | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot.                                             |
+| `onPointMove({ id, x, y, offset, positions })`          | A dragged point was released at its final position. `offset` is its height from the lane of its path: pass it back as `y` to keep it in every view.                                                                                             |
+| `onPointAdd({ x, y, date, lanes })`                     | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot. `lanes` holds the lane of every path.       |
 | `onPointDoubleClick({ id, date })`                      | A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view.                                                                                                                           |
 | `onLeadDoubleClick({ pointId, side, title, date, id })` | A line that leaves the view was double-clicked, on its text or on the line. `side` is `'before'` for a line that comes from outside and `'after'` for one that goes on. `title`, `date` and `id` are what you gave in `incoming` or `outgoing`. |
-| `onLineSelect({ from, to, x, y, date, at })`            | A line was clicked or right-clicked. `from` and `to` are its ends, `x`/`y`/`date` the place on the line, `at` the place for a `LineMenu`. See [Keep the layout](#keep-the-layout).                                                              |
-| `onLineEndMove({ from, to, y })`                        | The arrow at the end of a line that leaves or spans the view was dragged and let go. Pass `y` back on the lead or on the `through` entry.                                                                                                       |
+| `onLineSelect({ from, to, x, y, date, lanes, at })`     | A line was clicked or right-clicked. `from` and `to` are its ends, `x`/`y`/`date` the place on the line, `lanes` the lane of every path, `at` the place for a `LineMenu`. See [Keep the layout](#keep-the-layout).                              |
+| `onLineEndMove({ from, to, y })`                        | The arrow at the end of a line that leaves or spans the view was dragged and let go. `y` is the height from the lane. Pass it back on the lead or on the `through` entry.                                                                       |
 | `onError(errors)`                                       | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                                                                          |
 
 Update your data in these callbacks and pass the new objects back in. The data is yours. If you do not answer a move within 80 ms with a **new** `PeriodData` object for the current view, the point moves back to where it was. Changing the old object in place does not count, the map compares by reference. Sometimes a point cannot stay where it was dropped (no room, or on a foreign line). Then it moves back along its way until it finds a free spot. That spot is what `onPointMove` reports.
@@ -531,9 +534,16 @@ Besides what is shown above, the package exports helpers you may want for your o
 - The first layout of a view costs time with many points: about 150 ms for 200 points and well over a second beyond 500, when none of them is pinned. Pinned points cost almost nothing, so store the positions the user chose (see `onPointMove`). Plan on views with a few dozen points.
 - Adding a point to a path can make the view wider and move points that are not pinned. Pin points to keep them where they are.
 
-### Not in this version
+### What your app does
 
-Undo and redo belong in your app, and so does passing changes on between week, month and year data. The library never changes your data. The demo shows one way to do undo and redo (`demo/app-logic/history.ts`). Controls are provided for React only; the map itself works with any framework.
+The library draws and reports, your app holds the state. That is a choice, not a gap:
+
+- **Undo and redo** work on your state. The demo keeps a history of its states (`demo/app-logic/history.ts`, `stateHistory.ts`).
+- **Saving and loading** are yours, in whatever store you use.
+- **Week, month and year** are views of the same data. Keep one list of points and build each view from it, filtered by date and importance, as the demo does (`demo/app-logic/periodData.ts`).
+- **Heights** the user chose come back through `onPointMove` (`offset`) and `onLineEndMove` (`y`). Store them, per point and per period, and pass them back.
+
+Controls are provided for React only; the map itself works with any framework.
 
 ## 🔧 Contributing
 

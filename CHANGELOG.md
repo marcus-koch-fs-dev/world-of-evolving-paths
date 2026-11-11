@@ -9,13 +9,15 @@
 - New event `onLineEndMove({ from, to, y })`: the user dragged the arrow at the end of a line up or down. Pass `y` back on the lead (`Lead.y`) or on the `through` entry to keep the line there.
 - New event `onLineSelect({ from, to, x, y, date, at })`: a line was clicked or right-clicked. New React control `LineMenu` for a tile menu at that place.
 - New option `timeLocked` (default `true`): a dragged point stays on its date and only moves across the time axis.
-- A point with only `y` keeps its height and sits on its date, so a height can hold in every view.
+- Heights in the data are distances from the lane of the path, not world positions: `y` alone on a point, `Lead.y` and `PathThrough.y`. The same number now fits every view and page. A point with only `y` sits on its date at that distance from its lane. `onPointMove` gives the new `offset`, `onPointAdd` and `onLineSelect` give `lanes`, and `onLineEndMove` reports `y` from the lane.
 - New option `snap`: dragged and added points snap to a grid.
 - The marker for today shows only in a view that holds today, on the right day of each line.
 - The year level can span 1 to 10 years: `periodOf('year', date, { years })`, key `year:YYYY-01-01+N`.
 - `ViewBar`: new props `levelChips`, `freeLast`, `afterLevels` and `periodSlot`. Level buttons can have a `title`.
 - `Toast` can show a button (`action`).
 - Lines are easier to hit when the view is zoomed out.
+- A point that is done shows a check mark in its symbol, in the color of its path. Before only a reached goal did.
+- Lines put at a height still move apart when two of them would lie on top of each other.
 
 ### Demo
 
@@ -23,7 +25,7 @@
 - The demo offers week, month and year. Day and half year are gone from the demo, not from the library.
 - A legend in the corner shows from which view on a point of each importance appears. It starts closed.
 - If a changed importance hides a point, a message says where it shows, with a button to go there.
-- Points move only up and down and keep their height in every view. Line heights are kept per connection.
+- Points move only up and down and keep one height in every view. Where a line meets the edge is kept per period; without a dragged height it follows the heights of the two points.
 - Click or right-click a line to insert a point there. Deleting a point keeps its path connected.
 - Snap to grid in the settings.
 
