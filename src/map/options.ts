@@ -1,12 +1,24 @@
 import type { BackgroundOptions, BackgroundPattern } from '../core/background/types.js';
 import type { Camera } from '../core/camera.js';
 import type { Direction } from '../core/orientation.js';
+import type { LineEnd } from '../core/scene/lineTarget.js';
 import type { PeriodMap, Position } from '../core/types.js';
 
 export type { BackgroundOptions, BackgroundPattern };
 
 // Which way time runs on the screen. `auto` is vertical while the map is taller than wide, otherwise horizontal.
 export type Orientation = Direction | 'auto';
+
+export type { LineEnd };
+
+/** The end of a line, the arrow at the edge of the view, was dragged to a height. */
+export type LineEndMoveEvent = {
+  /** The two points the line leads from and to. Keep the height for this connection. */
+  from: LineEnd;
+  to: LineEnd;
+  /** The height, in the positions the data uses. Pass it back as `y` of the lead or of the `through` of the path. */
+  y: number;
+};
 
 export type PointMoveEvent = {
   id: string;
@@ -26,9 +38,34 @@ export type LeadDoubleClickEvent = {
   id?: string;
 };
 
+/** A line was clicked, or right-clicked: where, and the two points it leads from and to. */
+export type LineSelectEvent = {
+  /** The earlier end of the line. A point of the view, or the point out there when the line leaves the view. */
+  from: LineEnd;
+  /** The later end of the line. */
+  to: LineEnd;
+  /** Where on the line the user clicked, in the positions the data uses (see `PointAddEvent`), and the date there. */
+  x: number;
+  y: number;
+  date: string;
+  /** Where the click was on the map, in the coordinates of the overlay. A menu placed there moves with the camera. */
+  at: Position;
+};
+
 export type PathWorldEvents = {
   /** A point was clicked (its id) or the empty area was clicked (null). */
   onSelect?: (id: string | null) => void;
+  /**
+   * A line was clicked or right-clicked: a connection between two points, a line that leaves the view, or one that
+   * spans it. Your app decides what happens, for example a menu to insert a point there. Clicking the empty area
+   * calls `onSelect(null)`, which is the time to close that menu.
+   */
+  onLineSelect?: (event: LineSelectEvent) => void;
+  /**
+   * The arrow at the end of a line that leaves the view or spans it was dragged up or down and let go. Store the
+   * height and pass it back as `y` on the lead (or on the `through` of the path), so the line stays there.
+   */
+  onLineEndMove?: (event: LineEndMoveEvent) => void;
   /** A dragged point was released. Pass `x` and `y` back on the point to keep it there. */
   onPointMove?: (event: PointMoveEvent) => void;
   /** The empty area was double-clicked. The app decides whether and how to add a point. */
@@ -54,6 +91,13 @@ export type PathWorldOptions = PathWorldEvents & {
   editable?: boolean;
   /** Points cannot be dragged. Default false. */
   pointsLocked?: boolean;
+  /**
+   * A dragged point moves only across the time axis (up and down when time runs left to right). Its place along the
+   * axis stays at its date, so the marker for today and the lines always agree with it. Default true.
+   */
+  timeLocked?: boolean;
+  /** Distance between the grid points that dragged and added points snap to, in world units. Default: no snapping. */
+  snap?: number;
   /** Slight wave on the lines. Default false. */
   wavy?: boolean;
   /** Language of the dates under the points, such as `de` or `en-GB`. Default: the browser's language. */

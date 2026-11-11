@@ -47,6 +47,7 @@ export function createSceneHolder({
             wave: current.wavy === true,
             hovered: interaction.hovered(),
             dragging: interaction.dragging(),
+            lineOverrides: interaction.lineHeights(),
             locale: locale(current),
             formatDate: current.formatDate,
           })

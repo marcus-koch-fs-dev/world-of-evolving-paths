@@ -41,6 +41,8 @@ function setup(
   options: {
     pointAt?: PointerHooks['pointAt'];
     leadAt?: PointerHooks['leadAt'];
+    onLineClick?: PointerHooks['onLineClick'];
+    lineEndAt?: PointerHooks['lineEndAt'];
     offset?: { left: number; top: number };
   } = {},
 ) {
@@ -53,6 +55,10 @@ function setup(
     onDragMove: vi.fn(),
     onDragEnd: vi.fn(),
     onBackgroundClick: vi.fn(),
+    onLineClick: vi.fn(options.onLineClick ?? (() => false)),
+    lineEndAt: vi.fn(options.lineEndAt ?? (() => null)),
+    onLineEndMove: vi.fn(),
+    onLineEndRelease: vi.fn(),
     leadAt: vi.fn(options.leadAt ?? (() => null)),
     onPointDoubleClick: vi.fn(),
     onLeadDoubleClick: vi.fn(),
@@ -121,6 +127,64 @@ describe('Pointer controller', () => {
       fire('pointerup');
 
       expect(hooks.onBackgroundClick).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when a line is tapped', () => {
+    it('tells the hooks about the line and does not count it as a click on the background', () => {
+      const { fire, hooks } = setup({ onLineClick: () => true });
+
+      fire('pointerdown');
+      fire('pointerup');
+
+      expect(hooks.onLineClick).toHaveBeenCalledOnce();
+      expect(hooks.onBackgroundClick).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the end of a line is dragged', () => {
+    it('moves that line, tells the hooks when it is let go, and does not pan the map', () => {
+      const { fire, hooks, camera } = setup({ lineEndAt: () => 'lead:after:a:0' });
+      const before = camera.get();
+
+      fire('pointerdown', { clientX: 0, clientY: 0 });
+      fire('pointermove', { clientX: 0, clientY: 50, buttons: 1 });
+      fire('pointerup', { clientX: 0, clientY: 50 });
+
+      expect(hooks.onLineEndMove).toHaveBeenCalledWith('lead:after:a:0', expect.anything());
+      expect(hooks.onLineEndRelease).toHaveBeenCalledWith('lead:after:a:0');
+      expect(camera.get()).toEqual(before);
+    });
+
+    it('is a click on the line when it did not move', () => {
+      const { fire, hooks } = setup({ lineEndAt: () => 'lead:after:a:0', onLineClick: () => true });
+
+      fire('pointerdown');
+      fire('pointerup');
+
+      expect(hooks.onLineEndRelease).not.toHaveBeenCalled();
+      expect(hooks.onLineClick).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('when a line is right-clicked', () => {
+    it('opens the menu of the app and keeps the menu of the browser away', () => {
+      const prevent = vi.fn();
+      const { fire, hooks } = setup({ onLineClick: () => true });
+
+      fire('contextmenu', { preventDefault: prevent });
+
+      expect(hooks.onLineClick).toHaveBeenCalledOnce();
+      expect(prevent).toHaveBeenCalledOnce();
+    });
+
+    it('leaves the menu of the browser alone where there is no line', () => {
+      const prevent = vi.fn();
+      const { fire } = setup();
+
+      fire('contextmenu', { preventDefault: prevent });
+
+      expect(prevent).not.toHaveBeenCalled();
     });
   });
 

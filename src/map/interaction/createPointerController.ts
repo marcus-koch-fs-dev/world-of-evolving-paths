@@ -18,6 +18,14 @@ export type PointerHooks = {
   onDragMove(id: string, position: Position): void;
   onDragEnd(id: string): void;
   onBackgroundClick(): void;
+  /** A line was clicked or right-clicked at a world position. Returns true when there is a line there. */
+  onLineClick(world: Position): boolean;
+  /** The key of the line whose end (the arrow at the edge of the view) is at a world position, if any. */
+  lineEndAt(world: Position): string | null;
+  /** The end of a line is dragged to this world position. */
+  onLineEndMove(key: string, world: Position): void;
+  /** The end of a line was let go after it was dragged. */
+  onLineEndRelease(key: string): void;
   /** The id of the line that leaves the view at a world position, if any. */
   leadAt(world: Position): string | null;
   /** A point was double-clicked. */
@@ -61,6 +69,8 @@ export function createPointerController(
   const fingers = createFingers(camera);
   const pan = createPan(camera);
   let drag: Drag | null = null;
+  // The key of the line whose end is being dragged
+  let lineEnd: string | null = null;
   let moved = false;
   const cleanup: (() => void)[] = [];
 
@@ -114,6 +124,12 @@ export function createPointerController(
       drag = { id, offset: { x: at.x - position.x, y: at.y - position.y } };
       return;
     }
+    // The arrow at the end of a line is taken to move that line, not the map
+    const end = id === null ? hooks.lineEndAt(at) : null;
+    if (end !== null) {
+      lineEnd = end;
+      return;
+    }
     if (id === null) pan.start({ x: event.clientX, y: event.clientY });
   };
 
@@ -123,6 +139,11 @@ export function createPointerController(
       return;
     }
     if (drag) return dragTo(event, drag);
+    if (lineEnd !== null) {
+      moved = true;
+      hooks.onLineEndMove(lineEnd, world(event));
+      return;
+    }
     if (pan.isActive()) {
       moved = pan.moveTo(event, moved);
       return;
@@ -145,7 +166,20 @@ export function createPointerController(
       hooks.onDragEnd(released.id);
       return;
     }
-    if (!moved && !isUiEvent(event) && hooks.pointAt(world(event)) === null) hooks.onBackgroundClick();
+    const grabbed = lineEnd;
+    lineEnd = null;
+    if (grabbed !== null && moved) return hooks.onLineEndRelease(grabbed);
+    if (moved || isUiEvent(event)) return;
+    const at = world(event);
+    // A click on a line selects the line, a click on nothing clears the selection
+    if (hooks.pointAt(at) === null && !hooks.onLineClick(at)) hooks.onBackgroundClick();
+  };
+
+  /** A right click on a line does the same as a click: the app opens its menu there. The browser menu stays elsewhere. */
+  const onContextMenu = (event: MouseEvent) => {
+    if (isUiEvent(event)) return;
+    const at = world(event);
+    if (hooks.pointAt(at) === null && hooks.onLineClick(at)) event.preventDefault();
   };
 
   /** A cancelled gesture ends a drag the normal way but is never a click. */
@@ -181,6 +215,7 @@ export function createPointerController(
   listen('pointercancel', onCancel);
   listen('pointerleave', () => hooks.onHover(null));
   listen('dblclick', onDoubleClick);
+  listen('contextmenu', onContextMenu);
 
   return {
     destroy() {
@@ -190,6 +225,7 @@ export function createPointerController(
     },
     cancel() {
       drag = null;
+      lineEnd = null;
       pan.stop();
       fingers.clear();
     },
