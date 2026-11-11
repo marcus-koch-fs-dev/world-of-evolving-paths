@@ -11,6 +11,7 @@ import {
 } from 'world-of-evolving-paths/react';
 import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
 import { rememberColor } from './app-logic/customColors';
+import { followersOf } from './app-logic/followers';
 import { heightOnPath } from './app-logic/heightOnPath';
 import { canRedo, canUndo } from './app-logic/history';
 import { levelThatShows, minImportanceOf, steppedYears } from './app-logic/levels';
@@ -85,7 +86,8 @@ export function App() {
   const lineSelection = useLineSelection(tileKey);
 
   // A point that is not in the current view is not selected, so its menu and check-in button do not linger
-  const visibleIds = new Set(result.data.paths.flatMap((path) => path.points.map((point) => point.id)));
+  const viewPoints = result.data.paths.flatMap((path) => path.points);
+  const visibleIds = new Set(viewPoints.map((point) => point.id));
   const selected = state.points.find((point) => point.id === selectedId && visibleIds.has(point.id));
   const selectedPath = state.paths.find((path) => path.id === selected?.pathId);
   const checkedInToday = selectedPath !== undefined && hasCheckedIn(state.checkIns, selectedPath.id, today);
@@ -179,7 +181,15 @@ export function App() {
           setSelectedId(null);
           lineSelection.select(line);
         }}
-        onPointMove={({ id, offset }) => dispatch({ type: 'move', id, height: offset })}
+        onPointMove={({ id, offset, offsets }) => {
+          // The points after it would follow it, so they are pinned where they are: a point moves alone
+          const followers = Object.fromEntries(
+            followersOf(viewPoints, id)
+              .filter((followerId) => offsets[followerId] !== undefined)
+              .map((followerId) => [followerId, offsets[followerId]]),
+          );
+          dispatch({ type: 'move', id, height: offset, followers });
+        }}
         onPointAdd={({ y, date, lanes }) => {
           // The new point is as important as the view needs, so it shows where it was added
           const importance = minImportanceOf(period);

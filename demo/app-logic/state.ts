@@ -27,7 +27,8 @@ export type DemoState = {
 
 export type DemoAction =
   // A point was dragged to a height: its distance from the lane of its path
-  | { type: 'move'; id: string; height: number }
+  // `followers` are the heights of the points after it, which stay where they are so that a point moves alone
+  | { type: 'move'; id: string; height: number; followers?: Record<string, number> }
   | { type: 'add'; pathId: string; height: number; date: string; importance: number }
   | { type: 'addNext'; fromId: string; input: NextPointInput }
   // A point in the middle of a line: the line from `fromId` to `toId` now runs through it
@@ -238,8 +239,8 @@ function setEdgeHeight(state: DemoState, action: Extract<DemoAction, { type: 'ed
 export function reduce(state: DemoState, action: DemoAction): DemoState {
   switch (action.type) {
     case 'move':
-      // One height for the point, in every view
-      return { ...state, heights: { ...state.heights, [action.id]: action.height } };
+      // One height for the point, in every view, and the followers keep the heights they had
+      return { ...state, heights: { ...state.heights, ...action.followers, [action.id]: action.height } };
     case 'add':
       return addPoint(state, action);
     case 'addNext':

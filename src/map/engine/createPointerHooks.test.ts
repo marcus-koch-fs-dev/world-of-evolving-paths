@@ -25,6 +25,7 @@ const LEAD = {
 
 /** The hooks with just enough around them: a scene with one lead, one point and the options a test gives. */
 function setup(options: Partial<PathWorldOptions>) {
+  const setCursor = vi.fn();
   const interaction = createInteractionState();
   const rebuild = vi.fn();
   const hooks = createPointerHooks({
@@ -33,15 +34,15 @@ function setup(options: Partial<PathWorldOptions>) {
       world: () => ({ today: '2026-11-11', period: null, paths: [], points: [POINT] }),
       periodData: () => null,
     },
-    scene: { current: () => ({ leads: [LEAD], edges: [], nodes: [] }), rebuild },
+    scene: { current: () => ({ leads: [LEAD], edges: [], nodes: [{ id: 'a', x: 0, y: 0, size: 56 }] }), rebuild },
     interaction,
     dragger: {},
-    viewport: { setCursor: () => undefined },
+    viewport: { setCursor },
     toLayout: (position: { x: number; y: number }) => position,
     zoom: () => 1,
     today: () => '2026-11-11',
   } as unknown as Parameters<typeof createPointerHooks>[0]);
-  return { hooks, interaction, rebuild };
+  return { hooks, interaction, rebuild, setCursor };
 }
 
 describe('Pointer hooks', () => {
@@ -62,6 +63,48 @@ describe('Pointer hooks', () => {
       const { hooks } = setup({ onLineEndMove: () => undefined, pointsLocked: true });
 
       expect(hooks.lineEndAt({ x: 100, y: 50 })).toBeNull();
+    });
+  });
+
+  describe('when the pointer moves over the map', () => {
+    it('shows a cross over the end of a line that can be moved', () => {
+      const { hooks, setCursor } = setup({ onLineEndMove: () => undefined });
+
+      hooks.onCursor({ x: 100, y: 50 });
+
+      expect(setCursor).toHaveBeenLastCalledWith('move');
+    });
+
+    it('shows a hand over a point even when the end of a line lies on it', () => {
+      const { hooks, setCursor } = setup({ onLineEndMove: () => undefined });
+
+      hooks.onCursor({ x: 10, y: 5 });
+
+      expect(setCursor).toHaveBeenLastCalledWith('pointer');
+    });
+
+    it('shows a hand over a line', () => {
+      const { hooks, setCursor } = setup({});
+
+      hooks.onCursor({ x: 50, y: 25 });
+
+      expect(setCursor).toHaveBeenLastCalledWith('pointer');
+    });
+
+    it('shows a hand over a point', () => {
+      const { hooks, setCursor } = setup({});
+
+      hooks.onCursor({ x: 0, y: 0 });
+
+      expect(setCursor).toHaveBeenLastCalledWith('pointer');
+    });
+
+    it('shows the hand that pans over the empty area', () => {
+      const { hooks, setCursor } = setup({});
+
+      hooks.onCursor({ x: 500, y: 500 });
+
+      expect(setCursor).toHaveBeenLastCalledWith('grab');
     });
   });
 

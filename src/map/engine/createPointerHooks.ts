@@ -52,14 +52,39 @@ export function createPointerHooks({
     return x === null ? position : { x, y: position.y };
   };
 
+  // The end of a line is only taken when the app listens, otherwise the height would be shown but never kept
+  const grabbableEnd = (world: Position): string | null =>
+    canDrag() && options().onLineEndMove
+      ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null)
+      : null;
+
   return {
     pointAt: (world) => hitNode(scene.current().nodes, world)?.id ?? null,
 
     onHover(id) {
       if (id === interaction.hovered()) return;
       interaction.hover(id);
-      viewport.setCursor(id ? 'pointer' : 'grab');
       scene.rebuild();
+    },
+
+    // A hand over what can be clicked, a cross over the end of a line that can be moved, otherwise the hand that pans
+    onCursor(world) {
+      const reach = reachAt(zoom());
+      const current = scene.current();
+      const onLine =
+        hitLead(current.leads, world, reach) !== null ||
+        (options().onLineSelect !== undefined &&
+          lineTargetAt(current, model.world()?.points ?? [], world, reach) !== null);
+      // A point wins over the end of a line, as when it is pressed
+      const cursor =
+        hitNode(current.nodes, world) !== null
+          ? 'pointer'
+          : grabbableEnd(world) !== null
+            ? 'move'
+            : onLine
+              ? 'pointer'
+              : 'grab';
+      viewport.setCursor(cursor);
     },
 
     onPointPress(id) {
@@ -86,11 +111,7 @@ export function createPointerHooks({
 
     leadAt: (world) => hitLead(scene.current().leads, world, reachAt(zoom()))?.id ?? null,
 
-    // The end of a line is only taken when the app listens, otherwise the height would be shown but never kept
-    lineEndAt: (world) =>
-      canDrag() && options().onLineEndMove
-        ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null)
-        : null,
+    lineEndAt: grabbableEnd,
 
     onLineEndMove(key, position) {
       interaction.dragLine(key, Math.round(toLayout(position).y));

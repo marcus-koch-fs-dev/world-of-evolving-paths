@@ -6,7 +6,7 @@ export const rounded = (position: Position): Position => ({ x: Math.round(positi
 
 /**
  * The event for a point that came to rest: its position, its height from the lane of its path (`lanes` by path id),
- * and where every point of the view is.
+ * where every point of the view is, and the height from its lane of every point of the view.
  */
 export function buildMoveEvent(
   points: PlacedPoint[],
@@ -17,7 +17,9 @@ export function buildMoveEvent(
   const positions = Object.fromEntries(points.map((point) => [point.id, rounded(point)]));
   const final = rounded(position);
   positions[id] = final;
-  const pathId = points.find((point) => point.id === id)?.pathId;
-  const lane = pathId === undefined ? 0 : (lanes[pathId] ?? 0);
-  return { id, ...final, offset: final.y - lane, positions };
+  const pathOf = new Map(points.map((point) => [point.id, point.pathId]));
+  const offsets = Object.fromEntries(
+    Object.entries(positions).map(([pointId, at]) => [pointId, at.y - (lanes[pathOf.get(pointId) ?? ''] ?? 0)]),
+  );
+  return { id, ...final, offset: offsets[id], offsets, positions };
 }

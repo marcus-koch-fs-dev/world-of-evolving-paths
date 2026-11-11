@@ -32,6 +32,13 @@ export type PointMoveEvent = {
    * the point at this height in every view, on its date.
    */
   offset: number;
+  /**
+   * The height from the lane of its path of every point of the view, by id, as `offset` is for the moved point, as the
+   * user sees them now. A point that is not pinned follows the point before it, so once you pass the new height of the
+   * moved point back, the points after it move along. Pass back the `offsets` of those points too to leave them where
+   * they are, so that a point moves alone.
+   */
+  offsets: Record<string, number>;
   /** Where every point of the view is right now. Pin them all to keep the layout exactly as the user sees it. */
   positions: Record<string, Position>;
 };

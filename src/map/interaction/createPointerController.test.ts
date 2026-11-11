@@ -51,6 +51,7 @@ function setup(
   const hooks = {
     pointAt: vi.fn(options.pointAt ?? (() => null)),
     onHover: vi.fn(),
+    onCursor: vi.fn(),
     onPointPress: vi.fn(() => true),
     onDragMove: vi.fn(),
     onDragEnd: vi.fn(),

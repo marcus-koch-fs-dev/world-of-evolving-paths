@@ -12,6 +12,8 @@ export type PointerHooks = {
   /** The id of the point at a world position, if any. */
   pointAt(world: Position): string | null;
   onHover(id: string | null): void;
+  /** The pointer is at a world position without a button down: the hooks show what can be done there with the cursor. */
+  onCursor(world: Position): void;
   /** A point was pressed. Return true to start dragging it. */
   onPointPress(id: string): boolean;
   /** Called while dragging with the position the point should have. */
@@ -162,6 +164,7 @@ export function createPointerController(
       const at = world(event);
       // A line that leaves the view is hovered like a point: the cursor changes and the line lights up
       hooks.onHover(hooks.pointAt(at) ?? hooks.leadAt(at));
+      hooks.onCursor(at);
     }
   };
 

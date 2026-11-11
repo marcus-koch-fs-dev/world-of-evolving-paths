@@ -20,6 +20,12 @@ describe('Demo app state', () => {
       expect(state.heights).toEqual({ b: 4 });
     });
 
+    it('leaves the points after it where they are, with the heights they had', () => {
+      const state = reduce(base(), { type: 'move', id: 'a', height: 50, followers: { b: 12 } });
+
+      expect(state.heights).toEqual({ a: 50, b: 12 });
+    });
+
     it('lets that height reach the data of another view, without a place on the time axis', () => {
       const moved = reduce(base(), { type: 'move', id: 'b', height: 321 });
       const period = periodOf('week', '2026-11-04');

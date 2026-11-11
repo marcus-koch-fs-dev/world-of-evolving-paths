@@ -9,6 +9,8 @@
 - Lines that run along the time axis keep apart from each other by themselves.
 - New event `onLineEndMove({ from, to, y })`: the user dragged the arrow at the end of a line up or down. Pass `y` back on the lead (`Lead.y`) or on the `through` entry to keep the line there.
 - New event `onLineSelect({ from, to, x, y, date, lanes, at })`: a line was clicked or right-clicked. New React control `LineMenu` for a tile menu at that place.
+- `onPointMove` also gives `offsets`: the height from its lane of every point of the view.
+- The cursor shows what a spot does: a hand over a point or a line, a cross over the end of a line that can be moved.
 - New option `timeLocked` (default `true`): a dragged point stays on its date and only moves across the time axis.
 - Heights in the data are distances from the lane of the path, not world positions: `y` alone on a point, `Lead.y` and `PathThrough.y`. The same number now fits every view and page. A point with only `y` sits on its date at that distance from its lane. `onPointMove` gives the new `offset`, `onPointAdd` and `onLineSelect` give `lanes`, and `onLineEndMove` reports `y` from the lane.
 - New option `snap`: dragged and added points snap to a grid.
@@ -26,6 +28,7 @@
 - The demo offers week, month and year, the same levels as the library. Double-click goes from the year to the month and the week.
 - A legend in the corner shows from which view on a point of each importance appears. It starts closed.
 - If a changed importance hides a point, a message says where it shows, with a button to go there.
+- A point moves alone: the points after it keep their heights when it is dragged (the demo pins them with `offsets`).
 - Points move only up and down and keep one height in every view. Where a line meets the edge is kept per period; without a dragged height it follows the heights of the two points.
 - Click or right-click a line to insert a point there. Deleting a point keeps its path connected.
 - Snap to grid in the settings.
