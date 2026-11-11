@@ -1,4 +1,5 @@
 import { fromDay, toDay } from '../dates.js';
+import { laneOffsets } from '../layout.js';
 import { tileWidth, xOfDate } from '../timeAxis.js';
 import type { PathInfo, PathThrough, PlacedPoint, PlacedWorld, Position } from '../types.js';
 import { buildEdges } from './edges.js';
@@ -65,6 +66,7 @@ function standIn(world: PlacedWorld, line: ThroughLine, side: LeadDraw['side'], 
 export function buildThrough(world: PlacedWorld, state: SceneState, tracks: Tracks): Found {
   const { period } = world;
   if (!period) return NOTHING;
+  const lanes = laneOffsets(world.paths);
   return throughLines(world, tracks).reduce<Found>((found, line) => {
     const before = { ...standIn(world, line, 'before', line.from), date: fromDay(period.start) };
     const after = { ...standIn(world, line, 'after', line.to), date: fromDay(period.end) };
@@ -90,6 +92,7 @@ export function buildThrough(world: PlacedWorld, state: SceneState, tracks: Trac
         anchor: leadAnchor(side, { x: 1, y: 0 }),
         span: { from: line.through.from, to: line.through.to },
         trackKey: throughKey(line.path.id, line.index),
+        lane: lanes.get(line.path.id) ?? 0,
       };
     };
     return {

@@ -124,23 +124,49 @@ export type ViewRequest = {
   edgeHeights?: Record<string, number>;
 };
 
+/** The height where a connection crosses the edge: the one the user dragged it to in this period, or the derived one. */
+type EdgeHeight = { kept?: number; derived?: number };
+
 /**
- * The height where a connection crosses the edge of the period: the one the user dragged it to in this period, or the
- * one on the straight line between its two points.
+ * Where a connection crosses the edge of the period: the height the user dragged it to in this period, and the one on
+ * the straight line between its two points.
  */
 function createEdgeHeights(heights: Record<string, number>, edgeHeights: Record<string, number>) {
   const end = (id: string | undefined, date: string): HeightAt => ({
     day: toDay(date),
     height: id === undefined ? undefined : heights[id],
   });
-  return (from: Lead, to: Lead, day: number): number | undefined => {
-    const kept = from.id && to.id ? edgeHeights[connectionKey(from.id, to.id)] : undefined;
-    return kept ?? heightBetween(end(from.id, from.date), end(to.id, to.date), day);
-  };
+  return (from: Lead, to: Lead, day: number): EdgeHeight => ({
+    kept: from.id && to.id ? edgeHeights[connectionKey(from.id, to.id)] : undefined,
+    derived: heightBetween(end(from.id, from.date), end(to.id, to.date), day),
+  });
+}
+
+/**
+ * The height of each of several lines that leave one point on one side, or run across one path. A dragged height always
+ * counts. A derived height counts only when no other line has the same: lines that would lie on top of each other
+ * get none, so the map spreads them as it does without heights.
+ */
+function heightsOfSiblings<T>(items: readonly T[], heightOf: (item: T) => EdgeHeight): (number | undefined)[] {
+  const found = items.map(heightOf);
+  const counts = found.reduce(
+    (all, { derived }) => (derived === undefined ? all : all.set(derived, (all.get(derived) ?? 0) + 1)),
+    new Map<number, number>(),
+  );
+  return found.map(
+    ({ kept, derived }) => kept ?? (derived !== undefined && counts.get(derived) === 1 ? derived : undefined),
+  );
 }
 
 /** A lead with a height, or as it is when there is none. */
 const withHeight = (lead: Lead, y: number | undefined): Lead => (y === undefined ? lead : { ...lead, y });
+
+/** The leads with the heights found for them, in the same order. */
+function withHeights(leads: Lead[] | undefined, heightOf: (lead: Lead) => EdgeHeight): Lead[] | undefined {
+  if (!leads) return undefined;
+  const found = heightsOfSiblings(leads, heightOf);
+  return leads.map((lead, index) => withHeight(lead, found[index]));
+}
 
 export type ViewResult = { data: PeriodData; pages: number; page: number };
 
@@ -181,22 +207,22 @@ export function buildPeriodData({
     // A line across the period is level: its height in the middle of the period
     const middle = period ? Math.round((period.start + period.end) / 2) : 0;
     return {
-      through: found.map((connection) => {
-        const y = edgeHeightOf(connection.from, connection.to, middle);
-        return {
+      through: (() => {
+        const ys = heightsOfSiblings(found, (connection) => edgeHeightOf(connection.from, connection.to, middle));
+        return found.map((connection, index) => ({
           ...connection,
           strength: tierAt(days, toDay(connection.to.date)),
-          ...(y === undefined ? {} : { y }),
-        };
-      }),
+          ...(ys[index] === undefined ? {} : { y: ys[index] }),
+        }));
+      })(),
     };
   };
   // A line that leaves a point meets the edge on the first or the last day of the period
   const leadsOf = (point: Pick<DemoPoint, 'id' | 'date' | 'incoming' | 'outgoing'>) => {
     const self: Lead = { id: point.id, title: '', date: point.date };
     return {
-      incoming: point.incoming?.map((lead) => withHeight(lead, edgeHeightOf(lead, self, period?.start ?? 0))),
-      outgoing: point.outgoing?.map((lead) => withHeight(lead, edgeHeightOf(self, lead, period?.end ?? 0))),
+      incoming: withHeights(point.incoming, (lead) => edgeHeightOf(lead, self, period?.start ?? 0)),
+      outgoing: withHeights(point.outgoing, (lead) => edgeHeightOf(self, lead, period?.end ?? 0)),
     };
   };
   const nest = (path: PathInfo) => ({

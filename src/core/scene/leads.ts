@@ -1,5 +1,6 @@
 import { toDay } from '../dates.js';
 import { formatPointDate } from '../format.js';
+import { laneOffsets } from '../layout.js';
 import type { Lead, PlacedPoint, PlacedWorld, Position } from '../types.js';
 import { buildEdges } from './edges.js';
 import { leadBaseY, leadEndX, leadKey } from './lineGeometry.js';
@@ -68,6 +69,7 @@ function leadsOfSide(
   leads: readonly Lead[],
   state: SceneState,
   tracks: Tracks,
+  lane: number,
 ): Found {
   return leads.reduce<Found>((found, lead, index) => {
     const stand = standIn(world, point, lead, side, index, leads.length, tracks);
@@ -90,6 +92,7 @@ function leadsOfSide(
       side,
       anchor: leadAnchor(side, { x: 1, y: 0 }),
       trackKey: stand.id,
+      lane,
     };
     return { edges: [...found.edges, edge], labels: [...found.labels, label] };
   }, NOTHING);
@@ -100,10 +103,11 @@ function leadsOfSide(
  * the edge in time, with the title and date of the point out there.
  */
 export function buildLeads(world: PlacedWorld, state: SceneState, tracks: Tracks): Found {
+  const lanes = laneOffsets(world.paths);
   return world.points
     .flatMap((point) => [
-      leadsOfSide(world, point, 'before', point.incoming ?? [], state, tracks),
-      leadsOfSide(world, point, 'after', point.outgoing ?? [], state, tracks),
+      leadsOfSide(world, point, 'before', point.incoming ?? [], state, tracks, lanes.get(point.pathId) ?? 0),
+      leadsOfSide(world, point, 'after', point.outgoing ?? [], state, tracks, lanes.get(point.pathId) ?? 0),
     ])
     .reduce<Found>(
       (all, part) => ({ edges: [...all.edges, ...part.edges], labels: [...all.labels, ...part.labels] }),

@@ -3,7 +3,6 @@ import { lanesOf } from '../../core/layout.js';
 import type { Turn } from '../../core/orientation.js';
 import { hitLead, hitLeadEnd, hitNode, reachAt } from '../../core/scene/hit.js';
 import { lineTargetAt, targetOfLead } from '../../core/scene/lineTarget.js';
-import { laneOfTrack } from '../../core/scene/tracks.js';
 import { dateAxisX } from '../../core/scene/viewEdges.js';
 import { snapToGrid } from '../../core/snap.js';
 import { dateAtX } from '../../core/timeAxis.js';
@@ -109,9 +108,8 @@ export function createPointerHooks({
       const points = new Map((model.world()?.points ?? []).map((point) => [point.id, point]));
       const target = lead && targetOfLead(lead, points);
       // The line stays where it was dragged until the app answers with new data that holds the height
-      const world = model.world();
-      if (y !== undefined && target && world)
-        options().onLineEndMove?.({ ...target, y: y - Math.round(laneOfTrack(world, key)) });
+      // The height goes to the app as a distance from the lane of the path of the line
+      if (y !== undefined && lead && target) options().onLineEndMove?.({ ...target, y: y - Math.round(lead.lane) });
       else interaction.dropLine(key);
       scene.rebuild();
     },

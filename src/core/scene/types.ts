@@ -85,6 +85,8 @@ export type LeadDraw = {
   span?: { from: Lead; to: Lead };
   /** The key of the line among the lines that run along the time axis. The end of the line can be dragged by it. */
   trackKey: string;
+  /** The y of the lane of the path the line belongs to. A height in the data is a distance from it. */
+  lane: number;
 };
 
 export type SceneState = {

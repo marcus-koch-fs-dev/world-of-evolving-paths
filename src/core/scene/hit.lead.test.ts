@@ -21,6 +21,7 @@ const after: LeadDraw = {
   color: '#fff',
   hovered: false,
   trackKey: 'lead:after:a:0',
+  lane: 0,
 };
 
 const before: LeadDraw = {
@@ -42,6 +43,7 @@ const before: LeadDraw = {
   color: '#fff',
   hovered: false,
   trackKey: 'lead:before:a:0',
+  lane: 0,
 };
 
 describe('Hit test of the end of a line', () => {

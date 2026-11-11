@@ -182,3 +182,43 @@ describe('Period data for the demo', () => {
     });
   });
 });
+
+describe('Heights of the lines of a fork', () => {
+  const month = periodOf('month', '2026-11-11');
+  const fork = (dateOfSecond: string): DemoPoint[] => [
+    makePoint({ id: 'a', date: '2026-11-10', importance: 3, next: ['b', 'c'] }),
+    makePoint({ id: 'b', date: '2026-12-20', importance: 3 }),
+    makePoint({ id: 'c', date: dateOfSecond, importance: 3 }),
+  ];
+  const outgoingOf = (points: DemoPoint[], heights: Record<string, number>) =>
+    buildPeriodData({ paths: [makePath('combat')], points, checkIns: [], period: month, page: 0, heights }).data
+      .paths[0].points[0].outgoing;
+
+  it('leaves lines that would get the same height to the map, so it spreads them', () => {
+    const lines = outgoingOf(fork('2026-12-20'), { a: 40 });
+
+    expect(lines).toHaveLength(2);
+    expect(lines?.map((line) => line.y)).toEqual([undefined, undefined]);
+  });
+
+  it('gives each line its own height when they differ', () => {
+    const lines = outgoingOf(fork('2026-12-20'), { a: 40, b: 100, c: -100 });
+
+    expect(lines?.map((line) => line.y)).toEqual([expect.any(Number), expect.any(Number)]);
+    expect(lines?.[0].y).not.toBe(lines?.[1].y);
+  });
+
+  it('always keeps a height the user dragged a line to', () => {
+    const lines = buildPeriodData({
+      paths: [makePath('combat')],
+      points: fork('2026-12-20'),
+      checkIns: [],
+      period: month,
+      page: 0,
+      heights: { a: 40 },
+      edgeHeights: { 'a>b': 77, 'a>c': 77 },
+    }).data.paths[0].points[0].outgoing;
+
+    expect(lines?.map((line) => line.y)).toEqual([77, 77]);
+  });
+});

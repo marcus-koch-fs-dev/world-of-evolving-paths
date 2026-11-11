@@ -3,7 +3,7 @@ import { makePath, makePoint } from '../../../tests/fixtures.js';
 import { toDay } from '../dates.js';
 import type { PathInfo, PlacedPoint, PlacedWorld } from '../types.js';
 import { LINE_GAP } from './lineGeometry.js';
-import { laneOfTrack, lineTracks, separateTracks, type Track } from './tracks.js';
+import { lineTracks, separateTracks, type Track } from './tracks.js';
 
 const track = (key: string, y: number, x0 = 0, x1 = 1000, fixed = false): Track => ({ key, x0, x1, y, fixed });
 
@@ -130,15 +130,8 @@ describe('Tracks of a world', () => {
     };
     const both = world([makePath('gym', '#ff3b3b', 0), kept]);
 
-    expect(lineTracks(both).get('through:read:0')).toBe(laneOfTrack(both, 'through:read:0') + 30);
-    expect(laneOfTrack(both, 'through:read:0')).toBe(100);
-  });
-
-  it('finds the lane of a line that leaves a point by the path of the point', () => {
-    const point = { ...makePoint({ id: 'a:b', pathId: 'gym', date: '2026-11-10' }), x: 0, y: 0 } as PlacedPoint;
-    const both = world([makePath('gym', '#ff3b3b', 0), makePath('read', '#3a86ff', 1)], [point]);
-
-    expect(laneOfTrack(both, 'lead:after:a:b:0')).toBe(-100);
+    // the lane of the second of two paths is 100, so 30 from it is 130
+    expect(lineTracks(both).get('through:read:0')).toBe(130);
   });
 
   it('puts a line at the height the user is dragging it to, before the data holds it', () => {

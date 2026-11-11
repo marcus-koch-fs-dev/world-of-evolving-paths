@@ -90,20 +90,6 @@ function wantedTracks(world: PlacedWorld, overrides: TrackOverrides): Track[] {
   return [...spanning, ...leaving];
 }
 
-/**
- * The y of the lane of the path a line belongs to, by the key of the line (`leadKey` or `throughKey`). Heights in the
- * data are distances from it. 0 when the line is not in the world.
- */
-export function laneOfTrack(world: PlacedWorld, key: string): number {
-  const lanes = laneOffsets(world.paths);
-  const inner = key.slice(key.indexOf(':') + 1, key.lastIndexOf(':'));
-  if (key.startsWith('through:')) return lanes.get(inner) ?? 0;
-  // A lead key holds the side, then the id of its point, which may itself contain a colon
-  const pointId = inner.slice(inner.indexOf(':') + 1);
-  const pathId = world.points.find((point) => point.id === pointId)?.pathId;
-  return pathId === undefined ? 0 : (lanes.get(pathId) ?? 0);
-}
-
 /** The y of every line that runs along the time axis in a world, keyed by `leadKey` and `throughKey`. */
 export function lineTracks(world: PlacedWorld, overrides: TrackOverrides = new Map()): Tracks {
   return separateTracks(wantedTracks(world, overrides));
