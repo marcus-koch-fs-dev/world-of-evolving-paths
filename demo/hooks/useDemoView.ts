@@ -41,8 +41,20 @@ export function useDemoView(state: DemoState, navigation: ViewNavigation, today:
         period,
         page: navigation.page,
         pins,
+        heights: state.heights,
+        lineHeights: state.lineHeights,
       }),
-    [state.paths, state.points, state.checkIns, travel.day, period, navigation.page, pins],
+    [
+      state.paths,
+      state.points,
+      state.checkIns,
+      state.heights,
+      state.lineHeights,
+      travel.day,
+      period,
+      navigation.page,
+      pins,
+    ],
   );
   const periods = useMemo<PeriodMap>(() => ({ [view]: result.data }), [view, result.data]);
 

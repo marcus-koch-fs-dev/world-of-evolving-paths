@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { type Orientation, VIEW_LEVELS } from 'world-of-evolving-paths';
-import { toggledLevels } from '../app-logic/levels';
+import { DEMO_LEVELS, toggledLevels } from '../app-logic/levels';
 import type { SettingsValues } from '../hooks/useDemoSettings';
 
 export const LOCALES = [
@@ -25,11 +25,12 @@ type Props = {
   children?: ReactNode;
 };
 
-type FlagKey = 'wavy' | 'pointsLocked' | 'animate';
+type FlagKey = 'wavy' | 'pointsLocked' | 'snap' | 'animate';
 
 const FLAGS: { key: FlagKey; label: string }[] = [
   { key: 'wavy', label: 'Wave on the lines' },
   { key: 'pointsLocked', label: 'Lock points' },
+  { key: 'snap', label: 'Snap to grid' },
   { key: 'animate', label: 'Animate' },
 ];
 
@@ -50,7 +51,7 @@ export function SettingsPanel({ values, onChange, children }: Props) {
 
       <fieldset>
         <legend>Levels in the view bar</legend>
-        {VIEW_LEVELS.map((option) => (
+        {VIEW_LEVELS.filter((option) => DEMO_LEVELS.includes(option.level)).map((option) => (
           <label key={option.level}>
             <input
               type="checkbox"

@@ -169,20 +169,19 @@ describe('Period data for the demo', () => {
       expect(result.page).toBe(result.pages - 1);
     });
 
-    it('pins points at the positions the user chose', () => {
+    it('pins points at the height the user chose, and leaves their place on the time axis to the date', () => {
       const result = buildPeriodData({
         paths,
         points,
         period: week,
         page: 0,
         checkIns: [],
-        pins: { a1: { x: 5, y: 6 } },
+        pins: { a1: { y: 6 } },
       });
 
-      expect(result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1')).toMatchObject({
-        x: 5,
-        y: 6,
-      });
+      const pinned = result.data.paths.flatMap((path) => path.points).find((point) => point.id === 'a1');
+      expect(pinned?.y).toBe(6);
+      expect(pinned?.x).toBeUndefined();
     });
   });
 });

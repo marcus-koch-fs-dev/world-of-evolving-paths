@@ -72,3 +72,90 @@ body,
   display: flex;
   gap: 4px;
 }
+
+.demo-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.demo-legend-title {
+  color: #8a8f80;
+}
+
+/* One row per importance: the circle in its real size, the number, and the widest view that shows it */
+.demo-legend-row {
+  display: grid;
+  grid-template-columns: 26px 14px 1fr;
+  align-items: center;
+  gap: 6px;
+  color: #8a8f80;
+  opacity: 0.4;
+}
+
+.demo-legend-row.is-shown {
+  color: #e8eadf;
+  opacity: 1;
+}
+
+.demo-legend-dot {
+  justify-self: center;
+  min-width: 6px;
+  min-height: 6px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.demo-legend-number {
+  text-align: center;
+}
+
+.demo-period-picker {
+  position: relative;
+  display: inline-flex;
+}
+
+.demo-period-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 260px;
+  padding: 10px;
+  border: 1px solid #3a3e33;
+  border-radius: 12px;
+  background: #1b1d17;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+}
+
+.demo-period-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-period-row > span {
+  min-width: 40px;
+  color: #8a8f80;
+}
+
+.demo-period-months {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.demo-years {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.demo-years-count {
+  min-width: 18px;
+  text-align: center;
+}
