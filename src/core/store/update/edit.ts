@@ -1,4 +1,4 @@
-import { withoutPointLayout } from '../layout.js';
+import { withoutPointLayout } from '../layoutEdits.js';
 import { compareByDate, indexPoints, sortedPoints } from '../order.js';
 import type { Branch, Store, StorePath, StorePoint } from '../types.js';
 import { keepArrows } from './reshape.js';

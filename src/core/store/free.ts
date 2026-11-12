@@ -2,7 +2,8 @@ import { fromDay, toDay } from '../dates.js';
 import { laneOffsets } from '../lanes.js';
 import type { Position } from '../types.js';
 import { createLookup, type Lookup } from './chains.js';
-import { keptFreePlace, keptPointHeight, withFreePlaces } from './layout.js';
+import { keptFreePlace, keptPointHeight } from './layout.js';
+import { withFreePlaces } from './layoutEdits.js';
 import { defaultHeight } from './reader.js';
 import type { Store } from './types.js';
 

@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useState } from 'react';
 import type { NextPointInput } from '../types.js';
-import { isBeforeFollowed, nextPointError } from './nextPointError.js';
+import { isBeforeFollowed, nextPointError, startsBeforeFork } from './nextPointError.js';
 
 type Props = {
   /** The date the field starts with, usually the date of the point the new one follows. */
@@ -18,11 +18,22 @@ export function NextPointPanel({ defaultDate, startsNewBranch, onAddNext, onDone
   const [newBranch, setNewBranch] = useState(startsNewBranch);
   const [error, setError] = useState<string | null>(null);
 
-  const earlier = isBeforeFollowed(date, defaultDate);
+  const beforeFork = startsBeforeFork(date, defaultDate, newBranch);
+  const earlier = !newBranch && isBeforeFollowed(date, defaultDate);
+
+  // A message belongs to the input it was made for, so it goes away when the user changes something
+  const change =
+    <T,>(set: (value: T) => void) =>
+    (value: T) => {
+      set(value);
+      setError(null);
+    };
+  const [changeTitle, changeDate, changeBranch] = [change(setTitle), change(setDate), change(setNewBranch)];
 
   const submit = () => {
     const missing = nextPointError(title, date);
     if (missing) return setError(missing);
+    if (beforeFork) return; // the message under the date says why
     const problem = onAddNext({ title: title.trim(), date, newBranch });
     if (problem) return setError(problem);
     onDone();
@@ -38,16 +49,17 @@ export function NextPointPanel({ defaultDate, startsNewBranch, onAddNext, onDone
       <input
         value={title}
         placeholder="Name"
-        onChange={(event) => setTitle(event.target.value)}
+        onChange={(event) => changeTitle(event.target.value)}
         onKeyDown={submitOnEnter}
       />
       <label>
         Date (required)
-        <input type="date" required value={date} onChange={(event) => setDate(event.target.value)} />
+        <input type="date" required value={date} onChange={(event) => changeDate(event.target.value)} />
       </label>
       {earlier && <p className="pw-warn">This date is before the point it follows, so the line will run backwards.</p>}
+      {beforeFork && <p className="pw-warn">A new branch cannot start before the point it forks from.</p>}
       <label className="pw-inline">
-        <input type="checkbox" checked={newBranch} onChange={(event) => setNewBranch(event.target.checked)} />
+        <input type="checkbox" checked={newBranch} onChange={(event) => changeBranch(event.target.checked)} />
         As a new branch (forks off here)
       </label>
       <button type="button" onClick={submit}>

@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { isBeforeFollowed, nextPointError, startsNewBranchByDefault } from './nextPointError.js';
+import { isBeforeFollowed, nextPointError, startsBeforeFork, startsNewBranchByDefault } from './nextPointError.js';
 
 describe('Next point input', () => {
+  describe('when a new branch gets a date before the point it forks from', () => {
+    it('is flagged, and the same day or an ordinary next point is not', () => {
+      expect(startsBeforeFork('2026-01-01', '2026-02-01', true)).toBe(true);
+      expect(startsBeforeFork('2026-02-01', '2026-02-01', true)).toBe(false);
+      expect(startsBeforeFork('2026-01-01', '2026-02-01', false)).toBe(false);
+      expect(startsBeforeFork('', '2026-02-01', true)).toBe(false);
+    });
+  });
+
   describe('after a fork point', () => {
     it('starts a new branch by default, also when a branch already leaves from it', () => {
       expect(startsNewBranchByDefault('crossroad', false)).toBe(true);

@@ -1,5 +1,6 @@
 import type { Turn } from '../../core/orientation.js';
 import { hitConnection, hitLeadEnd, hitLeadLine, reachAt } from '../../core/scene/hit.js';
+import type { PlacedPoint, PlacedWorld } from '../../core/types.js';
 import type { PointerHooks } from '../interaction/createPointerController.js';
 import type { WorldModel } from '../state/createWorldModel.js';
 import type { InteractionState } from './createInteractionState.js';
@@ -11,8 +12,12 @@ const PATH_PREFIX = 'path:';
 /** The key of a drag that moves a whole path, as the pointer controller passes it around. */
 export const pathKeyOf = (pathId: string) => `${PATH_PREFIX}${pathId}`;
 
-/** The path id in the key of a path drag, or null for the key of an arrow. */
-export const pathIdOfKey = (key: string) => (key.startsWith(PATH_PREFIX) ? key.slice(PATH_PREFIX.length) : null);
+/**
+ * The path id in the key of a path drag, or null for the key of an arrow. An arrow key always holds a slash
+ * (`pathId/branchId@date`) and a path id never does, so a path whose id starts with `path:` cannot be mistaken.
+ */
+export const pathIdOfKey = (key: string) =>
+  key.startsWith(PATH_PREFIX) && !key.includes('/') ? key.slice(PATH_PREFIX.length) : null;
 
 type Dependencies = {
   model: WorldModel;
@@ -37,6 +42,16 @@ type At = { x: number; y: number };
 export function createLineGrabs({ model, scene, interaction, edits, toLayout, zoom }: Dependencies): LineGrabs {
   // Where a path was taken by its line
   let pathGrab: { key: string; at: At } | null = null;
+  // The points of the world by id, made again only when the world is another one: hovering asks on every mouse move
+  let indexed: { world: PlacedWorld | null; points: Map<string, PlacedPoint>; ids: Set<string> } | null = null;
+
+  const pointsOfWorld = () => {
+    const world = model.world();
+    if (indexed?.world === world) return indexed;
+    const points = new Map((world?.points ?? []).map((point) => [point.id, point]));
+    indexed = { world, points, ids: new Set(points.keys()) };
+    return indexed;
+  };
 
   const layoutAt = (position: At): At => {
     const at = toLayout(position);
@@ -65,10 +80,10 @@ export function createLineGrabs({ model, scene, interaction, edits, toLayout, zo
     pathLineAt(world) {
       if (!edits.canMove()) return null;
       const reach = reachAt(zoom());
-      const points = new Map((model.world()?.points ?? []).map((point) => [point.id, point]));
+      const { points, ids } = pointsOfWorld();
       const current = scene.current();
       const lead = hitLeadLine(current.leads, world, reach);
-      const edge = lead ? null : hitConnection(current.edges, new Set(points.keys()), world, reach);
+      const edge = lead ? null : hitConnection(current.edges, ids, world, reach);
       const pathId = lead ? lead.pathId : edge && points.get(edge.from)?.pathId;
       return pathId === undefined || pathId === null ? null : pathKeyOf(pathId);
     },

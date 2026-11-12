@@ -1,5 +1,5 @@
 import { toDay } from '../dates.js';
-import { type Chain, chainsOfPath, type Lookup, type PathChains } from './chains.js';
+import { type Chain, chainsOfPath, type Located, type Lookup, type PathChains } from './chains.js';
 import { indexPoints, type PointInfo } from './order.js';
 import type { Level, StorePath } from './types.js';
 
@@ -49,11 +49,16 @@ export function createStoreCache(): StoreCache {
   return {
     view(paths) {
       const current = new Set(paths);
+      // A point is searched for once, then remembered for this view: a reader asks for the same neighbours again and again
+      const found = new Map<string, Located | undefined>();
       const lookup: Lookup = {
         point(id) {
+          if (found.has(id)) return found.get(id);
           const path = paths.find((candidate) => infosOf(candidate).has(id));
           const info = path && infosOf(path).get(id);
-          return path && info ? { info, path } : undefined;
+          const located = path && info ? { info, path } : undefined;
+          found.set(id, located);
+          return located;
         },
         branch(id) {
           const path = paths.find((candidate) => candidate.branches.some((branch) => branch.id === id));

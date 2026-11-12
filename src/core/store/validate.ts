@@ -1,5 +1,5 @@
 import { isIsoDate } from '../dates.js';
-import { compareByDate, indexPoints } from './order.js';
+import { indexPoints } from './order.js';
 import type { StorePath } from './types.js';
 
 /** The ids that appear more than once, each one once. */
@@ -46,7 +46,8 @@ export function validateStore(paths: readonly StorePath[]): string[] {
     ...branches
       .filter((branch) => {
         const split = branch.splitsAt === undefined ? undefined : infos.get(branch.splitsAt);
-        return split !== undefined && branch.points.some((point) => compareByDate(point, split.point) < 0);
+        // By date only: a point on the same day as the split point is fine, whatever its id
+        return split !== undefined && branch.points.some((point) => point.date < split.point.date);
       })
       .map((branch) => `Branch "${branch.id}" has a point before the point it splits at.`),
     ...branches

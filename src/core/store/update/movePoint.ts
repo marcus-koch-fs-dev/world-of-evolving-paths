@@ -1,4 +1,5 @@
-import { keptPointHeight, withArrowHeights, withPointHeights } from '../layout.js';
+import { keptPointHeight } from '../layout.js';
+import { withArrowHeights, withPointHeights } from '../layoutEdits.js';
 import { LEVELS } from '../levels.js';
 import type { Level, Store } from '../types.js';
 import { freezeArrowsAround } from './freeze.js';

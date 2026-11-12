@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { replacePath, storeChanges } from './changes.js';
-import { withArrowHeights, withFreePlaces, withoutHeights, withPointHeights } from './layout.js';
+import { withArrowHeights, withFreePlaces, withoutHeights, withPointHeights } from './layoutEdits.js';
 import { createStore } from './levels.js';
 import type { Branch, Store, StorePath, StorePoint } from './types.js';
 import { addPoint, removePoint, updatePath, updatePoint } from './update/edit.js';

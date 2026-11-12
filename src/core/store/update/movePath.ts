@@ -1,6 +1,6 @@
 import { bordersBetween } from '../boundaries.js';
 import { levelChains } from '../chains.js';
-import { withArrowHeights, withPointHeights } from '../layout.js';
+import { withArrowHeights, withPointHeights } from '../layoutEdits.js';
 import { indexPoints } from '../order.js';
 import { createLevelReader } from '../reader.js';
 import type { Level, Store } from '../types.js';

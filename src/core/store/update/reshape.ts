@@ -1,5 +1,5 @@
 import { type Chain, levelChains } from '../chains.js';
-import { withArrowHeights } from '../layout.js';
+import { withArrowHeights } from '../layoutEdits.js';
 import { LEVELS } from '../levels.js';
 import { createLevelReader } from '../reader.js';
 import type { Level, Store } from '../types.js';

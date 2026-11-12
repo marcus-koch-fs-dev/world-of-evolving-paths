@@ -1,4 +1,4 @@
-import { withoutHeights } from '../layout.js';
+import { withoutHeights } from '../layoutEdits.js';
 import type { Level, Store } from '../types.js';
 
 /** Lets go of the kept heights of some points and arrows on a level: they fall back to the week or the default. */

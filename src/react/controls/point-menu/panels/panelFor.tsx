@@ -55,7 +55,7 @@ const PANELS: Record<PanelId, (context: Context) => ReactNode> = {
       onUpdate={menu.onUpdate}
     />
   ),
-  remove: ({ menu }) => <DeletePanel onDelete={menu.onDelete} />,
+  remove: ({ menu }) => <DeletePanel onDelete={menu.onDelete} isFork={menu.isFork ?? false} />,
 };
 
 /** The panel a tile opens. */

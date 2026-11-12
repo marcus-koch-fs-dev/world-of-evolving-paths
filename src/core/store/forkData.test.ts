@@ -72,6 +72,14 @@ describe('Checking the points of a fork', () => {
     });
   });
 
+  describe('when a fork has a point on the same day as the point it splits at', () => {
+    it('finds nothing wrong, whatever the ids are', () => {
+      const sameDay = path('b', [branch('b-fork', [point('a0', '2026-11-20')], 'a2')]);
+
+      expect(validateStore([parent, sameDay])).toEqual([]);
+    });
+  });
+
   describe('when every point of a fork comes after the point it splits at', () => {
     it('finds nothing wrong', () => {
       expect(validateStore([parent, fork])).toEqual([]);
