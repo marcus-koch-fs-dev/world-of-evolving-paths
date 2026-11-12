@@ -5,15 +5,17 @@ import { isBeforeFollowed, nextPointError } from './nextPointError.js';
 type Props = {
   /** The date the field starts with, usually the date of the point the new one follows. */
   defaultDate: string;
+  /** Does the box "As a new branch" start checked? It does after a fork point. */
+  startsNewBranch: boolean;
   onAddNext: (input: NextPointInput) => string | null;
   onDone: () => void;
 };
 
 /** Panel to create the point that follows, in the same branch or as the first point of a new branch that forks off. */
-export function NextPointPanel({ defaultDate, onAddNext, onDone }: Props) {
+export function NextPointPanel({ defaultDate, startsNewBranch, onAddNext, onDone }: Props) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(defaultDate);
-  const [newBranch, setNewBranch] = useState(false);
+  const [newBranch, setNewBranch] = useState(startsNewBranch);
   const [error, setError] = useState<string | null>(null);
 
   const earlier = isBeforeFollowed(date, defaultDate);

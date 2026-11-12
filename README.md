@@ -161,7 +161,7 @@ What the user can do in the [live demo](https://marcus-koch-fs-dev.github.io/wor
 - **Select:** click. Click the empty area to deselect.
 - **Move:** drag up or down. It stays on its date.
 - **Add:** double-click the empty area.
-- **Add the next point:** point menu, **Next point**. **As a new branch** starts a fork.
+- **Add the next point:** point menu, **Next point**. **As a new branch** starts a fork, and is already on after a fork point.
 - **Change:** point menu, **Properties** (status, kind, name, color, date, prio, note).
 - **Delete:** point menu, **Delete**. The line stays and joins its neighbours.
 - **Lower the prio:** the point may leave the view. A message says where it shows now.
