@@ -5,7 +5,6 @@ import { createEdgeLayer } from './createEdgeLayer.js';
 import { createHereLayer } from './createHereLayer.js';
 import { createLeadLayer } from './createLeadLayer.js';
 import { createNodeLayer } from './createNodeLayer.js';
-import { createRingLayer } from './createRingLayer.js';
 import { createTextPool } from './createTextPool.js';
 import { BOB_MS, easeOut, now, RING_MS } from './timing.js';
 
@@ -41,7 +40,6 @@ export function createPixiRenderer(): PixiRenderer {
   const edges = createEdgeLayer();
   const nodes = createNodeLayer(texts);
   const heres = createHereLayer(texts);
-  const rings = createRingLayer();
   const leads = createLeadLayer(texts);
 
   const applyCamera = () => {
@@ -80,7 +78,6 @@ export function createPixiRenderer(): PixiRenderer {
     edges.sync(next.edges);
     nodes.sync(next.nodes);
     heres.sync(next.heres);
-    rings.sync(next.rings);
     leads.sync(next.leads);
     keepTicking = edges.isAnimated() || nodes.isAnimated() || heres.isAnimated();
     app.render();
@@ -107,15 +104,7 @@ export function createPixiRenderer(): PixiRenderer {
       }
       app = created;
       host.appendChild(created.canvas);
-      world.addChild(
-        edges.lines,
-        edges.glow,
-        edges.lit,
-        rings.container,
-        leads.container,
-        nodes.container,
-        heres.container,
-      );
+      world.addChild(edges.lines, edges.glow, edges.lit, leads.container, nodes.container, heres.container);
       created.stage.addChild(world);
       created.ticker.maxFPS = MAX_FPS;
       created.ticker.add(tick);

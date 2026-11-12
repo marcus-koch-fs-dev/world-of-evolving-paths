@@ -43,6 +43,7 @@ function setup(
     leadAt?: PointerHooks['leadAt'];
     onLineClick?: PointerHooks['onLineClick'];
     lineEndAt?: PointerHooks['lineEndAt'];
+    pathLineAt?: PointerHooks['pathLineAt'];
     offset?: { left: number; top: number };
   } = {},
 ) {
@@ -58,6 +59,8 @@ function setup(
     onBackgroundClick: vi.fn(),
     onLineClick: vi.fn(options.onLineClick ?? (() => false)),
     lineEndAt: vi.fn(options.lineEndAt ?? (() => null)),
+    pathLineAt: vi.fn(options.pathLineAt ?? (() => null)),
+    onLineGrab: vi.fn(),
     onLineEndMove: vi.fn(),
     onLineEndRelease: vi.fn(),
     onLineEndCancel: vi.fn(),
@@ -183,6 +186,41 @@ describe('Pointer controller', () => {
 
     it('is a click on the line when it did not move', () => {
       const { fire, hooks } = setup({ lineEndAt: () => 'lead:after:a:0', onLineClick: () => true });
+
+      fire('pointerdown');
+      fire('pointerup');
+
+      expect(hooks.onLineEndRelease).not.toHaveBeenCalled();
+      expect(hooks.onLineClick).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('when the line of a path is dragged', () => {
+    it('moves that path, tells the hooks where it was taken, and does not pan the map', () => {
+      const { fire, hooks, camera } = setup({ pathLineAt: () => 'path:gym' });
+      const before = camera.get();
+
+      fire('pointerdown', { clientX: 10, clientY: 20 });
+      fire('pointermove', { clientX: 10, clientY: 70, buttons: 1 });
+      fire('pointerup', { clientX: 10, clientY: 70 });
+
+      expect(hooks.onLineGrab).toHaveBeenCalledWith('path:gym', expect.anything());
+      expect(hooks.onLineEndMove).toHaveBeenCalledWith('path:gym', expect.anything());
+      expect(hooks.onLineEndRelease).toHaveBeenCalledWith('path:gym');
+      expect(camera.get()).toEqual(before);
+    });
+
+    it('prefers the arrow at the end of a line over the line itself', () => {
+      const { fire, hooks } = setup({ lineEndAt: () => 'lead:after:a:0', pathLineAt: () => 'path:gym' });
+
+      fire('pointerdown');
+      fire('pointermove', { clientX: 0, clientY: 50, buttons: 1 });
+
+      expect(hooks.onLineEndMove).toHaveBeenCalledWith('lead:after:a:0', expect.anything());
+    });
+
+    it('is a click on the line when it did not move', () => {
+      const { fire, hooks } = setup({ pathLineAt: () => 'path:gym', onLineClick: () => true });
 
       fire('pointerdown');
       fire('pointerup');

@@ -1,5 +1,5 @@
 import type { Turn } from '../orientation.js';
-import { leadAnchor } from './leads.js';
+import { leadAnchor } from './arrows.js';
 import type { Scene } from './types.js';
 
 /**
@@ -23,7 +23,6 @@ export function turnScene(scene: Scene, turn: Turn): Scene {
     })),
     nodes: scene.nodes.map(turn),
     heres: scene.heres.map(turn),
-    rings: scene.rings.map(turn),
     leads: scene.leads.map((lead) => ({
       ...turn(lead),
       line: lead.line.map(turn),

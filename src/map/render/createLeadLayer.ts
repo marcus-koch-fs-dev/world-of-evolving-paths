@@ -1,5 +1,5 @@
 import { Container, Graphics, type Text } from 'pixi.js';
-import { LEAD_ARROW_SIZE, LEAD_FONT_SIZE } from '../../core/scene/leads.js';
+import { LEAD_ARROW_SIZE, LEAD_FONT_SIZE } from '../../core/scene/arrows.js';
 import type { LeadDraw } from '../../core/scene/types.js';
 import { createSlotMap } from './createSlotMap.js';
 import type { TextPool } from './createTextPool.js';

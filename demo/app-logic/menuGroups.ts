@@ -16,11 +16,14 @@ export type MenuState = {
   settingsOpen: boolean;
   /** The zoom of the map, 1 is 100 %. */
   zoom: number;
+  /** In the free view, points and paths can be moved in every direction. */
+  freeMove: boolean;
 };
 
 export type MenuActions = {
   changeLevel: (level: ViewLevel | null) => void;
   reroll: () => void;
+  toggleFreeMove: () => void;
   changeMode: (mode: DemoMode) => void;
   toggleSettings: () => void;
   zoomBy: (factor: number) => void;
@@ -76,7 +79,7 @@ const mapGroup = ({ zoom }: MenuState, actions: MenuActions): PanelGroup => ({
   ],
 });
 
-const layoutGroup = ({ mode, level }: MenuState, actions: MenuActions): PanelGroup => ({
+const layoutGroup = ({ mode, level, freeMove }: MenuState, actions: MenuActions): PanelGroup => ({
   id: 'work',
   label: 'Layout',
   tiles:
@@ -84,11 +87,20 @@ const layoutGroup = ({ mode, level }: MenuState, actions: MenuActions): PanelGro
       ? [
           {
             id: 'reroll',
-            label: 'Reroll',
-            title: 'Generate another layout',
+            label: 'Reset',
+            title: 'Forget the heights you set in this view',
             glyph: '⟳',
             disabled: level === null,
             onClick: actions.reroll,
+          },
+          {
+            id: 'free-move',
+            label: 'Move',
+            title: 'Move points and paths freely in the free view, without the time axis',
+            glyph: '✥',
+            active: freeMove,
+            disabled: level !== null,
+            onClick: actions.toggleFreeMove,
           },
         ]
       : [],

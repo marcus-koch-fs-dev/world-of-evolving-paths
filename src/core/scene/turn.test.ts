@@ -17,7 +17,6 @@ const scene = {
   ],
   nodes: [{ id: 'a', x: 1, y: 2, title: 'A' }],
   heres: [{ id: 'h', x: 7, y: 9 }],
-  rings: [{ id: 'r', x: 4, y: 6, radius: 30, dragged: false }],
   leads: [
     {
       id: 'l',
@@ -48,7 +47,6 @@ describe('Turning the scene', () => {
     expect(turned.edges[1].lit).toBeNull();
     expect(turned.nodes[0]).toMatchObject({ id: 'a', x: 2, y: 1, title: 'A' });
     expect(turned.heres[0]).toEqual({ id: 'h', x: 9, y: 7 });
-    expect(turned.rings[0]).toMatchObject({ x: 6, y: 4, radius: 30 });
   });
 
   it('turns a label with its point and lets the text grow away along the new direction of time', () => {

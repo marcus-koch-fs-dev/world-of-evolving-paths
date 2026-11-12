@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PathWorldOptions } from '../options.js';
 import { createBoundaryChecks } from './boundary.js';
 
-const options = (extra: Partial<PathWorldOptions>): PathWorldOptions => ({ periods: {}, view: 'v', ...extra });
+const options = (extra: Partial<PathWorldOptions>): PathWorldOptions => ({ store: { paths: [] }, view: 'v', ...extra });
 
 describe('Boundary checks', () => {
   describe('when today is wrong', () => {

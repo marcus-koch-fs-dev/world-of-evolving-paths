@@ -24,7 +24,11 @@ export type PointerHooks = {
   onLineClick(world: Position): boolean;
   /** The key of the line whose end (the arrow at the edge of the view) is at a world position, if any. */
   lineEndAt(world: Position): string | null;
-  /** The end of a line is dragged to this world position. */
+  /** The key of the path whose line (not its arrow) is at a world position, to be dragged as a whole. Null if none. */
+  pathLineAt(world: Position): string | null;
+  /** A line, or the end of one, was taken at this world position. `onLineEndMove` follows while it is dragged. */
+  onLineGrab(key: string, world: Position): void;
+  /** The end of a line, or a whole path by its line, is dragged to this world position. */
   onLineEndMove(key: string, world: Position): void;
   /** The end of a line was let go after it was dragged. */
   onLineEndRelease(key: string): void;
@@ -138,8 +142,11 @@ export function createPointerController(
     }
     // The arrow at the end of a line is taken to move that line, not the map
     const end = id === null ? hooks.lineEndAt(at) : null;
-    if (end !== null) {
-      lineEnd = end;
+    // Then the line itself, which moves its whole path
+    const grabbed = end ?? (id === null ? hooks.pathLineAt(at) : null);
+    if (grabbed !== null) {
+      lineEnd = grabbed;
+      hooks.onLineGrab(grabbed, at);
       return;
     }
     if (id === null) pan.start({ x: event.clientX, y: event.clientY });

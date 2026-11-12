@@ -7,6 +7,8 @@ type Props = {
   level: ViewLevel | null;
   onLevelChange: (level: ViewLevel | null) => void;
   onReroll: () => void;
+  freeMove: boolean;
+  onFreeMoveToggle: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onModeChange: (mode: DemoMode) => void;
@@ -20,10 +22,18 @@ export function MainMenu(props: Props) {
   const zoom = useCameraZoom(handle);
 
   const groups = menuGroups(
-    { levels: props.levels, level: props.level, mode: props.mode, settingsOpen: props.settingsOpen, zoom },
+    {
+      levels: props.levels,
+      level: props.level,
+      mode: props.mode,
+      settingsOpen: props.settingsOpen,
+      zoom,
+      freeMove: props.freeMove,
+    },
     {
       changeLevel: props.onLevelChange,
       reroll: props.onReroll,
+      toggleFreeMove: props.onFreeMoveToggle,
       changeMode: props.onModeChange,
       toggleSettings: props.onSettingsToggle,
       zoomBy: handle.zoomBy,

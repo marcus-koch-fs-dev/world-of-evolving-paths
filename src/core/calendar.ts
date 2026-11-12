@@ -1,4 +1,14 @@
-import { formatDate, formatDayMonth, fromDay, isoWeekNumber, monthName, monthSpan, toDay, weekdayOf } from './dates.js';
+import {
+  formatDate,
+  formatDayMonth,
+  fromDay,
+  isIsoDate,
+  isoWeekNumber,
+  monthName,
+  monthSpan,
+  toDay,
+  weekdayOf,
+} from './dates.js';
 import { formatMonthYearLong, formatNumericDate, weekPrefix } from './format.js';
 
 export type ViewLevel = 'week' | 'month' | 'year';
@@ -119,17 +129,15 @@ export function periodOf(level: ViewLevel, iso: string, options: CalendarOptions
 export function periodFromKey(key: string): Period | null {
   const match = PERIOD_KEY.exec(key);
   if (!match) return null;
-  try {
-    const level = match[1] as ViewLevel;
-    // Only the year level has a length in years
-    if (level !== 'year' && match[3]) return null;
-    const years = clampYears(match[3] ? Number(match[3]) : 1);
-    // The key holds the first day, a period of several years is built from its last year
-    const iso = level === 'year' ? `${Number(match[2].slice(0, 4)) + years - 1}${match[2].slice(4)}` : match[2];
-    return periodOf(level, iso, { weekStart: weekdayOf(toDay(match[2])), years });
-  } catch {
-    return null;
-  }
+  const [, level, date, yearCount] = match;
+  // A key with a date that does not exist (2026-02-30) is not a period
+  if (!isIsoDate(date)) return null;
+  // Only the year level has a length in years
+  if (level !== 'year' && yearCount) return null;
+  const years = clampYears(yearCount ? Number(yearCount) : 1);
+  // The key holds the first day, a period of several years is built from its last year
+  const iso = level === 'year' ? `${Number(date.slice(0, 4)) + years - 1}${date.slice(4)}` : date;
+  return periodOf(level as ViewLevel, iso, { weekStart: weekdayOf(toDay(date)), years });
 }
 
 /** The period `count` steps away (negative: back). */

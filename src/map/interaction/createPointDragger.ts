@@ -1,5 +1,4 @@
-import { layoutOf, settle } from '../../core/collision.js';
-import type { PlacedPoint, PointKind, Position } from '../../core/types.js';
+import type { Position } from '../../core/types.js';
 import type { WorldModel } from '../state/createWorldModel.js';
 import { createAnswerWatch } from './createAnswerWatch.js';
 import { createSpringRunner } from './createSpringRunner.js';
@@ -25,19 +24,11 @@ export type PointDragger = {
   cancel(): void;
 };
 
-/** Where a released point comes to rest: at the target if there is room, otherwise the first free spot on the way back. */
-export function destinationFor(points: PlacedPoint[], id: string, start: Position, target: Position): Position {
-  const self = points.find((point) => point.id === id);
-  const mover = { id, kind: (self?.kind ?? 'milestone') as PointKind, importance: self?.importance };
-  return settle(layoutOf(points), mover, start, target);
-}
-
 const isClick = (start: Position, end: Position) => Math.hypot(end.x - start.x, end.y - start.y) < MOVED_THRESHOLD;
 
 /**
- * Moves one point while it is dragged and decides where it ends up. A point may only rest where radius + radius
- * are free. Otherwise it springs back along its way to the first free spot, while all others stay.
- * After a move is reported the app owns the data: if it does not answer with new data, the point returns.
+ * Moves one point while it is dragged and reports where it came to rest.
+ * After a move is reported the app owns the data: if it does not answer with a new store, the point returns.
  */
 export function createPointDragger({ model, onChange, onMoved }: Dependencies): PointDragger {
   let startPosition: Position = { x: 0, y: 0 };
@@ -100,9 +91,7 @@ export function createPointDragger({ model, onChange, onMoved }: Dependencies): 
         onChange();
         return;
       }
-      const destination = destinationFor(world.points, id, startPosition, target);
-      if (destination === target) report(id, target);
-      else springTo(id, target, destination, true);
+      report(id, target);
     },
 
     acknowledge: watch.acknowledge,

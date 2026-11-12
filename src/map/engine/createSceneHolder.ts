@@ -1,4 +1,5 @@
 import { buildScene } from '../../core/scene/buildScene.js';
+import { shiftPaths } from '../../core/scene/shiftPaths.js';
 import { turnScene } from '../../core/scene/turn.js';
 import type { Scene } from '../../core/scene/types.js';
 import type { PathWorldOptions } from '../options.js';
@@ -7,7 +8,7 @@ import type { WorldModel } from '../state/createWorldModel.js';
 import type { InteractionState } from './createInteractionState.js';
 import type { OrientationState } from './createOrientationState.js';
 
-const EMPTY_SCENE: Scene = { edges: [], nodes: [], heres: [], rings: [], leads: [] };
+const EMPTY_SCENE: Scene = { edges: [], nodes: [], heres: [], leads: [] };
 
 type Dependencies = {
   model: WorldModel;
@@ -40,7 +41,9 @@ export function createSceneHolder({
   return {
     current: () => scene,
     rebuild() {
-      const world = model.world();
+      // While the end of a line is dragged, the whole path of that line goes along, as a preview
+      const shown = model.world();
+      const world = shown && shiftPaths(shown, interaction.pathShifts());
       const current = options();
       const built = world
         ? buildScene(world, {

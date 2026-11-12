@@ -1,19 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { makePath, makePoint } from '../../tests/fixtures';
+import { createStore, type StorePoint } from 'world-of-evolving-paths';
 import { canRedo, canUndo } from './history';
 import { initialState } from './state';
 import { createStateHistory, historyReduce } from './stateHistory';
 
+const point = (id: string, date: string): StorePoint => ({
+  id,
+  date,
+  title: id,
+  kind: 'milestone',
+  status: 'open',
+  prio: 3,
+});
+
 const start = () =>
   createStateHistory(
     initialState(
-      [makePath('a')],
-      [
-        makePoint({ id: 'a1', pathId: 'a', date: '2026-11-03' }),
-        makePoint({ id: 'a2', pathId: 'a', date: '2026-11-05' }),
-      ],
+      createStore([
+        {
+          id: 'a',
+          name: 'a',
+          color: '#3a86ff',
+          branches: [{ id: 'a-main', points: [point('a1', '2026-11-03'), point('a2', '2026-11-05')] }],
+        },
+      ]),
     ),
   );
+
+const pointsOf = (history: ReturnType<typeof start>) => history.present.store.paths[0].branches[0].points;
 
 describe('Demo history', () => {
   describe('when an action changes the data', () => {
@@ -23,9 +37,9 @@ describe('Demo history', () => {
       const undone = historyReduce(history, { type: 'undo' });
       const redone = historyReduce(undone, { type: 'redo' });
 
-      expect(history.present.points[0].title).toBe('New name');
-      expect(undone.present.points[0].title).not.toBe('New name');
-      expect(redone.present.points[0].title).toBe('New name');
+      expect(pointsOf(history)[0].title).toBe('New name');
+      expect(pointsOf(undone)[0].title).not.toBe('New name');
+      expect(pointsOf(redone)[0].title).toBe('New name');
     });
 
     it('brings a deleted point back', () => {
@@ -33,16 +47,18 @@ describe('Demo history', () => {
 
       const undone = historyReduce(history, { type: 'undo' });
 
-      expect(history.present.points.map((point) => point.id)).toEqual(['a1']);
-      expect(undone.present.points.map((point) => point.id)).toEqual(['a1', 'a2']);
+      expect(pointsOf(history).map((item) => item.id)).toEqual(['a1']);
+      expect(pointsOf(undone).map((item) => item.id)).toEqual(['a1', 'a2']);
     });
   });
 
   describe('when an action changes nothing', () => {
     it('is no step to undo', () => {
-      const history = historyReduce(start(), { type: 'connect', fromId: 'a1', toId: 'a1' });
+      const once = historyReduce(start(), { type: 'checkIn', pathId: 'a', date: '2026-11-05' });
 
-      expect(canUndo(history)).toBe(false);
+      const twice = historyReduce(once, { type: 'checkIn', pathId: 'a', date: '2026-11-05' });
+
+      expect(twice).toBe(once);
     });
   });
 
@@ -54,6 +70,7 @@ describe('Demo history', () => {
       const next = historyReduce(undone, { type: 'update', id: 'a1', patch: { title: 'Other' } });
 
       expect(canRedo(next)).toBe(false);
+      expect(canUndo(next)).toBe(true);
     });
   });
 });

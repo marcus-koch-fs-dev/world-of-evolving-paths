@@ -1,9 +1,8 @@
 import { toDay } from '../dates.js';
 import { RING_GAP, shapeRadiusOf } from '../symbol.js';
-import type { PlacedPoint, PlacedWorld, Position } from '../types.js';
-import { pointAt } from './curves.js';
-import { throughLines, todayOnThrough } from './through.js';
-import type { Tracks } from './tracks.js';
+import type { PlacedPoint, PlacedSpan, PlacedWorld, Position } from '../types.js';
+import { spanCurve } from './arrows.js';
+import { pointAt, yAtX } from './curves.js';
 import type { EdgeDraw, HereDraw, LeadDraw } from './types.js';
 import { todayAxisX } from './viewEdges.js';
 
@@ -71,7 +70,7 @@ export function buildHeres(
   world: PlacedWorld,
   edges: EdgeDraw[],
   leads: LeadDraw[] = [],
-  tracks: Tracks = new Map(),
+  lineOverrides: ReadonlyMap<string, number> = new Map(),
 ): HereDraw[] {
   const today = toDay(world.today);
   // A view of another time has no "today": a marker there would only sit on whatever point is nearest
@@ -79,17 +78,17 @@ export function buildHeres(
   const byId = new Map(world.points.map((point) => [point.id, point]));
   const dayOf = (id: string) => toDay((byId.get(id) as PlacedPoint).date);
   const edgesByPath = groupBy(edges, (edge) => byId.get(edge.to)?.pathId);
-  const leadsByPath = groupBy(leads, (lead) => byId.get(lead.pointId)?.pathId);
+  const leadsByPath = groupBy(leads, (lead) => (lead.pointId === '' ? undefined : lead.pathId));
   const pointsByPath = groupBy(world.points, (point) => point.pathId);
 
   const axisX = todayAxisX(world);
-  const throughByPath = groupBy(throughLines(world, tracks), (line) => line.path.id);
+  const throughByPath = groupBy(world.spans, (span) => span.pathId);
 
   return world.paths.flatMap((path): HereDraw[] => {
     // The lines that span the whole view carry today on their own, next to what the points of the path do
-    const onThrough = (throughByPath.get(path.id) ?? []).flatMap((line): HereDraw[] => {
-      const at = todayOnThrough(world, line);
-      return at ? [{ id: `${path.id}:through:${line.index}`, ...at, ...ringAt(at) }] : [];
+    const onThrough = (throughByPath.get(path.id) ?? []).flatMap((span, index): HereDraw[] => {
+      const at = todayOnSpan(world, span, lineOverrides);
+      return at ? [{ id: `${path.id}:through:${index}`, ...at, ...ringAt(at) }] : [];
     });
     if (!pointsByPath.has(path.id)) return onThrough;
     const connections = (edgesByPath.get(path.id) ?? [])
@@ -124,4 +123,16 @@ export function buildHeres(
 export function restingPoint(points: readonly PlacedPoint[], today: number): PlacedPoint | undefined {
   const ordered = [...points].sort((a, b) => toDay(a.date) - toDay(b.date));
   return ordered.filter((point) => toDay(point.date) <= today).at(-1) ?? ordered[0];
+}
+
+/** Where today is on a line that spans the view, or null when the connection is not under way today. */
+export function todayOnSpan(
+  world: PlacedWorld,
+  span: PlacedSpan,
+  lineOverrides: ReadonlyMap<string, number>,
+): Position | null {
+  const x = todayAxisX(world);
+  const today = toDay(world.today);
+  if (x === null || today < toDay(span.from.date) || today >= toDay(span.to.date)) return null;
+  return { x, y: yAtX(spanCurve(span, { lineOverrides }), x) };
 }

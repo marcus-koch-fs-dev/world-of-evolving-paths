@@ -1,9 +1,5 @@
 import type { Bounds } from '../core/camera.js';
 import { contentBounds } from '../core/geometry.js';
-import { lanesOf } from '../core/layout.js';
-import { throughLines } from '../core/scene/through.js';
-import { lineTracks } from '../core/scene/tracks.js';
-import { viewEdges } from '../core/scene/viewEdges.js';
 import { createCameraController } from './camera/createCameraController.js';
 import { createViewport } from './dom/createViewport.js';
 import { createBoundaryChecks } from './engine/boundary.js';
@@ -15,9 +11,9 @@ import { createKeyboard } from './engine/createKeyboard.js';
 import { createOrientationState } from './engine/createOrientationState.js';
 import { createPointerHooks } from './engine/createPointerHooks.js';
 import { createSceneHolder } from './engine/createSceneHolder.js';
+import { createStoreEdits } from './engine/createStoreEdits.js';
 import { createWorldSignal } from './engine/createWorldSignal.js';
 import { prefersReducedMotion, sameBackground } from './engine/environment.js';
-import { buildMoveEvent } from './engine/events.js';
 import type { Shortcut } from './engine/shortcuts.js';
 import { createPointDragger } from './interaction/createPointDragger.js';
 import { createPointerController } from './interaction/createPointerController.js';
@@ -25,7 +21,6 @@ import type { PathWorldHandle, PathWorldOptions } from './options.js';
 import { createPixiRenderer } from './render/createPixiRenderer.js';
 import { createWorldModel } from './state/createWorldModel.js';
 
-const DEFAULT_SEED = 1;
 const ERROR_PREFIX = 'World of Evolving Paths:';
 
 /**
@@ -55,22 +50,13 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
   const signal = createWorldSignal();
   let background = boundary.backgroundOf(initialOptions);
 
-  // The content is the points, the lines that run through the view without a point, and the left and right edge of
-  // the view that the lines of the points reach
+  // The content is the points, the arrows at the borders of the view, and the lines across the view without a point
   const bounds = (): Bounds | null => {
     const world = model.world();
     if (!world) return null;
-    const lineEnds = throughLines(world, lineTracks(world)).flatMap((line) => [line.from, line.to]);
-    const content = [...world.points, ...lineEnds];
-    const edges = viewEdges(world);
-    const edgeEnds =
-      edges && content.length > 0
-        ? [
-            { x: edges.left, y: content[0].y },
-            { x: edges.right, y: content[0].y },
-          ]
-        : [];
-    return contentBounds([...content, ...edgeEnds].map(orientation.toScreen));
+    const arrows = world.arrows.map(({ x, y }) => ({ x, y }));
+    const spans = world.spans.flatMap((span) => [span.before, span.after]);
+    return contentBounds([...world.points, ...arrows, ...spans].map(orientation.toScreen));
   };
   const frame = () => framing.apply(bounds(), viewport.size(), camera);
   const show = (kind: Shortcut) => {
@@ -89,16 +75,15 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
     locale: boundary.localeOf,
   });
 
+  const edits = createStoreEdits({ options: () => options, model });
+
   const dragger = createPointDragger({
     model,
     onChange: () => {
       scene.rebuild();
       signal.notify();
     },
-    onMoved: (id, position) => {
-      const world = model.world();
-      options.onPointMove?.(buildMoveEvent(world?.points ?? [], id, position, world ? lanesOf(world) : {}));
-    },
+    onMoved: edits.movePoint,
   });
 
   const pointer = createPointerController(
@@ -110,6 +95,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
       scene,
       interaction,
       dragger,
+      edits,
       viewport,
       toLayout: orientation.toLayout,
       zoom: () => camera.get().zoom,
@@ -147,9 +133,9 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
     const previous = options;
     options = next;
     const { changed, viewChanged, dataChanged } = model.configure({
-      periods: next.periods,
+      store: next.store,
       view: next.view,
-      seed: next.seed ?? DEFAULT_SEED,
+      pathIds: next.pathIds,
       today: boundary.todayOf(next),
     });
     renderer.setAnimate(next.animate ?? !prefersReducedMotion());

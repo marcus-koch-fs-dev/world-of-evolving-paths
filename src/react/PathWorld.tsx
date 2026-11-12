@@ -16,7 +16,7 @@ export type PathWorldProps = PathWorldOptions & {
 
 /**
  * The map as a React component. It fills its parent, so give the parent a size.
- * Pass the data of the periods in `periods` and the key of the one to show in `view`.
+ * Pass your `store` and the key of the period to show in `view`. Moves come back through `onStoreChange`.
  * Everything the user does comes back through the `on...` callbacks.
  * A `ref` gives the handle of the map (zoom, fit, center, camera), or null until the map exists.
  */

@@ -5,6 +5,7 @@ import { yearOfDay } from '../app-logic/periodChoices';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import { BackButton } from './BackButton';
 import { MainMenu } from './MainMenu';
+import { PathsStepper } from './PathsStepper';
 import { PeriodPicker } from './PeriodPicker';
 import { UndoRedo, type UndoRedoProps } from './UndoRedo';
 import { YearsStepper } from './YearsStepper';
@@ -27,10 +28,16 @@ type Props = {
   navigation: ViewNavigation;
   /** The page shown and how many there are, from the view that was built. */
   paging: { page: number; pages: number };
+  /** How many paths one page shows, in every view, and how many paths there are. */
+  pathsPerPage: number;
+  pathCount: number;
+  onPathsPerPageChange: (count: number) => void;
   locale: string;
   /** The levels the view bar offers. */
   levels: readonly { level: ViewLevel; label: string }[];
   onReroll: () => void;
+  freeMove: boolean;
+  onFreeMoveToggle: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onModeChange: (mode: DemoMode) => void;
@@ -46,9 +53,14 @@ export function TopBar({
   onDockChange,
   navigation,
   paging,
+  pathsPerPage,
+  pathCount,
+  onPathsPerPageChange,
   locale,
   levels,
   onReroll,
+  freeMove,
+  onFreeMoveToggle,
   onOrientationChange,
   mode,
   onModeChange,
@@ -82,9 +94,10 @@ export function TopBar({
         onNext={() => navigation.move(1)}
         onToday={navigation.goToToday}
         page={paging.page}
-        pages={navigation.level === null ? 0 : paging.pages}
+        pages={paging.pages}
         onPageChange={navigation.setPage}
       />
+      <PathsStepper count={pathsPerPage} max={pathCount} onChange={onPathsPerPageChange} />
       <BackButton canGoBack={navigation.canGoBack} onBack={navigation.back} />
       {undoRedo && <UndoRedo {...undoRedo} />}
       <MainMenu
@@ -92,6 +105,8 @@ export function TopBar({
         level={navigation.level}
         onLevelChange={navigation.chooseLevel}
         onReroll={onReroll}
+        freeMove={freeMove}
+        onFreeMoveToggle={onFreeMoveToggle}
         onOrientationChange={onOrientationChange}
         mode={mode}
         onModeChange={onModeChange}

@@ -1,6 +1,11 @@
-import type { PathPoint } from 'world-of-evolving-paths';
+import { indexPoints, type Store, sortedPoints } from 'world-of-evolving-paths';
 
-/** A point can be completed once every point that leads to it is done. */
-export function canComplete(points: PathPoint[], id: string): boolean {
-  return points.filter((point) => point.next.includes(id)).every((point) => point.status === 'done');
+/** A point can be completed once the point before it in its branch is done. */
+export function canComplete(store: Store, id: string): boolean {
+  const info = indexPoints(store.paths).get(id);
+  if (!info) return true;
+  const branch = store.paths.flatMap((path) => path.branches).find((candidate) => candidate.id === info.branchId);
+  const ordered = sortedPoints(branch?.points ?? []);
+  const before = ordered[ordered.findIndex((point) => point.id === id) - 1];
+  return before === undefined || before.status === 'done';
 }

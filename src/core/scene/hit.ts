@@ -1,5 +1,5 @@
 import type { Position } from '../types.js';
-import { LEAD_FONT_SIZE } from './leads.js';
+import { LEAD_FONT_SIZE } from './arrows.js';
 import type { EdgeDraw, LeadDraw, NodeDraw } from './types.js';
 
 /** The node under a world position. Later drawn nodes lie on top and are hit first. */
@@ -55,6 +55,14 @@ function onLine(line: readonly Position[], at: Position, padding: number): boole
 /** The line that leaves the view under a world position: on its label or on the line itself. */
 export function hitLead(leads: LeadDraw[], at: Position, reach: Reach = DEFAULT_REACH): LeadDraw | null {
   return leads.find((lead) => onLabel(lead, at, reach.line) || onLine(lead.line, at, reach.line)) ?? null;
+}
+
+/**
+ * The line that leaves the view under a world position, on the line itself and not on its label, to be dragged by it.
+ * A line across the whole view counts too: both of its halves belong to it.
+ */
+export function hitLeadLine(leads: LeadDraw[], at: Position, reach: Reach = DEFAULT_REACH): LeadDraw | null {
+  return leads.find((lead) => onLine(lead.line, at, reach.line)) ?? null;
 }
 
 /** The line whose end (the arrow at the edge of the view) is under a world position, to be dragged by it. */

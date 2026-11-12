@@ -43,14 +43,6 @@ export function sampleEdge(from: Position, to: Position, seed?: string): Positio
   });
 }
 
-/** Total length of a polyline. */
-export function polylineLength(points: Position[]): number {
-  return points.reduce(
-    (sum, point, i) => (i === 0 ? 0 : sum + Math.hypot(point.x - points[i - 1].x, point.y - points[i - 1].y)),
-    0,
-  );
-}
-
 /** The start of a polyline up to the fraction `f` of its length. */
 export function cutAt(points: Position[], f: number): Position[] {
   if (f >= 1) return points;
@@ -68,10 +60,30 @@ export function cutAt(points: Position[], f: number): Position[] {
   return [...points.slice(0, index + 1), { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }];
 }
 
+/** The start of a polyline that runs along x, up to the place `x`. Beyond its ends it is the whole line or its first point. */
+export function cutAtX(points: Position[], x: number): Position[] {
+  if (x <= points[0].x) return [points[0]];
+  if (x >= (points.at(-1) as Position).x) return points;
+  return [...points.filter((point) => point.x < x), { x, y: yAtX(points, x) }];
+}
+
 /** The point at the fraction `f` of the length of a polyline. */
 export function pointAt(points: Position[], f: number): Position {
   const part = cutAt(points, f);
   return part.at(-1) as Position;
+}
+
+/**
+ * The y of a polyline at an x, for a line that runs along x (its x grows from point to point). Beyond its ends it is the
+ * y of the nearest end.
+ */
+export function yAtX(points: readonly Position[], x: number): number {
+  const index = points.findIndex((point, i) => i > 0 && point.x >= x);
+  if (index < 0) return (points.at(-1) as Position).y;
+  const [a, b] = [points[index - 1], points[index]];
+  const span = b.x - a.x;
+  const share = span === 0 ? 1 : Math.min(1, Math.max(0, (x - a.x) / span));
+  return a.y + (b.y - a.y) * share;
 }
 
 type Piece = { from: Position; to: Position; start: number; end: number };

@@ -1,65 +1,13 @@
 /**
- * A connection to a point that is not in the shown view: the title and the date of that point, and its id if the
- * app wants to go there (see `onLeadDoubleClick`).
+ * The title and the date of a point that is not in the shown view, and its id if the app wants to go there (see
+ * `onLeadDoubleClick`). A line that crosses the border of the view leads to such a point.
  */
-export type Lead = {
-  title: string;
-  date: string;
-  id?: string;
-  /**
-   * The height where the line meets the edge of the view, as a distance from the lane of its path (0 = on the
-   * lane). Set it to keep a line where the user put it (see `onLineEndMove`). Without it the line comes in near the lane.
-   */
-  y?: number;
-};
+export type Lead = { title: string; date: string; id?: string };
 
 export type PointKind = 'start' | 'milestone' | 'crossroad' | 'goal';
 export type PointStatus = 'done' | 'current' | 'open' | 'abandoned';
 
 export type Position = { x: number; y: number };
-
-export type PathPoint = {
-  id: string;
-  /** ISO date, `YYYY-MM-DD`. */
-  date: string;
-  title: string;
-  kind: PointKind;
-  status: PointStatus;
-  /** Ids of the points this point leads to. Two or more make it a fork. */
-  next: string[];
-  /** Connections that come from points outside this view. The map draws a line towards the edge with title and date. */
-  incoming?: Lead[];
-  /** Connections that lead to points outside this view. The map draws a line towards the edge with title and date. */
-  outgoing?: Lead[];
-  /** 1 (default) to 5. Bigger points are drawn larger and keep more distance. */
-  importance?: number;
-  note?: string;
-  /** Strength tier of the segment leading to this point, 0 to 4. See `TIERS`. */
-  strength?: number;
-  /**
-   * Pins the point. With `x` and `y` it stays exactly at this world position of this view. With only `y` it sits
-   * on its date along the time axis, `y` away from the lane of its path: a height that holds in every view (see
-   * `offset` of `onPointMove`). `x` needs `y`. Without them the layout places the point.
-   */
-  x?: number;
-  y?: number;
-};
-
-/**
- * A connection that spans the whole period without a point in it: the point before and the point after.
- * The map draws a line across the view with an arrow and the title and date at each end.
- */
-export type PathThrough = {
-  from: Lead;
-  to: Lead;
-  /** Strength tier of the line, 0 to 4. See `TIERS`. */
-  strength?: number;
-  /**
-   * The height of the line across the view, as a distance from the lane of its path. Set it to keep a line where the
-   * user put it (see `onLineEndMove`).
-   */
-  y?: number;
-};
 
 /** How a path looks, without its points. */
 export type PathInfo = {
@@ -69,30 +17,58 @@ export type PathInfo = {
   color: string;
   /** Paths are stacked by `lane`, lowest first. Defaults to the order in the list. */
   lane?: number;
-  /**
-   * The connections of this path that span the whole period: from a point before it to a point after it, with no
-   * point of theirs inside. A fork gives several. Each is drawn as a line across the view.
-   */
-  through?: PathThrough[];
 };
 
-export type Path = PathInfo & { points: PathPoint[] };
+/** A point of the shown view with its place on the map, as the scene works with it. */
+export type PlacedPoint = Position & {
+  id: string;
+  pathId: string;
+  branchId: string;
+  /** ISO date, `YYYY-MM-DD`. */
+  date: string;
+  title: string;
+  kind: PointKind;
+  status: PointStatus;
+  /** The prio of the point, 1 to 5. Bigger points are drawn larger. */
+  importance: number;
+  note?: string;
+  /** Strength tier of the line that arrives at the point, 0 to 4. See `TIERS`. */
+  strength?: number;
+  /** The points this point is connected to: the next one in its branch, and the first one of a branch that forks off. */
+  next: string[];
+};
 
-/** Everything the library needs to draw one period (one view): its paths, each with its points. */
-export type PeriodData = { paths: Path[] };
+/**
+ * The place where the line of a branch crosses the border of the view, next to a point that is in the view. `pointId`
+ * is that point. `far` is the point out there the line comes from (`before`) or goes to (`after`).
+ */
+export type PlacedArrow = Position & {
+  /** The key of the border crossing, the same one the period on the other side of the border has. */
+  key: string;
+  pathId: string;
+  side: 'before' | 'after';
+  pointId: string;
+  far: Lead;
+};
 
-/** Period key → period data. The key is made by `periodOf(...).key`. */
-export type PeriodMap = Record<string, PeriodData>;
-
-/** A point together with the path it belongs to, as the layout and the scene work with it. */
-export type FlatPoint = PathPoint & { pathId: string };
-
-export type PlacedPoint = Omit<FlatPoint, 'x' | 'y'> & Position;
+/** A line across the whole view with no point in it: its two arrows, one on each border, and the points at its ends. */
+export type PlacedSpan = {
+  pathId: string;
+  branchId: string;
+  before: Position & { key: string };
+  after: Position & { key: string };
+  from: Lead;
+  to: Lead;
+  /** Strength tier of the line, 0 to 4. */
+  strength?: number;
+};
 
 export type PlacedWorld = {
   today: string;
-  /** The days the view covers, or null for a free view. Today is only marked when it lies inside. */
+  /** The days the view covers, or null for the overview of everything. Today is only marked when it lies inside. */
   period?: { start: number; end: number } | null;
   paths: PathInfo[];
   points: PlacedPoint[];
+  arrows: PlacedArrow[];
+  spans: PlacedSpan[];
 };

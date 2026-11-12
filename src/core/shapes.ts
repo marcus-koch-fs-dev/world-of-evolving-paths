@@ -1,4 +1,4 @@
-import type { PathPoint, Position } from './types.js';
+import type { PlacedPoint, Position } from './types.js';
 
 export type Shape = 'circle' | 'diamond' | 'triangle' | 'star';
 
@@ -8,7 +8,7 @@ const STAR_INNER_RATIO = 0.5;
 const TOP = -90; // degrees, 0 = right
 
 /** Shape by function: start ▲, goal ★, fork (more than one way on) ◆, otherwise ●. */
-export function shapeOf(point: Pick<PathPoint, 'kind' | 'next'>): Shape {
+export function shapeOf(point: Pick<PlacedPoint, 'kind' | 'next'>): Shape {
   if (point.kind === 'start') return 'triangle';
   if (point.kind === 'goal') return 'star';
   if (point.kind === 'crossroad' || point.next.length >= 2) return 'diamond';

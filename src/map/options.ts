@@ -2,7 +2,8 @@ import type { BackgroundOptions, BackgroundPattern } from '../core/background/ty
 import type { Camera } from '../core/camera.js';
 import type { Direction } from '../core/orientation.js';
 import type { LineEnd } from '../core/scene/lineTarget.js';
-import type { PeriodMap, Position } from '../core/types.js';
+import type { Store, StoreChanges } from '../core/store/types.js';
+import type { Position } from '../core/types.js';
 
 export type { BackgroundOptions, BackgroundPattern };
 
@@ -11,37 +12,6 @@ export type Orientation = Direction | 'auto';
 
 export type { LineEnd };
 
-/** The end of a line, the arrow at the edge of the view, was dragged to a height. */
-export type LineEndMoveEvent = {
-  /** The two points the line leads from and to. Keep the height for this connection. */
-  from: LineEnd;
-  to: LineEnd;
-  /**
-   * The height as a distance from the lane of the path of the line (0 = on the lane), so it fits every view. Pass it
-   * back as `y` of the lead or of the `through` of the path.
-   */
-  y: number;
-};
-
-export type PointMoveEvent = {
-  id: string;
-  x: number;
-  y: number;
-  /**
-   * The height as a distance from the lane of the path of the point. Pass it back as `y` alone (without `x`) to keep
-   * the point at this height in every view, on its date.
-   */
-  offset: number;
-  /**
-   * The height from the lane of its path of every point of the view, by id, as `offset` is for the moved point, as the
-   * user sees them now. A point that is not pinned follows the point before it, so once you pass the new height of the
-   * moved point back, the points after it move along. Pass back the `offsets` of those points too to leave them where
-   * they are, so that a point moves alone.
-   */
-  offsets: Record<string, number>;
-  /** Where every point of the view is right now. Pin them all to keep the layout exactly as the user sees it. */
-  positions: Record<string, Position>;
-};
 export type PointAddEvent = {
   x: number;
   y: number;
@@ -50,7 +20,7 @@ export type PointAddEvent = {
   lanes: Record<string, number>;
 };
 export type PointDoubleClickEvent = { id: string; date: string };
-/** A line that leaves the view was double-clicked: the point it leaves from, the side and what the app told about the point out there. */
+/** A line that leaves the view was double-clicked: the point it leaves from, the side and what the map knows about the point out there. */
 export type LeadDoubleClickEvent = {
   pointId: string;
   side: 'before' | 'after';
@@ -76,43 +46,41 @@ export type LineSelectEvent = {
 };
 
 export type PathWorldEvents = {
+  /**
+   * The user moved something: a point, an arrow at the border of the view, a whole path, or in the overview a point or a
+   * path to a free place. The map made the change and hands you the new `store` and what it touched: `changed` holds
+   * the paths that are new or different (whole, with their layout), `removed` the ids of paths that are gone. Keep the
+   * store and pass it back as `store`, and save `changed` and `removed` in your database.
+   * Without this callback nothing can be moved.
+   */
+  onStoreChange?: (store: Store, changes: StoreChanges) => void;
   /** A point was clicked (its id) or the empty area was clicked (null). */
   onSelect?: (id: string | null) => void;
   /**
-   * A line was clicked or right-clicked: a connection between two points, a line that leaves the view, or one that
-   * spans it. Your app decides what happens, for example a menu to insert a point there. Clicking the empty area
-   * calls `onSelect(null)`, which is the time to close that menu.
+   * A line was clicked or right-clicked: a connection between two points, or a line that leaves the view or spans it.
+   * Your app decides what happens, for example a menu to insert a point there. Clicking the empty area calls
+   * `onSelect(null)`, which is the time to close that menu.
    */
   onLineSelect?: (event: LineSelectEvent) => void;
-  /**
-   * The arrow at the end of a line that leaves the view or spans it was dragged up or down and let go. Store the
-   * height and pass it back as `y` on the lead (or on the `through` of the path), so the line stays there.
-   */
-  onLineEndMove?: (event: LineEndMoveEvent) => void;
-  /**
-   * A dragged point was released. Pass `offset` back as `y` to keep its height in every view, or `x` and `y` to pin it
-   * exactly here in this view.
-   */
-  onPointMove?: (event: PointMoveEvent) => void;
   /** The empty area was double-clicked. The app decides whether and how to add a point. */
   onPointAdd?: (event: PointAddEvent) => void;
   /** A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view. */
   onPointDoubleClick?: (event: PointDoubleClickEvent) => void;
   /** A line that leaves the view was double-clicked, on its label or on the line. Your app decides what happens, for example a jump to the period of `date`. */
   onLeadDoubleClick?: (event: LeadDoubleClickEvent) => void;
-  /** The data of the current view is invalid. Without this callback the errors go to `console.error`. */
+  /** The data is invalid. Without this callback the errors go to `console.error`. */
   onError?: (errors: string[]) => void;
 };
 
 export type PathWorldOptions = PathWorldEvents & {
-  /** Period key → data. Pass a new object for every period that changed and keep the others as they are. */
-  periods: PeriodMap;
-  /** Key of the period to show, from `periodOf(...).key`. Any other key shows a free view. */
+  /** The paths, each with its branches and points and the layout the user chose. See `createStore`. */
+  store: Store;
+  /** Key of the period to show, from `periodOf(...).key`. Any other key shows the overview of everything. */
   view: string;
+  /** Show only these paths, for an app that pages through them. Pass the same array while it does not change. Default: all. */
+  pathIds?: readonly string[];
   /** Today as `YYYY-MM-DD`. Default: the local date. */
   today?: string;
-  /** Changes the generated layout. The same seed always gives the same layout. Default 1. */
-  seed?: number;
   /** Allow moving and adding points. Default true. */
   editable?: boolean;
   /** Points cannot be dragged. Default false. */
@@ -122,6 +90,11 @@ export type PathWorldOptions = PathWorldEvents & {
    * axis stays at its date, so the marker for today and the lines always agree with it. Default true.
    */
   timeLocked?: boolean;
+  /**
+   * In the overview: points and whole paths can be moved freely, in every direction, without a time axis. The places
+   * are kept apart from the heights of the levels. Default false: the overview is only to look at.
+   */
+  freeMove?: boolean;
   /** Distance between the grid points that dragged and added points snap to, in world units. Default: no snapping. */
   snap?: number;
   /** Slight wave on the lines. Default false. */
@@ -158,11 +131,11 @@ export type PathWorldHandle = {
   positionOf(id: string): Position | null;
   /** Calls the listener on every camera change. Returns a function that stops listening. */
   subscribeCamera(listener: CameraListener): () => void;
-  /** Calls the listener when points were laid out again or moved. Returns a function that stops listening. */
+  /** Calls the listener when the world was made again or points were moved. Returns a function that stops listening. */
   subscribeWorld(listener: () => void): () => void;
   /** The direction time runs on the screen right now. With `orientation: 'auto'` this is the one that was chosen. */
   getDirection(): Direction;
-  /** Increases whenever the points were laid out again or moved. */
+  /** Increases whenever the world was made again or points were moved. */
   getWorldVersion(): number;
   /** Element that follows the camera. Controls placed here move and scale with the world. */
   readonly overlay: HTMLElement;

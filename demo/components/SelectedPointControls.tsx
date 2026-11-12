@@ -1,0 +1,80 @@
+import type { Dispatch } from 'react';
+import type { StorePath, StorePoint } from 'world-of-evolving-paths';
+import { ControlBar, PointMenu, type PointPatch } from 'world-of-evolving-paths/react';
+import { checkInMessage } from '../app-logic/checkIn';
+import { canComplete } from '../app-logic/rules';
+import type { DemoAction, DemoState } from '../app-logic/state';
+
+type Props = {
+  point: StorePoint;
+  path: StorePath;
+  /** Does a branch of another line leave from this point? */
+  isFork: boolean;
+  checkedInToday: boolean;
+  state: DemoState;
+  today: string;
+  dispatch: Dispatch<DemoAction>;
+  customColors: readonly string[];
+  onCustomColor: (color: string) => void;
+  onNotice: (text: string | null) => void;
+  /** Runs after a change in the menu, for example to say where a point that dropped out of the view shows now. */
+  onChanged: (patch: PointPatch) => void;
+  onAddNext: Parameters<typeof PointMenu>[0]['onAddNext'];
+  onDeleted: () => void;
+};
+
+/** What the demo offers for the selected point: a check-in button for its path, and the point menu. */
+export function SelectedPointControls({
+  point,
+  path,
+  isFork,
+  checkedInToday,
+  state,
+  today,
+  dispatch,
+  customColors,
+  onCustomColor,
+  onNotice,
+  onChanged,
+  onAddNext,
+  onDeleted,
+}: Props) {
+  return (
+    <>
+      <ControlBar dock="bottom-right">
+        <button
+          type="button"
+          className="pw-button"
+          disabled={checkedInToday}
+          title="Count today for this path. It gets stronger the more days you check in."
+          onClick={() => {
+            onNotice(checkInMessage(state.checkIns, path, today));
+            dispatch({ type: 'checkIn', pathId: path.id, date: today });
+          }}
+        >
+          {checkedInToday ? `✓ Checked in today: ${path.name}` : `Check in: ${path.name}`}
+        </button>
+      </ControlBar>
+
+      <PointMenu
+        point={point}
+        path={path}
+        isFork={isFork}
+        canComplete={canComplete(state.store, point.id)}
+        checkInCount={state.checkIns.filter((checkIn) => checkIn.pathId === path.id).length}
+        customColors={customColors}
+        onCustomColor={onCustomColor}
+        onUpdate={(patch) => {
+          dispatch({ type: 'update', id: point.id, patch });
+          onChanged(patch);
+        }}
+        onAddNext={onAddNext}
+        onPathColor={(color) => dispatch({ type: 'pathColor', pathId: path.id, color })}
+        onDelete={() => {
+          dispatch({ type: 'delete', id: point.id });
+          onDeleted();
+        }}
+      />
+    </>
+  );
+}

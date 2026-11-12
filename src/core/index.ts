@@ -10,27 +10,26 @@ export {
   isIsoDate,
   toDay,
   todayLocal,
+  weekdayOf,
 } from './dates.js';
 export { formatMonthYearLong, formatNumericDate, isValidLocale, weekPrefix } from './format.js';
+export { lanesOf } from './lanes.js';
 export type { Direction } from './orientation.js';
 export { rotateDirection } from './orientation.js';
+export { pathsInView, placeLevel } from './place/placeLevel.js';
 export { PATH_PALETTE } from './scene/paths.js';
+export * from './store/index.js';
 export type { StrengthRule, Tier } from './strength.js';
 export { activeDaysIn, STRENGTH_RULE, TIERS, tierAt, tierOf } from './strength.js';
 export { symbolSize } from './symbol.js';
 export type {
   Lead,
-  Path,
   PathInfo,
-  PathPoint,
-  PathThrough,
-  PeriodData,
-  PeriodMap,
+  PlacedArrow,
   PlacedPoint,
+  PlacedSpan,
   PlacedWorld,
   PointKind,
   PointStatus,
   Position,
 } from './types.js';
-export type { Validation } from './validate.js';
-export { validatePeriodData } from './validate.js';
