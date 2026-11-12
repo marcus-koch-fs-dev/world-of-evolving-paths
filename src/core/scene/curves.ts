@@ -43,14 +43,6 @@ export function sampleEdge(from: Position, to: Position, seed?: string): Positio
   });
 }
 
-/** Total length of a polyline. */
-export function polylineLength(points: Position[]): number {
-  return points.reduce(
-    (sum, point, i) => (i === 0 ? 0 : sum + Math.hypot(point.x - points[i - 1].x, point.y - points[i - 1].y)),
-    0,
-  );
-}
-
 /** The start of a polyline up to the fraction `f` of its length. */
 export function cutAt(points: Position[], f: number): Position[] {
   if (f >= 1) return points;

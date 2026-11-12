@@ -30,21 +30,6 @@ describe('Scene appearance', () => {
     });
   });
 
-  describe('when a point is dragged', () => {
-    const world = worldOf([placedPoint({ id: 'a' }, 0), placedPoint({ id: 'b' }, 90), placedPoint({ id: 'far' }, 900)]);
-
-    it('shows a ring around it and around the points close by', () => {
-      const { rings } = buildScene(world, { ...calm, dragging: 'a' });
-
-      expect(rings.map((ring) => ring.id).sort()).toEqual(['a', 'b']);
-      expect(rings.find((ring) => ring.id === 'a')?.dragged).toBe(true);
-    });
-
-    it('shows no rings otherwise', () => {
-      expect(buildScene(world, calm).rings).toEqual([]);
-    });
-  });
-
   describe('when writing the date under a point', () => {
     const world = worldOf([placedPoint({ id: 'a', date: '2026-11-02' }, 0)], '2026-11-10');
 

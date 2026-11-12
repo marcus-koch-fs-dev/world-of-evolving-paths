@@ -1,4 +1,3 @@
-import { toDay } from '../../dates.js';
 import { bordersBetween } from '../boundaries.js';
 import { levelChains } from '../chains.js';
 import { withArrowHeights, withPointHeights } from '../layout.js';
@@ -25,7 +24,7 @@ export function movePath(store: Store, level: Level, pathId: string, shift: numb
   const arrowHeights = chains
     .filter((chain) => chain.pathId === pathId)
     .flatMap((chain) => {
-      const days = chain.items.map((item) => toDay(item.point.date));
+      const days = chain.items.map((item) => item.day);
       return bordersBetween(level, days[0], days.at(-1) ?? days[0]).flatMap((border) => {
         const reading = reader.arrowAt(chain, border);
         return reading ? [[reading.key, Math.round(reading.y + shift)] as const] : [];

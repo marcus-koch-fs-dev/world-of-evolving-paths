@@ -1,76 +1,47 @@
-﻿import { useCallback, useMemo, useReducer, useState } from 'react';
-import { indexPoints, type PathInfo, toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
-import {
-  BackgroundPanel,
-  ControlBar,
-  PathWorld,
-  PointMenu,
-  type PointPatch,
-  SidePanel,
-  Toast,
-} from 'world-of-evolving-paths/react';
-import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
+import { useMemo, useState } from 'react';
+import { todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
+import { BackgroundPanel, PathWorld, SidePanel, Toast } from 'world-of-evolving-paths/react';
 import { rememberColor } from './app-logic/customColors';
-import { canRedo, canUndo } from './app-logic/history';
-import { levelThatShows, minPrioOf, steppedYears } from './app-logic/levels';
+import { minPrioOf, steppedYears } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
-import { nextPointProblem } from './app-logic/pointActions';
-import { canComplete } from './app-logic/rules';
-import { initialState } from './app-logic/state';
-import { createStateHistory, historyReduce } from './app-logic/stateHistory';
 import { DemoLineMenu } from './components/DemoLineMenu';
 import { Legend } from './components/Legend';
+import { SelectedPointControls } from './components/SelectedPointControls';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
-import { createHabits } from './data/habits';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
+import { useDemoState } from './hooks/useDemoState';
 import { useDemoView } from './hooks/useDemoView';
 import { useLineSelection } from './hooks/useLineSelection';
 import { useMapEvents } from './hooks/useMapEvents';
 import { useNotice } from './hooks/useNotice';
+import { usePointMenuActions } from './hooks/usePointMenuActions';
+import { useSelection } from './hooks/useSelection';
 import { useUndoShortcuts } from './hooks/useUndoShortcuts';
 import { useViewNavigation } from './hooks/useViewNavigation';
 import { useViewShortcuts } from './hooks/useViewShortcuts';
 
-// On a phone the bars start collapsed, so they leave room for the map
 // The distance between the grid points that points snap to when "Snap to grid" is on, in world units
 const SNAP_STEP = 50;
+// On a phone the time bar starts collapsed, so it leaves room for the map
 const SMALL_SCREEN = window.matchMedia('(max-width: 600px)').matches;
-
-function createInitialState(today: string) {
-  const habits = createHabits(today);
-  return initialState(habits.store, habits.checkIns);
-}
 
 /** The demo app: holds all data and state and wires the map and its controls to it. */
 export function App() {
   const today = useMemo(() => todayLocal(), []);
-  const [history, dispatch] = useReducer(historyReduce, today, (day) => createStateHistory(createInitialState(day)));
-  const state = history.present;
+  const notice = useNotice();
+  const { state, dispatch, undoRedo } = useDemoState(today, notice.clear);
   const navigation = useViewNavigation(today);
   const settings = useDemoSettings();
   const { values, docks } = settings;
   const [mode, setMode] = useState<DemoMode>('edit');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [freeMove, setFreeMove] = useState(false);
-  const notice = useNotice();
-  const setNotice = notice.set;
+  const editing = mode === 'edit';
   // The settings slide in from the side the menu bar is not on
   const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
-  const editing = mode === 'edit';
-  // A message describes the change just made, so stepping through the history closes it
-  const onUndo = useCallback(() => {
-    setNotice(null);
-    dispatch({ type: 'undo' });
-  }, [setNotice]);
-  const onRedo = useCallback(() => {
-    setNotice(null);
-    dispatch({ type: 'redo' });
-  }, [setNotice]);
-  const undoRedo = { canUndo: canUndo(history), canRedo: canRedo(history), onUndo, onRedo };
-  useUndoShortcuts({ enabled: editing, undo: onUndo, redo: onRedo });
+  useUndoShortcuts({ enabled: editing, undo: undoRedo.onUndo, redo: undoRedo.onRedo });
 
   useViewShortcuts((shortcut) => {
     if (shortcut.type === 'level') navigation.chooseLevel(shortcut.level);
@@ -88,23 +59,10 @@ export function App() {
   );
   const lineSelection = useLineSelection(tileKey);
   const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
-
-  // A point that is not in the current view is not selected, so its menu and check-in button do not linger
-  const infos = useMemo(() => indexPoints(state.store.paths), [state.store.paths]);
-  const selectedInfo = selectedId !== null && visibleIds.has(selectedId) ? infos.get(selectedId) : undefined;
-  const selectedStorePath = state.store.paths.find((path) => path.id === selectedInfo?.pathId);
-  const selected = selectedInfo?.point;
-  const selectedPath: PathInfo | undefined = selectedStorePath && {
-    id: selectedStorePath.id,
-    name: selectedStorePath.name,
-    color: selectedStorePath.color,
-    lane: selectedStorePath.lane,
-  };
-  const checkedInToday = selectedPath !== undefined && hasCheckedIn(state.checkIns, selectedPath.id, today);
-  const minPrio = minPrioOf(period);
-
+  const selection = useSelection(state, visibleIds, today);
   const events = useMapEvents({
     store: state.store,
+    infos: selection.infos,
     nextId: state.nextId,
     dispatch,
     level,
@@ -112,35 +70,22 @@ export function App() {
     pathIds,
     navigation,
     offeredLevels: values.levels,
-    selectedId: selected?.id ?? null,
-    select: setSelectedId,
+    selectedId: selection.point?.id ?? null,
+    select: selection.select,
+  });
+  const pointActions = usePointMenuActions({
+    dispatch,
+    notice,
+    navigation,
+    period,
+    offeredLevels: values.levels,
+    selected: selection.point,
   });
 
   const changeSettings = (patch: Partial<SettingsValues>) => {
     settings.change(patch);
     const { levels } = patch;
     if (levels && navigation.level !== null && !levels.includes(navigation.level)) navigation.chooseLevel(levels[0]);
-  };
-
-  /** A point that was made less important may drop out of this view. Say where it shows now, and offer to go there. */
-  const hintIfHidden = (patch: PointPatch) => {
-    if (!selected || patch.prio === undefined) return;
-    const target = levelThatShows(patch.prio, navigation.level, values.levels);
-    if (!target) return;
-    notice.show(`This point is hidden here. It shows from the ${target.label.toLowerCase()} view on.`, {
-      label: `Go to ${target.label.toLowerCase()}`,
-      onClick: () => navigation.zoomInto(target.level, selected.date),
-    });
-  };
-
-  const addNext = (fromId: string, input: Parameters<typeof nextPointProblem>[0]) => {
-    const problem = nextPointProblem(input);
-    if (problem) return problem;
-    dispatch({ type: 'addNext', fromId, input });
-    const day = toDay(input.date);
-    const outside = period !== null && (day < period.start || day > period.end);
-    setNotice(outside ? `"${input.title}" was created, but its date is outside this ${navigation.level}.` : null);
-    return null;
   };
 
   return (
@@ -162,11 +107,11 @@ export function App() {
         orientation={values.orientation}
         onSelect={(id) => {
           lineSelection.clear();
-          setSelectedId(id);
+          selection.select(id);
         }}
         onLineSelect={(line) => {
           if (!editing) return;
-          setSelectedId(null);
+          selection.select(null);
           lineSelection.select(line);
         }}
         onPointAdd={events.onPointAdd}
@@ -205,7 +150,7 @@ export function App() {
           </SidePanel>
         )}
 
-        <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrio} startCollapsed />
+        <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrioOf(period)} startCollapsed />
 
         <TimeBar
           dock={docks.time}
@@ -215,23 +160,6 @@ export function App() {
           locale={values.locale}
           startCollapsed={SMALL_SCREEN}
         />
-
-        {editing && selected && selectedPath && (
-          <ControlBar dock="bottom-right">
-            <button
-              type="button"
-              className="pw-button"
-              disabled={checkedInToday}
-              title="Count today for this path. It gets stronger the more days you check in."
-              onClick={() => {
-                setNotice(checkInMessage(state.checkIns, selectedPath, today));
-                dispatch({ type: 'checkIn', pathId: selectedPath.id, date: today });
-              }}
-            >
-              {checkedInToday ? `✓ Checked in today: ${selectedPath.name}` : `Check in: ${selectedPath.name}`}
-            </button>
-          </ControlBar>
-        )}
 
         <Toast message={notice.text} action={notice.action} onDismiss={notice.clear} />
 
@@ -244,25 +172,21 @@ export function App() {
           />
         )}
 
-        {editing && selected && selectedPath && (
-          <PointMenu
-            point={selected}
-            path={selectedPath}
-            isFork={state.store.paths.some((path) => path.branches.some((branch) => branch.splitsAt === selected.id))}
-            canComplete={canComplete(state.store, selected.id)}
-            checkInCount={state.checkIns.filter((checkIn) => checkIn.pathId === selectedPath.id).length}
+        {editing && selection.point && selection.path && (
+          <SelectedPointControls
+            point={selection.point}
+            path={selection.path}
+            isFork={selection.isFork}
+            checkedInToday={selection.checkedInToday}
+            state={state}
+            today={today}
+            dispatch={dispatch}
             customColors={settings.customColors}
             onCustomColor={(color) => settings.setCustomColors((colors) => rememberColor(colors, color))}
-            onUpdate={(patch) => {
-              dispatch({ type: 'update', id: selected.id, patch });
-              hintIfHidden(patch);
-            }}
-            onAddNext={(input) => addNext(selected.id, input)}
-            onPathColor={(color) => dispatch({ type: 'pathColor', pathId: selectedPath.id, color })}
-            onDelete={() => {
-              dispatch({ type: 'delete', id: selected.id });
-              setSelectedId(null);
-            }}
+            onNotice={notice.set}
+            onChanged={pointActions.hintIfHidden}
+            onAddNext={(input) => pointActions.addNext(selection.point?.id ?? '', input)}
+            onDeleted={() => selection.select(null)}
           />
         )}
       </PathWorld>

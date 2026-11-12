@@ -1,4 +1,5 @@
 import { fromDay, toDay } from '../dates.js';
+import { laneOffsets } from '../lanes.js';
 import type { Position } from '../types.js';
 import { createLookup, type Lookup } from './chains.js';
 import { keptFreePlace, keptPointHeight, withFreePlaces } from './layout.js';
@@ -6,15 +7,12 @@ import { defaultHeight } from './reader.js';
 import type { Store } from './types.js';
 
 const WORLD_PER_DAY = 24;
+// The distance between two lanes in the free arrangement: wider than in a period, where heights are small
 const LANE_GAP = 400;
 
 /** Where a point is in the free arrangement: where the user put it, else its date and the lane of its path. */
 export function createFreeReader(store: Store, lookup: Lookup = createLookup(store.paths)) {
-  const laneOf = new Map(
-    [...store.paths]
-      .sort((a, b) => (a.lane ?? 0) - (b.lane ?? 0))
-      .map((path, index) => [path.id, (index - (store.paths.length - 1) / 2) * LANE_GAP]),
-  );
+  const laneOf = laneOffsets(store.paths, LANE_GAP);
   return (id: string): Position => {
     const found = lookup.point(id);
     if (!found) return { x: 0, y: 0 };

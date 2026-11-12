@@ -47,8 +47,8 @@ function addNext(state: DemoState, { fromId, input }: Of<'addNext'>): DemoState 
   const id = customPointId(state.nextId);
   // The new point is as important as the one it follows, so it shows in the same levels
   const point = newPoint(id, input.date, input.title.trim(), from.point.prio);
-  const branchId = input.newPath ? `custom-branch-${state.nextId}` : from.branchId;
-  const withBranch = input.newPath
+  const branchId = input.newBranch ? `custom-branch-${state.nextId}` : from.branchId;
+  const withBranch = input.newBranch
     ? addBranch(state.store, from.pathId, { id: branchId, splitsAt: fromId, points: [] })
     : state.store;
   return { ...state, store: addPoint(withBranch, branchId, point), nextId: state.nextId + 1 };

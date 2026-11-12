@@ -1,10 +1,9 @@
-import { toDay } from '../../dates.js';
-import { bordersBetween } from '../boundaries.js';
 import { type Chain, levelChains } from '../chains.js';
 import { withArrowHeights } from '../layout.js';
 import { LEVELS } from '../levels.js';
 import { createLevelReader } from '../reader.js';
 import type { Level, Store } from '../types.js';
+import { unkeptArrowsBetween } from './freeze.js';
 
 const inSameBranch = (a: Chain) => (b: Chain) => a.pathId === b.pathId && a.branchId === b.branchId;
 const holdsPoint = (id: string) => (chain: Chain) => chain.items.some((item) => item.point.id === id);
@@ -17,13 +16,11 @@ function arrowsToKeep(before: Store, after: Store, level: Level, pointId: string
   const wasThere = around && oldChains.find(inSameBranch(around));
   if (!around || !wasThere) return {};
   const index = around.items.findIndex((item) => item.point.id === pointId);
-  const dayAt = (at: number) => toDay(around.items[Math.min(around.items.length - 1, Math.max(0, at))].point.date);
-  const reader = createLevelReader(before, level);
-  const readings = bordersBetween(level, dayAt(index - 1), dayAt(index + 1)).flatMap((border) => {
-    const reading = reader.arrowAt(wasThere, border);
-    return reading ? [reading] : [];
+  const dayAt = (at: number) => around.items[Math.min(around.items.length - 1, Math.max(0, at))].day;
+  return unkeptArrowsBetween(wasThere, level, createLevelReader(before, level), {
+    from: dayAt(index - 1),
+    to: dayAt(index + 1),
   });
-  return Object.fromEntries(readings.filter((reading) => !reading.stored).map((reading) => [reading.key, reading.y]));
 }
 
 /**

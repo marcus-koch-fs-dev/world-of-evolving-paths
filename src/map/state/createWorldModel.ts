@@ -58,7 +58,7 @@ export function createWorldModel(onError: (errors: string[]) => void): WorldMode
 
   return {
     configure(config) {
-      const delta = configDelta(snapshot, { ...config, pathIds: config.pathIds });
+      const delta = configDelta(snapshot, config);
       if (!anyChange(delta)) return NOTHING;
       if (delta.dataChanged) valid = check(config.store);
       if (delta.dataChanged || delta.viewChanged || delta.pathsChanged) overrides.clearAll();

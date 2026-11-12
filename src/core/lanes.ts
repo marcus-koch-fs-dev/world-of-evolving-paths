@@ -1,11 +1,12 @@
 import type { PathInfo } from './types.js';
 
-const LANE_GAP = 200; // distance between two lanes
+/** The distance between two lanes in a period view. */
+const LANE_GAP = 200;
 
 /** The y position of every path's lane. Only the order counts, not the distance: empty lanes cost no room. */
-export function laneOffsets(paths: readonly Pick<PathInfo, 'id' | 'lane'>[]): Map<string, number> {
+export function laneOffsets(paths: readonly Pick<PathInfo, 'id' | 'lane'>[], gap = LANE_GAP): Map<string, number> {
   const lanes = [...paths].sort((a, b) => (a.lane ?? 0) - (b.lane ?? 0));
-  return new Map(lanes.map((path, i) => [path.id, (i - (lanes.length - 1) / 2) * LANE_GAP]));
+  return new Map(lanes.map((path, i) => [path.id, (i - (lanes.length - 1) / 2) * gap]));
 }
 
 /** The y of the lane of every path of a world, by path id. Heights in the data are distances from it. */

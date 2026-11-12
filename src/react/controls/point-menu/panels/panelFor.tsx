@@ -11,8 +11,8 @@ import { StatusPanel } from './StatusPanel.js';
 
 const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
 
-/** The tiles that open a panel. The connect tile has none: it hands over to the app at once. */
-export type PanelId = Exclude<TileId, 'connect'>;
+/** The tiles that open a panel. */
+export type PanelId = TileId;
 
 type Context = {
   menu: PointMenuProps;
@@ -26,9 +26,7 @@ const PANELS: Record<PanelId, (context: Context) => ReactNode> = {
   status: ({ menu }) => (
     <StatusPanel status={menu.point.status} canComplete={menu.canComplete ?? true} onUpdate={menu.onUpdate} />
   ),
-  next: ({ menu, colors, close }) => (
-    <NextPointPanel colors={colors} defaultDate={menu.point.date} onAddNext={menu.onAddNext} onDone={close} />
-  ),
+  next: ({ menu, close }) => <NextPointPanel defaultDate={menu.point.date} onAddNext={menu.onAddNext} onDone={close} />,
   kind: ({ menu }) => <KindPanel kind={menu.point.kind} branches={menu.isFork ?? false} onUpdate={menu.onUpdate} />,
   color: ({ menu, colors }) => (
     <ColorPanel

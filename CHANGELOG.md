@@ -20,7 +20,7 @@ The library no longer asks you to build every view. You give it one store of pat
 - The marker for today and the lit part of a line that leaves the view now agree.
 - New functions `placeLevel`, `lanesOf`, `weekdayOf`, `addPoint`, `updatePoint`, `removePoint`, `addBranch`, `addPath`, `updatePath`, `forgetHeights`, `moveFreePoint` and `moveFreePath`.
 - The points no longer push each other away, and the thin rings while dragging are gone. Heights are chosen by the user, not by a layout search.
-- `PointMenu` takes a `StorePoint` and its patch uses `prio`. New prop `isFork`.
+- `PointMenu` takes a `StorePoint` and its patch uses `prio`. New prop `isFork`. The connect tile and the props `onConnect` and `connecting` are gone, because paths are not connected any more. `onAddNext` gets `{ title, date, newBranch }`: `newPath`, `color` and `pathName` are gone, because a new line is a branch of the same path.
 
 The entries below that mention `through`, `Lead.y`, `onLineEndMove`, `onPointMove`, `offsets` or `PathThrough` describe what this rework replaced.
 

@@ -1,25 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { levelThatShows, minImportanceOf, steppedYears, toggledLevels, widestLevelShowing } from './levels';
+import { levelThatShows, minPrioOf, steppedYears, toggledLevels, widestLevelShowing } from './levels';
 
-describe('Least importance of a view', () => {
+describe('Least prio of a view', () => {
   it('is higher the wider the view is', () => {
-    expect(minImportanceOf({ level: 'week' })).toBe(1);
-    expect(minImportanceOf({ level: 'month' })).toBe(2);
-    expect(minImportanceOf({ level: 'year' })).toBe(3);
+    expect(minPrioOf({ level: 'week' })).toBe(1);
+    expect(minPrioOf({ level: 'month' })).toBe(3);
+    expect(minPrioOf({ level: 'year' })).toBe(5);
   });
 
-  it('is 2 in the free view', () => {
-    expect(minImportanceOf(null)).toBe(2);
+  it('is 1 in the free view, which shows every point', () => {
+    expect(minPrioOf(null)).toBe(1);
   });
 });
 
 describe('Widest level showing a point', () => {
   const offered = ['week', 'month', 'year'] as const;
 
-  it('is the widest view whose limit the importance reaches', () => {
+  it('is the widest view whose limit the prio reaches', () => {
     expect(widestLevelShowing(5, offered)?.level).toBe('year');
-    expect(widestLevelShowing(3, offered)?.level).toBe('year');
-    expect(widestLevelShowing(2, offered)?.level).toBe('month');
+    expect(widestLevelShowing(3, offered)?.level).toBe('month');
     expect(widestLevelShowing(1, offered)?.level).toBe('week');
   });
 
@@ -33,11 +32,11 @@ describe('Level that shows a point', () => {
 
   it('is the widest offered level that is fine enough', () => {
     expect(levelThatShows(1, 'year', offered)?.level).toBe('week');
-    expect(levelThatShows(2, 'year', offered)?.level).toBe('month');
+    expect(levelThatShows(3, 'year', offered)?.level).toBe('month');
   });
 
   it('is null when the shown view shows the point already', () => {
-    expect(levelThatShows(3, 'year', offered)).toBeNull();
+    expect(levelThatShows(5, 'year', offered)).toBeNull();
     expect(levelThatShows(1, null, offered)).toBeNull();
   });
 

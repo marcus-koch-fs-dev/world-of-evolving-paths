@@ -10,11 +10,13 @@ const state: MenuState = {
   mode: 'edit',
   settingsOpen: false,
   zoom: 0.5,
+  freeMove: false,
 };
 
 const createActions = (): MenuActions => ({
   changeLevel: vi.fn(),
   reroll: vi.fn(),
+  toggleFreeMove: vi.fn(),
   changeMode: vi.fn(),
   toggleSettings: vi.fn(),
   zoomBy: vi.fn(),
@@ -31,7 +33,7 @@ const tileIds = (groupId: string, current: MenuState) =>
 describe('Menu groups', () => {
   describe('when editing', () => {
     it('offers reroll and settings', () => {
-      expect(tileIds('work', state)).toEqual(['reroll']);
+      expect(tileIds('work', state)).toEqual(['reroll', 'free-move']);
       expect(tileIds('mode', state)).toContain('settings');
     });
   });
@@ -46,13 +48,16 @@ describe('Menu groups', () => {
   });
 
   describe('when the free view is shown', () => {
-    it('marks Free active and disables reroll', () => {
+    it('marks Free active, disables reroll and offers the free move', () => {
       const groups = menuGroups({ ...state, level: null }, createActions());
 
       const free = groups[0].tiles.find((tile) => tile.id === 'free');
-      const reroll = groups.find((group) => group.id === 'work')?.tiles[0];
+      const work = groups.find((group) => group.id === 'work')?.tiles;
+      const reroll = work?.find((tile) => tile.id === 'reroll');
+      const freeMove = work?.find((tile) => tile.id === 'free-move');
       expect(free?.active).toBe(true);
       expect(reroll?.disabled).toBe(true);
+      expect(freeMove?.disabled).toBe(false);
     });
   });
 

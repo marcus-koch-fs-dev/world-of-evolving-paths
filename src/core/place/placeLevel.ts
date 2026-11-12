@@ -71,10 +71,13 @@ export function placeLevel(
   const parts = shown.flatMap((path) => path.branches.map((branch) => branchParts(path.id, branch)));
   const allParts = parts.flatMap((part) => part.points);
   const width = tileWidth(allParts);
-  const free = createFreeReader(store, cached?.lookup);
+  // The free places are only read in the overview, so the reader is only made there
+  const free = period ? null : createFreeReader(store, cached?.lookup);
   const points: PlacedPoint[] = allParts.map(({ height, ...point }) => ({
     ...point,
-    ...(period ? { x: xOfDate(point.date, period, width), y: laneOf(point.pathId) + height } : free(point.id)),
+    ...(period
+      ? { x: xOfDate(point.date, period, width), y: laneOf(point.pathId) + height }
+      : (free?.(point.id) ?? { x: 0, y: 0 })),
   }));
   const world = { today, period: period && { start: period.start, end: period.end }, paths };
   if (!period) return { ...world, points: joined(points, parts), arrows: [], spans: [] };

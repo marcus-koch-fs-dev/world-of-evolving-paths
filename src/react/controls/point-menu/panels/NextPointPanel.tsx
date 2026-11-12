@@ -1,23 +1,19 @@
 import { type KeyboardEvent, useState } from 'react';
 import type { NextPointInput } from '../types.js';
-import { ColorSwatches } from './ColorSwatches.js';
 import { isBeforeFollowed, nextPointError } from './nextPointError.js';
 
 type Props = {
-  colors: readonly string[];
   /** The date the field starts with, usually the date of the point the new one follows. */
   defaultDate: string;
   onAddNext: (input: NextPointInput) => string | null;
   onDone: () => void;
 };
 
-/** Panel to create the point that follows, optionally on a new path. */
-export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props) {
+/** Panel to create the point that follows, in the same branch or as the first point of a new branch that forks off. */
+export function NextPointPanel({ defaultDate, onAddNext, onDone }: Props) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(defaultDate);
-  const [newPath, setNewPath] = useState(false);
-  const [pathName, setPathName] = useState('');
-  const [color, setColor] = useState(colors[0] ?? '#ffffff');
+  const [newBranch, setNewBranch] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const earlier = isBeforeFollowed(date, defaultDate);
@@ -25,7 +21,7 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
   const submit = () => {
     const missing = nextPointError(title, date);
     if (missing) return setError(missing);
-    const problem = onAddNext({ title: title.trim(), date, newPath, color, pathName: newPath ? pathName.trim() : '' });
+    const problem = onAddNext({ title: title.trim(), date, newBranch });
     if (problem) return setError(problem);
     onDone();
   };
@@ -36,7 +32,7 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
 
   return (
     <>
-      <p>Next point, connected to this one</p>
+      <p>Next point, after this one</p>
       <input
         value={title}
         placeholder="Name"
@@ -49,20 +45,9 @@ export function NextPointPanel({ colors, defaultDate, onAddNext, onDone }: Props
       </label>
       {earlier && <p className="pw-warn">This date is before the point it follows, so the line will run backwards.</p>}
       <label className="pw-inline">
-        <input type="checkbox" checked={newPath} onChange={(event) => setNewPath(event.target.checked)} />
-        On a new path (own color)
+        <input type="checkbox" checked={newBranch} onChange={(event) => setNewBranch(event.target.checked)} />
+        As a new branch (forks off here)
       </label>
-      {newPath && (
-        <>
-          <input
-            value={pathName}
-            placeholder="Path name (optional)"
-            onChange={(event) => setPathName(event.target.value)}
-            onKeyDown={submitOnEnter}
-          />
-          <ColorSwatches colors={colors} value={color} onPick={setColor} />
-        </>
-      )}
       <button type="button" onClick={submit}>
         Create
       </button>

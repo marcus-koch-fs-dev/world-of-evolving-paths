@@ -8,7 +8,7 @@ export type ConfigSnapshot = {
   pathIds: readonly string[] | undefined;
 };
 
-export type ConfigInput = { store: Store; view: string; today: string; pathIds: readonly string[] | undefined };
+export type ConfigInput = { store: Store; view: string; today: string; pathIds?: readonly string[] };
 
 export type ConfigDelta = {
   dataChanged: boolean;

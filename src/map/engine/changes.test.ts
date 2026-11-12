@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { PathWorldOptions } from '../options.js';
 import { lookChanged } from './changes.js';
 
-const base: PathWorldOptions = { periods: {}, view: 'week' };
+const base: PathWorldOptions = { store: { paths: [] }, view: 'week' };
 
 describe('Look changes', () => {
   describe('when only the data or the view differ', () => {

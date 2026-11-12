@@ -58,12 +58,12 @@ export function createLineGrabs({ model, scene, interaction, edits, toLayout, zo
 
   return {
     lineEndAt: (world) =>
-      edits.canMoveLines() && model.level() !== null
+      edits.canMove() && model.level() !== null
         ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null)
         : null,
 
     pathLineAt(world) {
-      if (!edits.canMoveLines()) return null;
+      if (!edits.canMove()) return null;
       const reach = reachAt(zoom());
       const points = new Map((model.world()?.points ?? []).map((point) => [point.id, point]));
       const current = scene.current();

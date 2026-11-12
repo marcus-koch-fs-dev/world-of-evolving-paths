@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { createStoreCache, fromDay, indexPoints, pathsInView, placeLevel } from 'world-of-evolving-paths';
+import { createStoreCache, fromDay, pathsInView, placeLevel } from 'world-of-evolving-paths';
 import { withLook } from '../app-logic/appearance';
 import { heightLevelOf } from '../app-logic/heightLevel';
 import { pagesOf } from '../app-logic/paging';
@@ -30,7 +30,9 @@ export function useDemoView(state: DemoState, navigation: ViewNavigation, today:
     () =>
       viewRange(
         period,
-        [...indexPoints(state.store.paths).values()].map(({ point }) => point.date),
+        state.store.paths.flatMap((path) =>
+          path.branches.flatMap((branch) => branch.points.map((point) => point.date)),
+        ),
         today,
       ),
     [period, state.store.paths, today],

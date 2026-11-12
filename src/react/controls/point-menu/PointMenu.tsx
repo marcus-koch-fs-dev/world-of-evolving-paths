@@ -35,10 +35,6 @@ export type PointMenuProps = {
   hide?: readonly TileId[];
   /** Where the menu sits next to the point. Default auto: below, or above when there is no room below. */
   placement?: MenuPlacement;
-  /** The connect tile shows when this is given. Clicking it calls it; the app then waits for the user to pick the point to connect to. */
-  onConnect?: () => void;
-  /** True while the app waits for that point. The connect tile shows as active. */
-  connecting?: boolean;
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
 };
@@ -62,17 +58,13 @@ function PointMenuBody(props: PointMenuProps) {
   if (!position) return null;
 
   const { point, path } = props;
-  const tiles = visibleTiles(TILES, props.hide, props.onConnect !== undefined);
+  const tiles = visibleTiles(TILES, props.hide);
   const close = () => setOpen(null);
   const camera = handle.getCamera();
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
   const placement = resolvePlacement(props.placement ?? 'auto', position.y * camera.zoom + camera.y, room);
 
-  const toggle = (id: TileId) => {
-    if (id !== 'connect') return setOpen((current) => (current === id ? null : id));
-    close();
-    props.onConnect?.();
-  };
+  const toggle = (id: TileId) => setOpen((current) => (current === id ? null : id));
 
   return createPortal(
     <div className={`pw-point-menu pw-menu-${placement}`} data-pw-ui style={anchorFor(placement, position)}>
@@ -86,13 +78,7 @@ function PointMenuBody(props: PointMenuProps) {
           </span>
         </div>
         <div className="pw-menu-path">Path: {path.name}</div>
-        <MenuTiles
-          tiles={tiles}
-          open={open}
-          pathColor={path.color}
-          connecting={props.connecting === true}
-          onToggle={toggle}
-        />
+        <MenuTiles tiles={tiles} open={open} pathColor={path.color} onToggle={toggle} />
       </div>
       {open && (
         <div className="pw-menu-sub">

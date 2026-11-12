@@ -36,7 +36,11 @@ export function createLookup(paths: readonly StorePath[]): Lookup {
 }
 
 /** The line of every branch of one path on a level, and the other paths its forks leave from. */
-export type PathChains = { chains: Chain[]; depends: readonly StorePath[] };
+/**
+ * `complete` is false when a fork looked for a point or branch that is not in the store (yet). The answer is then
+ * only right for this store: another path may bring what is missing, so it must not be remembered.
+ */
+export type PathChains = { chains: Chain[]; depends: readonly StorePath[]; complete: boolean };
 
 /**
  * Where a branch starts on a level: its split point, or when that one is hidden the last point of the branch it forks
@@ -61,15 +65,18 @@ function createAnchorFinder(lookup: Lookup, level: Level) {
 /** The line of every branch of one path on a level. A branch without any point has no line. */
 export function chainsOfPath(path: StorePath, level: Level, lookup: Lookup): PathChains {
   const touched = new Set<StorePath>();
+  const missing: string[] = [];
   const watching: Lookup = {
     point(id) {
       const found = lookup.point(id);
       if (found) touched.add(found.path);
+      else missing.push(id);
       return found;
     },
     branch(id) {
       const found = lookup.branch(id);
       if (found) touched.add(found.path);
+      else missing.push(id);
       return found;
     },
   };
@@ -95,7 +102,7 @@ export function chainsOfPath(path: StorePath, level: Level, lookup: Lookup): Pat
           },
         ];
   });
-  return { chains, depends: [...touched].filter((other) => other !== path) };
+  return { chains, depends: [...touched].filter((other) => other !== path), complete: missing.length === 0 };
 }
 
 /** The line of every branch on a level. */

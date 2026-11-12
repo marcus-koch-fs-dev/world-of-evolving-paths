@@ -1,13 +1,13 @@
-import { type Dispatch, useMemo } from 'react';
-import {
-  indexPoints,
-  type LineSelectEvent,
-  type PathWorldEvents,
-  type Period,
-  type Store,
-  type ViewLevel,
+import type { Dispatch } from 'react';
+import type {
+  Level,
+  LineSelectEvent,
+  PathWorldEvents,
+  Period,
+  PointInfo,
+  Store,
+  ViewLevel,
 } from 'world-of-evolving-paths';
-import type { HeightLevel } from '../app-logic/heightLevel';
 import { heightOnPath } from '../app-logic/heightOnPath';
 import { minPrioOf } from '../app-logic/levels';
 import { customPointId } from '../app-logic/pointActions';
@@ -17,9 +17,11 @@ import type { ViewNavigation } from './useViewNavigation';
 
 type Options = {
   store: Store;
+  /** Every point by id, with its path and branch. */
+  infos: ReadonlyMap<string, PointInfo>;
   nextId: number;
   dispatch: Dispatch<DemoAction>;
-  level: HeightLevel | null;
+  level: Level | null;
   period: Period | null;
   /** The paths on the page that is shown. */
   pathIds: readonly string[];
@@ -39,6 +41,7 @@ type Position = { y: number; date: string; lanes: Record<string, number> };
  */
 export function useMapEvents({
   store,
+  infos,
   nextId,
   dispatch,
   level,
@@ -51,7 +54,6 @@ export function useMapEvents({
 }: Options): Pick<PathWorldEvents, 'onPointAdd' | 'onPointDoubleClick' | 'onLeadDoubleClick'> & {
   insertIntoLine: (line: LineSelectEvent) => boolean;
 } {
-  const infos = useMemo(() => indexPoints(store.paths), [store.paths]);
   const prio = minPrioOf(period);
 
   /** A new point in a branch. Its height is kept on the level it was added on. */

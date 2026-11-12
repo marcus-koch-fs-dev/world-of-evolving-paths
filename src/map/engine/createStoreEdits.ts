@@ -8,10 +8,8 @@ import type { WorldModel } from '../state/createWorldModel.js';
 type Dependencies = { options(): PathWorldOptions; model: WorldModel };
 
 export type StoreEdits = {
-  /** Can the user move points now? In a period of a level, or in the overview when `freeMove` is on. */
+  /** Can the user move points, arrows and whole paths now? In a period of a level, or in the overview when `freeMove` is on. */
   canMove(): boolean;
-  /** Can the user move arrows and whole paths now? */
-  canMoveLines(): boolean;
   /** A point came to rest at a position (in the layout, before it was turned for the screen). */
   movePoint(id: string, position: Position): void;
   /** An arrow was dragged to a world y. */
@@ -39,7 +37,6 @@ export function createStoreEdits({ options, model }: Dependencies): StoreEdits {
 
   return {
     canMove: () => canMove() && options().pointsLocked !== true,
-    canMoveLines: () => canMove() && options().pointsLocked !== true,
 
     movePoint(id, position) {
       const [store, level, point] = [model.store(), model.level(), model.world()?.points.find((p) => p.id === id)];

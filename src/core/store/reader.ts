@@ -47,7 +47,8 @@ export function createLevelReader(store: Store, level: Level, lookup: Lookup = c
     const ends = { from: before.point, to: after.point };
     if (stored !== undefined) return { key, y: stored, stored: true, ...ends };
     const [from, to] = [before.day, after.day];
-    const share = (borderDay - HALF_DAY - from) / (to - from);
+    // A chain in time order always has `to` after `from`; the guard keeps odd data from giving NaN
+    const share = to > from ? (borderDay - HALF_DAY - from) / (to - from) : 0;
     const [a, b] = [pointY(before.point.id), pointY(after.point.id)];
     return { key, y: Math.round(a + (b - a) * share), stored: false, ...ends };
   };

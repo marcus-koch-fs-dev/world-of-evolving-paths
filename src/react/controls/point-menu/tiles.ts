@@ -1,12 +1,8 @@
 import type { TileId } from './types.js';
 
-/** The tiles to show: without the hidden ones, and the connect tile only when the app can connect. */
-export function visibleTiles(
-  tiles: readonly Tile[],
-  hide: readonly TileId[] | undefined,
-  canConnect: boolean,
-): readonly Tile[] {
-  return tiles.filter((tile) => !hide?.includes(tile.id) && (tile.id !== 'connect' || canConnect));
+/** The tiles to show: all of them without the hidden ones. */
+export function visibleTiles(tiles: readonly Tile[], hide: readonly TileId[] | undefined): readonly Tile[] {
+  return tiles.filter((tile) => !hide?.includes(tile.id));
 }
 
 export type Tile = { id: TileId; label: string; glyph: string; group: 'action' | 'property' };
@@ -14,7 +10,6 @@ export type Tile = { id: TileId; label: string; glyph: string; group: 'action' |
 // Things you do with a point come first, then the properties of the point.
 export const TILES: readonly Tile[] = [
   { id: 'next', label: 'Next point', glyph: '+', group: 'action' },
-  { id: 'connect', label: 'Connect', glyph: '⇢', group: 'action' },
   { id: 'remove', label: 'Delete', glyph: '×', group: 'action' },
   { id: 'status', label: 'Status', glyph: '✓', group: 'property' },
   { id: 'kind', label: 'Kind', glyph: '▲', group: 'property' },

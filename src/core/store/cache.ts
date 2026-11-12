@@ -69,7 +69,8 @@ export function createStoreCache(): StoreCache {
           const known = byLevel.get(level);
           if (known?.depends.every((other) => current.has(other))) return known.chains;
           const made = chainsOfPath(path, level, lookup);
-          byLevel.set(level, made);
+          // A fork that looked for something that is not there yet is worked out again next time
+          if (made.complete) byLevel.set(level, made);
           return made.chains;
         },
         spanOf(path) {

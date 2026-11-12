@@ -53,14 +53,16 @@ function groupedByOwner<T>(
 
 /** For every point id the id of its path. */
 function pointOwners(store: Store): (id: string) => string | undefined {
-  const owners = new Map([...indexPoints(store.paths)].map(([id, info]) => [id, info.pathId]));
-  return (id) => owners.get(id);
+  const infos = indexPoints(store.paths);
+  return (id) => infos.get(id)?.pathId;
 }
 
-const withoutKeys = <T>(record: Record<string, T>, keys: readonly string[]): Record<string, T> =>
-  keys.some((key) => key in record)
-    ? Object.fromEntries(Object.entries(record).filter(([key]) => !keys.includes(key)))
+const withoutKeys = <T>(record: Record<string, T>, keys: readonly string[]): Record<string, T> => {
+  const gone = new Set(keys);
+  return keys.some((key) => key in record)
+    ? Object.fromEntries(Object.entries(record).filter(([key]) => !gone.has(key)))
     : record;
+};
 
 const emptyLevel = (): LevelHeights => ({ points: {}, arrows: {} });
 
@@ -121,9 +123,7 @@ export function withoutHeights(
   pointIds: readonly string[],
   arrowKeys: readonly string[],
 ): Store {
-  const points = groupedByOwner(Object.fromEntries(pointIds.map((id) => [id, true])), pointOwners(store));
-  const arrows = groupedByOwner(Object.fromEntries(arrowKeys.map((key) => [key, true])), pathOfArrow);
-  const owners = new Set([...points.keys(), ...arrows.keys()]);
+  const ownerOfPoint = pointOwners(store);
   const forget =
     (ids: readonly string[], keys: readonly string[]): LayoutChange =>
     (layout) =>
@@ -131,17 +131,19 @@ export function withoutHeights(
         points: withoutKeys(current.points, ids),
         arrows: withoutKeys(current.arrows, keys),
       }));
+  // What to forget, per path: the ids of its points and the keys of its arrows
+  const wanted = [
+    ...pointIds.map((id): [string | undefined, 'ids' | 'keys', string] => [ownerOfPoint(id), 'ids', id]),
+    ...arrowKeys.map((key): [string | undefined, 'ids' | 'keys', string] => [pathOfArrow(key), 'keys', key]),
+  ].reduce((all, [owner, kind, value]) => {
+    if (owner === undefined) return all;
+    const own = all.get(owner) ?? { ids: [], keys: [] };
+    own[kind].push(value);
+    return all.set(owner, own);
+  }, new Map<string, { ids: string[]; keys: string[] }>());
   return changeLayouts(
     store,
-    new Map(
-      [...owners].map((pathId): [string, LayoutChange] => [
-        pathId,
-        forget(
-          (points.get(pathId) ?? []).map(([id]) => id),
-          (arrows.get(pathId) ?? []).map(([key]) => key),
-        ),
-      ]),
-    ),
+    new Map([...wanted].map(([pathId, { ids, keys }]): [string, LayoutChange] => [pathId, forget(ids, keys)])),
   );
 }
 

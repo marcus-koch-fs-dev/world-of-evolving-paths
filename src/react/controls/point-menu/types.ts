@@ -5,12 +5,8 @@ export type PointPatch = Partial<Pick<StorePoint, 'title' | 'status' | 'kind' | 
 export type NextPointInput = {
   title: string;
   date: string;
-  /** Put the new point on a path of its own. */
-  newPath: boolean;
-  /** Color of the new path. Only meaningful with `newPath`. */
-  color: string;
-  /** Name of the new path. Only meaningful with `newPath`. Empty or missing: the app picks a name, for example the title. */
-  pathName?: string;
+  /** Start a new branch that forks off from the point, instead of adding to the branch the point is in. */
+  newBranch: boolean;
 };
 
-export type TileId = 'status' | 'next' | 'connect' | 'kind' | 'color' | 'rename' | 'details' | 'remove';
+export type TileId = 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove';
