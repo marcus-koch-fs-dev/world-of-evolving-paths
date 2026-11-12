@@ -24,7 +24,7 @@ const LEAD = {
 };
 
 /** The hooks with just enough around them: a scene with one lead, one point and the options a test gives. */
-function setup(options: Partial<PathWorldOptions>) {
+function setup(options: Partial<PathWorldOptions>, lead: Record<string, unknown> = {}) {
   const setCursor = vi.fn();
   const interaction = createInteractionState();
   const rebuild = vi.fn();
@@ -34,7 +34,10 @@ function setup(options: Partial<PathWorldOptions>) {
       world: () => ({ today: '2026-11-11', period: null, paths: [], points: [POINT] }),
       periodData: () => null,
     },
-    scene: { current: () => ({ leads: [LEAD], edges: [], nodes: [{ id: 'a', x: 0, y: 0, size: 56 }] }), rebuild },
+    scene: {
+      current: () => ({ leads: [{ ...LEAD, ...lead }], edges: [], nodes: [{ id: 'a', x: 0, y: 0, size: 56 }] }),
+      rebuild,
+    },
     interaction,
     dragger: {},
     viewport: { setCursor },
@@ -108,6 +111,87 @@ describe('Pointer hooks', () => {
     });
   });
 
+  describe('when the end of a line is dragged', () => {
+    it('moves only that end and takes no points along', () => {
+      const { hooks, interaction } = setup({ onLineEndMove: () => undefined });
+
+      hooks.onLineEndMove('lead:after:a:0', { x: 100, y: 120 });
+
+      expect(interaction.lineHeights().get('lead:after:a:0')).toBe(120);
+      expect(interaction.pathShifts().size).toBe(0);
+    });
+
+    it('moves a line across the whole view by itself, too', () => {
+      const { hooks, interaction } = setup(
+        { onLineEndMove: () => undefined },
+        { span: { from: LEAD.lead, to: LEAD.lead } },
+      );
+
+      hooks.onLineEndMove('lead:after:a:0', { x: 100, y: 120 });
+
+      expect(interaction.lineHeights().get('lead:after:a:0')).toBe(120);
+      expect(interaction.pathShifts().size).toBe(0);
+    });
+
+    it('ignores a line that is not in the scene', () => {
+      const { hooks, interaction } = setup({ onLineEndMove: () => undefined });
+
+      hooks.onLineEndMove('lead:after:zzz:0', { x: 100, y: 120 });
+
+      expect(interaction.lineDrags().size).toBe(0);
+    });
+  });
+
+  describe('when the line of a path is dragged', () => {
+    it('is taken only when the app listens and the line is on the pointer', () => {
+      const listening = setup({ onLineEndMove: () => undefined });
+      const deaf = setup({});
+
+      expect(listening.hooks.pathLineAt({ x: 50, y: 25 })).toBe('path:gym');
+      expect(listening.hooks.pathLineAt({ x: 500, y: 500 })).toBeNull();
+      expect(deaf.hooks.pathLineAt({ x: 50, y: 25 })).toBeNull();
+    });
+
+    it('moves the whole path along as a preview', () => {
+      const { hooks, interaction } = setup({ onLineEndMove: () => undefined });
+      hooks.onLineGrab('path:gym', { x: 50, y: 25 });
+
+      hooks.onLineEndMove('path:gym', { x: 50, y: 95 });
+
+      expect(interaction.pathShifts().get('gym')).toBe(70);
+      expect(interaction.lineHeights().size).toBe(0);
+    });
+
+    it('tells the app that the whole path moved, how far, and the heights from before', () => {
+      const onLineEndMove = vi.fn();
+      const { hooks } = setup({ onLineEndMove });
+      hooks.onLineGrab('path:gym', { x: 50, y: 25 });
+      hooks.onLineEndMove('path:gym', { x: 50, y: 95 });
+
+      hooks.onLineEndRelease('path:gym');
+
+      expect(onLineEndMove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'path',
+          pathId: 'gym',
+          shift: 70,
+          offsets: { a: 0 },
+          from: { id: 'a', title: 'A', date: '2026-11-10' },
+        }),
+      );
+    });
+
+    it('tells the app that only the end moved when the arrow was taken', () => {
+      const onLineEndMove = vi.fn();
+      const { hooks } = setup({ onLineEndMove });
+      hooks.onLineEndMove('lead:after:a:0', { x: 100, y: 120 });
+
+      hooks.onLineEndRelease('lead:after:a:0');
+
+      expect(onLineEndMove).toHaveBeenCalledWith(expect.objectContaining({ scope: 'end', pathId: 'gym' }));
+    });
+  });
+
   describe('when the drag of a line end is cancelled', () => {
     it('lets the line go back to where it was', () => {
       const { hooks, interaction, rebuild } = setup({ onLineEndMove: () => undefined });
@@ -144,6 +228,17 @@ describe('Pointer hooks', () => {
           to: { id: undefined, title: 'Out', date: '2026-12-20' },
         }),
       );
+    });
+
+    it('reports how far the end moved and the height of every point from its lane', () => {
+      const onLineEndMove = vi.fn();
+      const { hooks } = setup({ onLineEndMove });
+      hooks.onLineEndMove('lead:after:a:0', { x: 100, y: 20 });
+      hooks.onLineEndMove('lead:after:a:0', { x: 100, y: -30 });
+
+      hooks.onLineEndRelease('lead:after:a:0');
+
+      expect(onLineEndMove).toHaveBeenCalledWith(expect.objectContaining({ shift: -80, offsets: { a: 0 } }));
     });
 
     it('lets the line go when it was not dragged anywhere', () => {

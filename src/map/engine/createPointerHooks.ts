@@ -1,8 +1,8 @@
 import { layoutOf, nearestFree } from '../../core/collision.js';
 import { lanesOf } from '../../core/layout.js';
 import type { Turn } from '../../core/orientation.js';
-import { hitLead, hitLeadEnd, hitNode, reachAt } from '../../core/scene/hit.js';
-import { lineTargetAt, targetOfLead } from '../../core/scene/lineTarget.js';
+import { hitLead, hitNode, reachAt } from '../../core/scene/hit.js';
+import { lineTargetAt } from '../../core/scene/lineTarget.js';
 import { dateAxisX } from '../../core/scene/viewEdges.js';
 import { snapToGrid } from '../../core/snap.js';
 import { dateAtX } from '../../core/timeAxis.js';
@@ -13,6 +13,7 @@ import type { PointerHooks } from '../interaction/createPointerController.js';
 import type { PathWorldOptions } from '../options.js';
 import type { WorldModel } from '../state/createWorldModel.js';
 import type { InteractionState } from './createInteractionState.js';
+import { createLineGrabs } from './createLineGrabs.js';
 import type { SceneHolder } from './createSceneHolder.js';
 import { rounded } from './events.js';
 
@@ -52,13 +53,10 @@ export function createPointerHooks({
     return x === null ? position : { x, y: position.y };
   };
 
-  // The end of a line is only taken when the app listens, otherwise the height would be shown but never kept
-  const grabbableEnd = (world: Position): string | null =>
-    canDrag() && options().onLineEndMove
-      ? (hitLeadEnd(scene.current().leads, world, reachAt(zoom()))?.trackKey ?? null)
-      : null;
+  const lineGrabs = createLineGrabs({ options, model, scene, interaction, toLayout, zoom, canDrag });
 
   return {
+    ...lineGrabs,
     pointAt: (world) => hitNode(scene.current().nodes, world)?.id ?? null,
 
     onHover(id) {
@@ -67,7 +65,8 @@ export function createPointerHooks({
       scene.rebuild();
     },
 
-    // A hand over what can be clicked, a cross over the end of a line that can be moved, otherwise the hand that pans
+    // A hand over what can be clicked, a cross over the end of a line or a line that can be moved, otherwise the hand
+    // that pans
     onCursor(world) {
       const reach = reachAt(zoom());
       const current = scene.current();
@@ -75,15 +74,10 @@ export function createPointerHooks({
         hitLead(current.leads, world, reach) !== null ||
         (options().onLineSelect !== undefined &&
           lineTargetAt(current, model.world()?.points ?? [], world, reach) !== null);
-      // A point wins over the end of a line, as when it is pressed
+      const movable = lineGrabs.lineEndAt(world) !== null || lineGrabs.pathLineAt(world) !== null;
+      // A point wins over a line, as when it is pressed
       const cursor =
-        hitNode(current.nodes, world) !== null
-          ? 'pointer'
-          : grabbableEnd(world) !== null
-            ? 'move'
-            : onLine
-              ? 'pointer'
-              : 'grab';
+        hitNode(current.nodes, world) !== null ? 'pointer' : movable ? 'move' : onLine ? 'pointer' : 'grab';
       viewport.setCursor(cursor);
     },
 
@@ -110,30 +104,6 @@ export function createPointerHooks({
     onBackgroundClick: () => options().onSelect?.(null),
 
     leadAt: (world) => hitLead(scene.current().leads, world, reachAt(zoom()))?.id ?? null,
-
-    lineEndAt: grabbableEnd,
-
-    onLineEndMove(key, position) {
-      interaction.dragLine(key, Math.round(toLayout(position).y));
-      scene.rebuild();
-    },
-
-    onLineEndCancel(key) {
-      interaction.dropLine(key);
-      scene.rebuild();
-    },
-
-    onLineEndRelease(key) {
-      const y = interaction.lineHeights().get(key);
-      const lead = scene.current().leads.find((candidate) => candidate.trackKey === key);
-      const points = new Map((model.world()?.points ?? []).map((point) => [point.id, point]));
-      const target = lead && targetOfLead(lead, points);
-      // The line stays where it was dragged until the app answers with new data that holds the height
-      // The height goes to the app as a distance from the lane of the path of the line
-      if (y !== undefined && lead && target) options().onLineEndMove?.({ ...target, y: y - Math.round(lead.lane) });
-      else interaction.dropLine(key);
-      scene.rebuild();
-    },
 
     onLineClick(at) {
       const current = options();

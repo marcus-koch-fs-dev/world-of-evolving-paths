@@ -14,6 +14,10 @@ describe('Height where a connection crosses the edge of a period', () => {
     expect(heightBetween({ day: 0 }, { day: 10 }, 5)).toBeUndefined();
   });
 
+  it('never straightens a line: points far apart in height give a slanted line', () => {
+    expect(heightBetween({ day: 0, height: 0 }, { day: 10, height: 400 }, 5)).toBe(200);
+  });
+
   it('stays between the two points for a day outside them', () => {
     expect(heightBetween({ day: 0, height: 20 }, { day: 10, height: 40 }, 99)).toBe(40);
   });

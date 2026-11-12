@@ -1,7 +1,10 @@
 import { isIsoDate, type PathInfo } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
 import { hasCheckedIn } from './checkIn';
-import { connectionKey, involves } from './connection';
+import { crossesAt } from './connection';
+import type { HeightLevel } from './heightLevel';
+import { changeAllLevels, changeLevel, emptyHeights, type LevelHeights, omitKeys } from './heights';
+import { leadsTo } from './reach';
 import type { CheckIn, DemoPoint } from './types';
 
 /** What the demo app keeps. The library keeps none of it. */
@@ -10,36 +13,53 @@ export type DemoState = {
   points: DemoPoint[];
   checkIns: CheckIn[];
   /**
-   * The height of a point, per point id, as a distance from the lane of its path. One height for every view: where the
-   * point sits along the time axis is always its date.
+   * The height of a point, per level and point id, as a distance from the lane of its path. A week, a month and a year
+   * have different scales, so each keeps its own. Where the point sits along the time axis is always its date.
+   * Without a height the layout places the point.
    */
-  heights: Record<string, number>;
+  heights: LevelHeights;
   /**
-   * Where a path enters and leaves a period: per period key, then per connection (`connectionKey`), as a distance from
-   * the lane. The edge of a week lies on another date than the edge of a month, so each period keeps its own.
-   * Without an entry the height follows from the heights of the two points of the connection.
+   * The height where a path crosses the border between two periods, per level and crossing (`boundaryKey`), as a
+   * distance from the lane. The period before the border and the period after it share one height. Without an entry the
+   * line takes the heights of its two neighbours.
    */
-  edgeHeights: Record<string, Record<string, number>>;
+  boundaryHeights: LevelHeights;
   /** Layout seed per view key. */
   seeds: Record<string, number>;
   nextId: number;
 };
 
 export type DemoAction =
-  // A point was dragged to a height: its distance from the lane of its path
-  // `followers` are the heights of the points after it, which stay where they are so that a point moves alone
-  | { type: 'move'; id: string; height: number; followers?: Record<string, number> }
-  | { type: 'add'; pathId: string; height: number; date: string; importance: number }
+  // A point was dragged to a height: its distance from the lane of its path, kept for the level of the view.
+  // `followers` are the heights of the points after it, which stay where they are so that a point moves alone.
+  // A `level` of null is an overview, which keeps no heights.
+  | { type: 'move'; level: HeightLevel | null; id: string; height: number; followers?: Record<string, number> }
+  | { type: 'add'; level: HeightLevel | null; pathId: string; height: number; date: string; importance: number }
   | { type: 'addNext'; fromId: string; input: NextPointInput }
   // A point in the middle of a line: the line from `fromId` to `toId` now runs through it
-  | { type: 'insert'; fromId: string; toId: string; height: number; date: string; importance: number }
-  // The end of a line that leaves a period or spans it was dragged: the period, the connection and the height
-  | { type: 'edgeHeight'; periodKey: string; fromId: string; toId: string; height: number }
+  | {
+      type: 'insert';
+      level: HeightLevel | null;
+      fromId: string;
+      toId: string;
+      height: number;
+      date: string;
+      importance: number;
+    }
+  // A whole path was moved in a view: the new heights of its points and of where its lines cross the borders
+  | {
+      type: 'shiftPath';
+      level: HeightLevel | null;
+      heights: Record<string, number>;
+      boundaries: Record<string, number>;
+    }
+  // The arrow at the end of a line was dragged: where the connection crosses a border of the period (`boundaryKey`)
+  | { type: 'boundaryHeight'; level: HeightLevel | null; key: string; height: number }
   | { type: 'update'; id: string; patch: PointPatch }
   | { type: 'pathColor'; pathId: string; color: string }
   | { type: 'delete'; id: string }
-  // Another layout for a view: `pointIds` are the points it shows, they let go of their heights
-  | { type: 'reroll'; viewKey: string; pointIds: readonly string[] }
+  // Another layout for a view: `pointIds` are the points it shows, they let go of their heights on its level
+  | { type: 'reroll'; level: HeightLevel | null; viewKey: string; pointIds: readonly string[] }
   | { type: 'checkIn'; pathId: string; date: string }
   | { type: 'connect'; fromId: string; toId: string };
 
@@ -47,7 +67,15 @@ export const DEFAULT_SEED = 1;
 
 /** The state the demo starts with. */
 export function initialState(paths: PathInfo[], points: DemoPoint[], checkIns: CheckIn[] = []): DemoState {
-  return { paths, points, checkIns, heights: {}, edgeHeights: {}, seeds: {}, nextId: 1 };
+  return {
+    paths,
+    points,
+    checkIns,
+    heights: emptyHeights(),
+    boundaryHeights: emptyHeights(),
+    seeds: {},
+    nextId: 1,
+  };
 }
 
 /** The message to show when a new point cannot be created, or null when the input is fine. */
@@ -60,23 +88,11 @@ export function nextPointProblem(input: NextPointInput): string | null {
 /** The id of a point the user adds. One place for the format, so the app can predict it. */
 export const customPointId = (nextId: number) => `custom-${nextId}`;
 
-/** Does following the connections from `startId` lead to `targetId`? `nextOf` maps each id to the ids it links to. */
-function leadsTo(
-  nextOf: ReadonlyMap<string, readonly string[]>,
-  startId: string,
-  targetId: string,
-  seen = new Set<string>(),
-): boolean {
-  if (startId === targetId) return true;
-  if (seen.has(startId)) return false;
-  seen.add(startId);
-  return (nextOf.get(startId) ?? []).some((id) => leadsTo(nextOf, id, targetId, seen));
-}
-
 /** The message to show when two points cannot be connected, or null when they can. */
 export function connectProblem(points: DemoPoint[], fromId: string, toId: string): string | null {
   const from = points.find((point) => point.id === fromId);
-  if (!from || fromId === toId) return 'Pick another point to connect to.';
+  if (!from || fromId === toId || !points.some((point) => point.id === toId))
+    return 'Pick another point to connect to.';
   if (from.next.includes(toId)) return 'These points are already connected.';
   if (leadsTo(new Map(points.map((point) => [point.id, point.next])), toId, fromId))
     return 'That would make a circle. A path only runs forward.';
@@ -106,7 +122,7 @@ function addPoint(state: DemoState, action: Extract<DemoAction, { type: 'add' }>
   return {
     ...state,
     points: [...state.points, point],
-    heights: { ...state.heights, [id]: action.height },
+    heights: changeLevel(state.heights, action.level, (current) => ({ ...current, [id]: action.height })),
     nextId: state.nextId + 1,
   };
 }
@@ -145,7 +161,7 @@ function insertPoint(state: DemoState, action: Extract<DemoAction, { type: 'inse
       ),
       point,
     ],
-    heights: { ...state.heights, [id]: action.height },
+    heights: changeLevel(state.heights, action.level, (current) => ({ ...current, [id]: action.height })),
     nextId: state.nextId + 1,
   };
 }
@@ -205,50 +221,56 @@ function bridged(point: DemoPoint, removedId: string, successors: readonly strin
 
 function deletePoint(state: DemoState, id: string): DemoState {
   const successors = state.points.find((point) => point.id === id)?.next ?? [];
-  const edgeHeights = Object.fromEntries(
-    Object.entries(state.edgeHeights).map(([periodKey, heights]) => [
-      periodKey,
-      Object.fromEntries(Object.entries(heights).filter(([key]) => !involves(key, id))),
-    ]),
-  );
   return {
     ...state,
     points: state.points
       .filter((point) => point.id !== id)
       .map((point) => ({ ...point, next: bridged(point, id, successors) })),
-    heights: omit(state.heights, [id]),
-    edgeHeights,
+    heights: changeAllLevels(state.heights, (current) => omitKeys(current, [id])),
+    boundaryHeights: changeAllLevels(state.boundaryHeights, (current) => withoutInvolving(current, id)),
   };
 }
 
-/** A record without some keys. */
-function omit<T>(record: Record<string, T>, keys: readonly string[]): Record<string, T> {
-  return Object.fromEntries(Object.entries(record).filter(([key]) => !keys.includes(key)));
-}
-
-/** The height where a path enters or leaves one period, for one connection. Other periods keep theirs. */
-function setEdgeHeight(state: DemoState, action: Extract<DemoAction, { type: 'edgeHeight' }>): DemoState {
-  const ofPeriod = {
-    ...state.edgeHeights[action.periodKey],
-    [connectionKey(action.fromId, action.toId)]: action.height,
-  };
-  return { ...state, edgeHeights: { ...state.edgeHeights, [action.periodKey]: ofPeriod } };
-}
+/** The heights at the borders without those of a point. */
+const withoutInvolving = (heights: Record<string, number>, pointId: string) =>
+  Object.fromEntries(Object.entries(heights).filter(([key]) => !crossesAt(key, pointId)));
 
 /** The app's rules for how its data changes. Pure, so it is easy to test. */
 export function reduce(state: DemoState, action: DemoAction): DemoState {
   switch (action.type) {
     case 'move':
-      // One height for the point, in every view, and the followers keep the heights they had
-      return { ...state, heights: { ...state.heights, ...action.followers, [action.id]: action.height } };
+      // One height for the point on this level, and the followers keep the heights they had
+      return {
+        ...state,
+        heights: changeLevel(state.heights, action.level, (current) => ({
+          ...current,
+          ...action.followers,
+          [action.id]: action.height,
+        })),
+      };
+    case 'shiftPath':
+      return {
+        ...state,
+        heights: changeLevel(state.heights, action.level, (current) => ({ ...current, ...action.heights })),
+        boundaryHeights: changeLevel(state.boundaryHeights, action.level, (current) => ({
+          ...current,
+          ...action.boundaries,
+        })),
+      };
     case 'add':
       return addPoint(state, action);
     case 'addNext':
       return addNextPoint(state, action);
     case 'insert':
       return insertPoint(state, action);
-    case 'edgeHeight':
-      return setEdgeHeight(state, action);
+    case 'boundaryHeight':
+      return {
+        ...state,
+        boundaryHeights: changeLevel(state.boundaryHeights, action.level, (current) => ({
+          ...current,
+          [action.key]: action.height,
+        })),
+      };
     case 'update':
       return {
         ...state,
@@ -268,8 +290,8 @@ export function reduce(state: DemoState, action: DemoAction): DemoState {
     case 'reroll':
       return {
         ...state,
-        // Another layout also lets go of the heights the user chose for the points of this view
-        heights: omit(state.heights, action.pointIds),
+        // Another layout also lets go of the heights the user chose for the points of this view, on its level
+        heights: changeLevel(state.heights, action.level, (current) => omitKeys(current, action.pointIds)),
         seeds: { ...state.seeds, [action.viewKey]: (state.seeds[action.viewKey] ?? DEFAULT_SEED) + 1 },
       };
   }

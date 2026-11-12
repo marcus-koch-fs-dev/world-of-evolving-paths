@@ -24,6 +24,15 @@ describe('Random', () => {
     });
   });
 
+  describe('when names are picked', () => {
+    it('gives numbers in [0, 1) that differ by name', () => {
+      const values = ['a|s', 'a|y', 'b|y', 'point-1|y'].map(pick);
+
+      expect(values.every((value) => value >= 0 && value < 1)).toBe(true);
+      expect(new Set(values).size).toBe(values.length);
+    });
+  });
+
   describe('when a name is picked twice', () => {
     it('gives the same number', () => {
       expect(pick('point-1|y')).toBe(pick('point-1|y'));

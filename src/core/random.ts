@@ -1,6 +1,5 @@
 const FNV_OFFSET = 2166136261;
 const FNV_PRIME = 16777619;
-const SINE_SCALE = 43758.5453;
 
 const MULBERRY_STEP = 0x6d2b79f5;
 const UINT32_RANGE = 4294967296;
@@ -17,9 +16,11 @@ export function createSequence(seed: number): () => number {
   };
 }
 
-/** Fixed pseudo-random number in [0, 1) for a name: the same name always gives the same number. */
+/**
+ * Fixed pseudo-random number in [0, 1) for a name: the same name always gives the same number.
+ * Integer math only, so every JavaScript engine gives the same result.
+ */
 export function pick(name: string): number {
   const hash = name.split('').reduce((sum, char) => Math.imul(sum ^ char.charCodeAt(0), FNV_PRIME), FNV_OFFSET);
-  const value = Math.sin(hash) * SINE_SCALE;
-  return value - Math.floor(value);
+  return createSequence(hash)();
 }

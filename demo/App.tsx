@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer, useState } from 'react';
+﻿import { useCallback, useMemo, useReducer, useState } from 'react';
 import { toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import {
   BackgroundPanel,
@@ -11,13 +11,15 @@ import {
 } from 'world-of-evolving-paths/react';
 import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
 import { rememberColor } from './app-logic/customColors';
-import { followersOf } from './app-logic/followers';
 import { heightOnPath } from './app-logic/heightOnPath';
 import { canRedo, canUndo } from './app-logic/history';
 import { levelThatShows, minImportanceOf, steppedYears } from './app-logic/levels';
+import { lineEndAction } from './app-logic/lineEndAction';
 import type { DemoMode } from './app-logic/menuGroups';
 import { importanceOf } from './app-logic/periodData';
+import { createBorderKeyOf } from './app-logic/reach';
 import { canComplete } from './app-logic/rules';
+import { keptHeights } from './app-logic/shiftPath';
 import { customPointId, DEFAULT_SEED, initialState, nextPointProblem } from './app-logic/state';
 import { createStateHistory, historyReduce } from './app-logic/stateHistory';
 import { finerLevel } from './app-logic/zoom';
@@ -82,7 +84,7 @@ export function App() {
     else if (navigation.level !== null) navigation.move(shortcut.count);
   });
 
-  const { period, view, tileKey, range, travel, result, periods } = useDemoView(state, navigation, today);
+  const { period, level, view, tileKey, range, travel, result, periods } = useDemoView(state, navigation, today);
   const lineSelection = useLineSelection(tileKey);
 
   // A point that is not in the current view is not selected, so its menu and check-in button do not linger
@@ -131,6 +133,7 @@ export function App() {
     if (height === null) return;
     dispatch({
       type: 'insert',
+      level,
       fromId: line.from.id,
       toId: line.to.id,
       height,
@@ -160,7 +163,8 @@ export function App() {
         seed={state.seeds[tileKey] ?? DEFAULT_SEED}
         editable={editing}
         wavy={values.wavy}
-        pointsLocked={values.pointsLocked}
+        // An overview (several years, everything) keeps no heights, so nothing can be moved there
+        pointsLocked={values.pointsLocked || level === null}
         snap={values.snap ? SNAP_STEP : undefined}
         animate={values.animate}
         locale={values.locale}
@@ -170,11 +174,15 @@ export function App() {
           lineSelection.clear();
           connecting.handleSelect(id);
         }}
-        onLineEndMove={({ from, to, y }) => {
-          // The height belongs to this period: the edge of a week lies on another day than the edge of a month
-          if (from.id && to.id)
-            dispatch({ type: 'edgeHeight', periodKey: view, fromId: from.id, toId: to.id, height: y });
-        }}
+        onLineEndMove={
+          level === null
+            ? undefined
+            : (event) => {
+                // The path of the line moves in this view, on this level. Where it meets the edge follows from that
+                const action = lineEndAction(event, period, result.data.paths, createBorderKeyOf(state.points));
+                if (action) dispatch(action);
+              }
+        }
         onLineSelect={(line) => {
           // While waiting for the point to connect to, a line is not a choice
           if (!editing || connecting.from !== null) return;
@@ -182,13 +190,9 @@ export function App() {
           lineSelection.select(line);
         }}
         onPointMove={({ id, offset, offsets }) => {
-          // The points after it would follow it, so they are pinned where they are: a point moves alone
-          const followers = Object.fromEntries(
-            followersOf(viewPoints, id)
-              .filter((followerId) => offsets[followerId] !== undefined)
-              .map((followerId) => [followerId, offsets[followerId]]),
-          );
-          dispatch({ type: 'move', id, height: offset, followers });
+          // Every other point of the view stays where it is, so a point moves alone and nothing is pushed around
+          const others = viewPoints.map((point) => point.id).filter((otherId) => otherId !== id);
+          dispatch({ type: 'move', level, id, height: offset, followers: keptHeights(others, offsets) });
         }}
         onPointAdd={({ y, date, lanes }) => {
           // The new point is as important as the view needs, so it shows where it was added
@@ -197,13 +201,13 @@ export function App() {
           const pathId = selected?.pathId ?? result.data.paths[0]?.id;
           const height = pathId === undefined ? null : heightOnPath(y, lanes, pathId);
           if (pathId === undefined || height === null) return;
-          dispatch({ type: 'add', pathId, height, date, importance });
+          dispatch({ type: 'add', level, pathId, height, date, importance });
           setSelectedId(customPointId(state.nextId));
         }}
         onPointDoubleClick={({ date }) => {
           // A double-click on a point goes one level finer, to the period of its date
-          const level = finerLevel(navigation.level, values.levels);
-          if (level) navigation.zoomInto(level, date);
+          const finer = finerLevel(navigation.level, values.levels);
+          if (finer) navigation.zoomInto(finer, date);
         }}
         onLeadDoubleClick={({ id, date }) => {
           // A double-click on a line that leaves the view goes to the period of the point out there, in the same level
@@ -220,7 +224,7 @@ export function App() {
           paging={result}
           locale={values.locale}
           levels={offeredLevels}
-          onReroll={() => dispatch({ type: 'reroll', viewKey: tileKey, pointIds: [...visibleIds] })}
+          onReroll={() => dispatch({ type: 'reroll', level, viewKey: tileKey, pointIds: [...visibleIds] })}
           onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
           onModeChange={setMode}
@@ -260,7 +264,7 @@ export function App() {
                 dispatch({ type: 'checkIn', pathId: selectedPath.id, date: today });
               }}
             >
-              {checkedInToday ? `✓ Checked in today: ${selectedPath.name}` : `Check in: ${selectedPath.name}`}
+              {checkedInToday ? `âœ“ Checked in today: ${selectedPath.name}` : `Check in: ${selectedPath.name}`}
             </button>
           </ControlBar>
         )}

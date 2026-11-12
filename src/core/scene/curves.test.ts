@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cutAt, dashSegments, pointAt } from './curves.js';
+import { cutAt, dashSegments, pointAt, yAtX } from './curves.js';
 
 const straight = [
   { x: 0, y: 0 },
@@ -49,6 +49,24 @@ describe('Dashed lines', () => {
         [2, 10],
       ),
     ).toHaveLength(83334);
+  });
+});
+
+describe('Height of a line at a place along it', () => {
+  const line = [
+    { x: 0, y: 0 },
+    { x: 100, y: 50 },
+    { x: 200, y: 50 },
+  ];
+
+  it('is between the two points that enclose the place', () => {
+    expect(yAtX(line, 50)).toBe(25);
+    expect(yAtX(line, 150)).toBe(50);
+  });
+
+  it('is the height of the nearest end beyond the line', () => {
+    expect(yAtX(line, -40)).toBe(0);
+    expect(yAtX(line, 400)).toBe(50);
   });
 });
 

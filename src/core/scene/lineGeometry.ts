@@ -42,3 +42,15 @@ export const leadKey = (side: LeadSide, pointId: string, index: number) => `lead
 
 /** The key of a line that spans the whole view. */
 export const throughKey = (pathId: string, index: number) => `through:${pathId}:${index}`;
+
+/** The key of the whole line that spans the view, from the key of one of its ends. Null for any other key. */
+export const throughKeyOfEnd = (endKey: string): string | null =>
+  /^(through:.*:\d+):(?:start|end)$/.exec(endKey)?.[1] ?? null;
+
+/** The id of the path of a line that spans the view, from the key of one of its ends. Null for any other key. */
+export const throughPathIdOf = (endKey: string): string | null =>
+  /^through:(.*):\d+:(?:start|end)$/.exec(endKey)?.[1] ?? null;
+
+/** The key of one end of a line that spans the whole view: the arrow at the start or at the end of the view. */
+export const throughEndKey = (pathId: string, index: number, side: LeadSide) =>
+  `${throughKey(pathId, index)}:${side === 'before' ? 'start' : 'end'}`;

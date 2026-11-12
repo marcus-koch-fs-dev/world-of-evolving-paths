@@ -54,6 +54,46 @@ describe('Path that runs through the view', () => {
     });
   });
 
+  describe('when it has a height at each end', () => {
+    const slanted: PathInfo = {
+      ...through,
+      through: [{ ...(through.through?.[0] as NonNullable<PathInfo['through']>[number]), yStart: -100, yEnd: 100 }],
+    };
+
+    it('runs from the one height to the other, from the lane of its path', () => {
+      const [line] = linesOf(worldOf({ paths: [slanted] }));
+
+      // One path has its lane at 0
+      expect(line.from.y).toBe(-100);
+      expect(line.to.y).toBe(100);
+    });
+
+    it('carries today at the height of the line on that day, between its two ends', () => {
+      const world = worldOf({ paths: [slanted] });
+      const [line] = linesOf(world);
+
+      const at = todayOnThrough(world, line);
+
+      expect(at?.y).toBeGreaterThan(-100);
+      expect(at?.y).toBeLessThan(100);
+    });
+
+    it('gives each end its own key, so the two can be dragged apart', () => {
+      const scene = buildScene(worldOf({ paths: [slanted] }), calm);
+
+      expect(scene.leads.map((lead) => lead.trackKey)).toEqual(['through:reading:0:start', 'through:reading:0:end']);
+    });
+
+    it('follows the height an end is dragged to', () => {
+      const world = worldOf({ paths: [slanted] });
+
+      const [line] = throughLines(world, lineTracks(world), new Map([['through:reading:0:start', 40]]));
+
+      expect(line.from.y).toBe(40);
+      expect(line.to.y).toBe(100);
+    });
+  });
+
   describe('when the point at its end has been reached', () => {
     it('is a solid line like any walked connection, not a dotted one', () => {
       const past: PathInfo = {

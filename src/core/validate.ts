@@ -48,7 +48,9 @@ function oneThroughErrors(through: unknown, where: string): string[] {
     ...oneLeadErrors(through.from, `${where}.from`),
     ...oneLeadErrors(through.to, `${where}.to`),
     ...(strengthOk ? [] : [`${where}.strength must be a whole number from 0 to ${MAX_STRENGTH}.`]),
-    ...(through.y === undefined || isFiniteNumber(through.y) ? [] : [`${where}.y must be a number.`]),
+    ...(['y', 'yStart', 'yEnd'] as const).flatMap((field) =>
+      through[field] === undefined || isFiniteNumber(through[field]) ? [] : [`${where}.${field} must be a number.`],
+    ),
   ];
 }
 

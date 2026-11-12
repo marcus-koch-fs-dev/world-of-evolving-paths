@@ -35,27 +35,35 @@ describe('Tracks of lines along the time axis', () => {
   });
 
   describe('when the user put a line at a height', () => {
-    it('keeps it there, and the others make room', () => {
+    it('keeps it there, and the others stay where they are too, so they can cross', () => {
       const found = separateTracks([track('other', 100), { ...track('chosen', 100), exact: true }]);
 
       expect(found.get('chosen')).toBe(100);
-      expect(found.get('other')).toBe(100 + LINE_GAP);
+      expect(found.get('other')).toBe(100);
     });
 
     it('keeps it even next to a line that spans the whole view', () => {
       const found = separateTracks([track('across', 100, 0, 1000, true), { ...track('chosen', 110), exact: true }]);
 
       expect(found.get('chosen')).toBe(110);
+      expect(found.get('across')).toBe(100);
     });
 
-    it('moves the second of two such lines that lie on top of each other', () => {
+    it('keeps two such lines where they were put, also when they lie on top of each other', () => {
       const found = separateTracks([
         { ...track('first', 100), exact: true },
         { ...track('second', 100), exact: true },
       ]);
 
       expect(found.get('first')).toBe(100);
-      expect(found.get('second')).toBe(100 + LINE_GAP);
+      expect(found.get('second')).toBe(100);
+    });
+
+    it('lets a line that was not put anywhere keep its place when another line is put beside it', () => {
+      const before = separateTracks([track('other', 100)]);
+      const after = separateTracks([track('other', 100), { ...track('mover', 110), exact: true }]);
+
+      expect(after.get('other')).toBe(before.get('other'));
     });
   });
 

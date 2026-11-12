@@ -57,6 +57,14 @@ export function hitLead(leads: LeadDraw[], at: Position, reach: Reach = DEFAULT_
   return leads.find((lead) => onLabel(lead, at, reach.line) || onLine(lead.line, at, reach.line)) ?? null;
 }
 
+/**
+ * The line that leaves the view under a world position, on the line itself and not on its label, to be dragged by it.
+ * A line across the whole view counts too: both of its halves belong to it.
+ */
+export function hitLeadLine(leads: LeadDraw[], at: Position, reach: Reach = DEFAULT_REACH): LeadDraw | null {
+  return leads.find((lead) => onLine(lead.line, at, reach.line)) ?? null;
+}
+
 /** The line whose end (the arrow at the edge of the view) is under a world position, to be dragged by it. */
 export function hitLeadEnd(leads: LeadDraw[], at: Position, reach: Reach = DEFAULT_REACH): LeadDraw | null {
   return leads.find((lead) => Math.hypot(at.x - lead.end.x, at.y - lead.end.y) <= reach.end) ?? null;

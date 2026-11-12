@@ -13,7 +13,7 @@ describe('Move events', () => {
   it('reports the moved point and where every point of the view is', () => {
     const points = [placed('a', 10.2, 20.7), placed('b', 30, 40)];
 
-    const event = buildMoveEvent(points, 'a', { x: 55.5, y: 66.4 });
+    const event = buildMoveEvent(points, 'a', { x: 55.5, y: 66.4 }, {});
 
     expect(event).toEqual({
       id: 'a',
@@ -42,5 +42,17 @@ describe('Move events', () => {
     const event = buildMoveEvent(points, 'a', { x: 10, y: -80 }, { gym: -100 });
 
     expect(event.offset).toBe(20);
+  });
+
+  describe('when a point id is "__proto__"', () => {
+    it('keeps it as a key of positions and offsets', () => {
+      const points = [placed('__proto__', 10, 20), placed('b', 30, 40)];
+
+      const event = buildMoveEvent(points, '__proto__', { x: 11, y: 22 }, {});
+
+      expect(Object.keys(event.positions)).toEqual(['__proto__', 'b']);
+      expect(Object.getPrototypeOf(event.positions)).toBe(Object.prototype);
+      expect(event.offset).toBe(22);
+    });
   });
 });

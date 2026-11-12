@@ -17,10 +17,46 @@ export type LineEndMoveEvent = {
   from: LineEnd;
   to: LineEnd;
   /**
-   * The height as a distance from the lane of the path of the line (0 = on the lane), so it fits every view. Pass it
-   * back as `y` of the lead or of the `through` of the path.
+   * What was moved. `end`: the user took the arrow at the end of the line, so only that end moves (its height is `y`).
+   * `path`: the user took the line itself, so the whole path of the line moves in this view (see `shift`). While the
+   * user drags, the preview shows the same. A line across the whole view has no path to take along, so it only gives `end`.
+   */
+  scope: 'end' | 'path';
+  /** The id of the path of the line, when it is known. With scope `path` it is the path that moves. */
+  pathId?: string;
+  /**
+   * With scope `end`: which end of the line was moved. `before` is the end at the start of the view, `after` the one at
+   * its end. Needed for a line across the whole view, which has both.
+   */
+  side?: 'before' | 'after';
+  /**
+   * The height of the end of the line as a distance from the lane of the path of the line (0 = on the lane). With
+   * scope `end` pass it back as `y` of the lead, or keep it yourself for the edge of the view.
    */
   y: number;
+  /**
+   * How far the pointer moved, up or down, since it took the line (negative: up when time runs left to right). With
+   * scope `path`, add `shift` to the `offsets` of the points of the path in this view and pass the results back as `y`
+   * of those points.
+   */
+  shift: number;
+  /** The height from the lane of its path of every point of the view, by id, before the move. */
+  offsets: Record<string, number>;
+  /**
+   * Every line that leaves the view or comes in from outside it (not the ones across the whole view), with the height of
+   * its end at the edge, as a distance from the lane of its path, before the move. Add `shift` to the ends of the
+   * lines of the path to move them along with its points.
+   */
+  lineEnds: LineEndHeight[];
+};
+
+/** The end of a line at the edge of the view: its two points and its height from the lane of its path. */
+export type LineEndHeight = {
+  from: LineEnd;
+  to: LineEnd;
+  y: number;
+  /** Set for the ends of a line across the whole view: which border of the view the end lies on. */
+  side?: 'before' | 'after';
 };
 
 export type PointMoveEvent = {

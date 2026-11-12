@@ -56,9 +56,16 @@ export type PathThrough = {
   strength?: number;
   /**
    * The height of the line across the view, as a distance from the lane of its path. Set it to keep a line where the
-   * user put it (see `onLineEndMove`).
+   * user put it (see `onLineEndMove`). It is the height of both ends when `yStart` and `yEnd` are not set.
    */
   y?: number;
+  /**
+   * The height of the line where it comes in at the edge of the view, as a distance from the lane. With `yEnd` the line
+   * runs smoothly from one to the other, so it meets the line of the period before it and the one after it.
+   */
+  yStart?: number;
+  /** The height of the line where it leaves the view, as a distance from the lane. See `yStart`. */
+  yEnd?: number;
 };
 
 /** How a path looks, without its points. */
