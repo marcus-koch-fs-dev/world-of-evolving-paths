@@ -1,7 +1,8 @@
 import { toDay } from '../../dates.js';
 import { bordersBetween } from '../boundaries.js';
 import { type Chain, levelChains } from '../chains.js';
-import { LEVELS, withArrowHeights } from '../levels.js';
+import { withArrowHeights } from '../layout.js';
+import { LEVELS } from '../levels.js';
 import { createLevelReader } from '../reader.js';
 import type { Level, Store } from '../types.js';
 

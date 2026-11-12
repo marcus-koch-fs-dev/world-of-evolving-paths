@@ -13,9 +13,10 @@ The library no longer asks you to build every view. You give it one store of pat
 - Lines that cross the border of a period end in an arrow at the exact place of the border. Both periods next to a border show the arrow at the same height: one entry per path, branch and border date. Until the user drags it, it lies on the straight line between its two neighbours.
 - Heights are kept per level. A point without a height on a level takes the one from the week, then a default that depends only on the point.
 - A dragged point moves alone. Moving a line moves the whole path with all its branches, points and arrows.
-- New option `freeMove`: in the free view, points and paths move freely in every direction. The places are kept apart in `store.free` and do not touch the levels.
+- New option `freeMove`: in the free view, points and paths move freely in every direction. The places are kept apart in `layout.free` and do not touch the levels.
 - New option `pathIds` and function `pathsInView(store, view, cache?)` to page through many paths. Only the shown paths are worked out.
-- Paths that did not change are not worked out again (`createStoreCache`). New helpers `replacePath` and `changedParts(before, after)` to swap one path and to save only what the user changed.
+- Paths that did not change are not worked out again (`createStoreCache`). New helper `replacePath` to swap one path.
+- **Breaking:** the store is `{ paths }`. The heights and free places moved into the path (`path.layout`), so one path holds everything about itself. `onStoreChange(store, { changed, removed })` says which paths are new or different (whole) and which ids are gone: save `changed`, delete `removed`. `storeChanges(before, after)` gives the same for your own changes. Path ids must not contain a slash. New section "Connect your database" in the README.
 - The marker for today and the lit part of a line that leaves the view now agree.
 - New functions `placeLevel`, `lanesOf`, `weekdayOf`, `addPoint`, `updatePoint`, `removePoint`, `addBranch`, `addPath`, `updatePath`, `forgetHeights`, `moveFreePoint` and `moveFreePath`.
 - The points no longer push each other away, and the thin rings while dragging are gone. Heights are chosen by the user, not by a layout search.

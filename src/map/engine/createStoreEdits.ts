@@ -1,5 +1,6 @@
 import { lanesOf } from '../../core/lanes.js';
-import { moveArrow, moveFreePath, moveFreePoint, movePath, movePoint } from '../../core/store/index.js';
+import { moveArrow, moveFreePath, moveFreePoint, movePath, movePoint, storeChanges } from '../../core/store/index.js';
+import type { Store } from '../../core/store/types.js';
 import type { Position } from '../../core/types.js';
 import type { PathWorldOptions } from '../options.js';
 import type { WorldModel } from '../state/createWorldModel.js';
@@ -33,7 +34,8 @@ export function createStoreEdits({ options, model }: Dependencies): StoreEdits {
     const world = model.world();
     return world ? lanesOf(world) : {};
   };
-  const publish = (next: ReturnType<typeof moveArrow>) => options().onStoreChange?.(next);
+  // The app gets the new store and the paths it touched, so it saves those and nothing else
+  const publish = (before: Store, next: Store) => options().onStoreChange?.(next, storeChanges(before, next));
 
   return {
     canMove: () => canMove() && options().pointsLocked !== true,
@@ -42,8 +44,8 @@ export function createStoreEdits({ options, model }: Dependencies): StoreEdits {
     movePoint(id, position) {
       const [store, level, point] = [model.store(), model.level(), model.world()?.points.find((p) => p.id === id)];
       if (!store || !point) return;
-      if (level === null) return publish(moveFreePoint(store, id, position));
-      publish(movePoint(store, level, id, position.y - (lanes()[point.pathId] ?? 0)));
+      if (level === null) return publish(store, moveFreePoint(store, id, position));
+      publish(store, movePoint(store, level, id, position.y - (lanes()[point.pathId] ?? 0)));
     },
 
     moveArrow(key, y) {
@@ -52,13 +54,13 @@ export function createStoreEdits({ options, model }: Dependencies): StoreEdits {
         world?.arrows.find((arrow) => arrow.key === key)?.pathId ??
         world?.spans.find((span) => span.before.key === key || span.after.key === key)?.pathId;
       if (!store || level === null || pathId === undefined) return;
-      publish(moveArrow(store, level, key, y - (lanes()[pathId] ?? 0)));
+      publish(store, moveArrow(store, level, key, y - (lanes()[pathId] ?? 0)));
     },
 
     movePath(pathId, shift) {
       const [store, level] = [model.store(), model.level()];
       if (!store) return;
-      publish(level === null ? moveFreePath(store, pathId, shift) : movePath(store, level, pathId, shift.y));
+      publish(store, level === null ? moveFreePath(store, pathId, shift) : movePath(store, level, pathId, shift.y));
     },
   };
 }

@@ -2,7 +2,7 @@ import type { BackgroundOptions, BackgroundPattern } from '../core/background/ty
 import type { Camera } from '../core/camera.js';
 import type { Direction } from '../core/orientation.js';
 import type { LineEnd } from '../core/scene/lineTarget.js';
-import type { Store } from '../core/store/types.js';
+import type { Store, StoreChanges } from '../core/store/types.js';
 import type { Position } from '../core/types.js';
 
 export type { BackgroundOptions, BackgroundPattern };
@@ -48,10 +48,12 @@ export type LineSelectEvent = {
 export type PathWorldEvents = {
   /**
    * The user moved something: a point, an arrow at the border of the view, a whole path, or in the overview a point or a
-   * path to a free place. The map made the change and hands you the new store. Keep it and pass it back as `store`.
+   * path to a free place. The map made the change and hands you the new `store` and what it touched: `changed` holds
+   * the paths that are new or different (whole, with their layout), `removed` the ids of paths that are gone. Keep the
+   * store and pass it back as `store`, and save `changed` and `removed` in your database.
    * Without this callback nothing can be moved.
    */
-  onStoreChange?: (store: Store) => void;
+  onStoreChange?: (store: Store, changes: StoreChanges) => void;
   /** A point was clicked (its id) or the empty area was clicked (null). */
   onSelect?: (id: string | null) => void;
   /**
@@ -71,7 +73,7 @@ export type PathWorldEvents = {
 };
 
 export type PathWorldOptions = PathWorldEvents & {
-  /** The paths with their branches and points, the heights the user chose, and the free positions. See `createStore`. */
+  /** The paths, each with its branches and points and the layout the user chose. See `createStore`. */
   store: Store;
   /** Key of the period to show, from `periodOf(...).key`. Any other key shows the overview of everything. */
   view: string;

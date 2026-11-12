@@ -1,6 +1,7 @@
 import { pick } from '../random.js';
 import { arrowKey } from './boundaries.js';
 import { type Chain, createLookup, type Lookup } from './chains.js';
+import { keptArrowHeight, keptPointHeight } from './layout.js';
 import type { PointInfo } from './order.js';
 import type { Level, Store, StorePoint } from './types.js';
 
@@ -25,10 +26,13 @@ export type ArrowReading = { key: string; y: number; stored: boolean; from: Stor
  * depend on the points of the level, never on the period shown, so two periods agree on a shared border.
  */
 export function createLevelReader(store: Store, level: Level, lookup: Lookup = createLookup(store.paths)) {
-  const kept = store.heights[level];
+  const pathById = new Map(store.paths.map((path) => [path.id, path]));
   const pointY = (id: string): number => {
-    const info = lookup.point(id)?.info;
-    return kept.points[id] ?? store.heights.week.points[id] ?? (info ? defaultHeight(info) : 0);
+    const found = lookup.point(id);
+    if (!found) return 0;
+    return (
+      keptPointHeight(found.path, level, id) ?? keptPointHeight(found.path, 'week', id) ?? defaultHeight(found.info)
+    );
   };
 
   /** The arrow where a chain crosses the border starting on `borderDay`, or null when the line does not reach it. */
@@ -38,7 +42,8 @@ export function createLevelReader(store: Store, level: Level, lookup: Lookup = c
     const after = nextIndex > 0 ? chain.items[nextIndex] : undefined;
     if (!before || !after) return null;
     const key = arrowKey(chain.pathId, chain.branchId, borderDay);
-    const stored = kept.arrows[key];
+    const owner = pathById.get(chain.pathId);
+    const stored = owner ? keptArrowHeight(owner, level, key) : undefined;
     const ends = { from: before.point, to: after.point };
     if (stored !== undefined) return { key, y: stored, stored: true, ...ends };
     const [from, to] = [before.day, after.day];

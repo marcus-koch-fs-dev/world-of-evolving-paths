@@ -31,6 +31,7 @@ export function validateStore(paths: readonly StorePath[]): string[] {
   );
   return [
     ...duplicates(paths.map((path) => path.id)).map((id) => `Path id "${id}" is used twice.`),
+    ...paths.filter((path) => path.id.includes('/')).map((path) => `Path id "${path.id}" must not contain a slash.`),
     ...duplicates(branches.map((branch) => branch.id)).map((id) => `Branch id "${id}" is used twice.`),
     ...duplicates(points.map((point) => point.id)).map((id) => `Point id "${id}" is used twice.`),
     ...points

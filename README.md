@@ -196,7 +196,7 @@ You own the data. The library turns your `store` into a picture, and when the us
 ```
 your app ── store, view, options ──▶  PathWorld  ──▶  canvas
    ▲                                      │
-   └──────── onStoreChange(newStore) ─────┘
+   └─ onStoreChange(newStore, { changed, removed }) ─┘
 ```
 
 > [!NOTE]
@@ -205,24 +205,20 @@ your app ── store, view, options ──▶  PathWorld  ──▶  canvas
 ### The data
 
 ```ts
-type Store = {
-  paths: StorePath[]; // what you provide
-  heights: …; // the heights the user chose, per level (the library fills it)
-  free: …; // the places the user chose in the free view (the library fills it)
-};
+type Store = { paths: StorePath[] };
 ```
 
-You only write the `paths`. Pass them to `createStore(paths)`:
+The store is only the list of paths. **A path holds everything about itself**, also what the user arranged on it (`layout`: the heights per level and the places in the free view). So one path is one unit: you give paths in, and you save paths when they change. Pass your paths to `createStore(paths)`:
 
 | Object  | Fields                                                                                                         |
 | ------- | -------------------------------------------------------------------------------------------------------------- |
-| Path    | `{ id, name, color, lane?, branches }`. `color` is `#rrggbb` and stays the same along the whole path.         |
+| Path    | `{ id, name, color, lane?, branches, layout? }`. `color` is `#rrggbb`. The `id` must not contain a slash.      |
 | Branch  | `{ id, splitsAt?, points }`. A branch with `splitsAt` (the id of a point) forks off from that point.         |
 | Point   | `{ id, date, title, kind, status, prio, note?, strength? }`. `date` is `YYYY-MM-DD`, `prio` is 1 to 5.        |
 
 - The points of a branch stand in time order. At the same date the id decides. There is no `next`: a line always connects a point with the one before and the one after it in its branch.
 - A branch can only fork off. Two branches do not run together again, and two paths are not connected.
-- Heights and arrows are **not** your input. They come from dragging and are kept per level.
+- Heights and arrows are **not** your input. They come from dragging, are kept per level and live in the `layout` of the path. Save the layout with the path.
 - `validateStore(paths)` lists what is wrong (double ids, a bad date, a prio outside 1 to 5, a `splitsAt` that does not exist, a fork in a circle). The map runs it and reports through `onError`.
 
 ### Show a view
@@ -256,7 +252,7 @@ A double-click on the line or its text calls `onLeadDoubleClick({ pointId, side,
 
 ### What happens when the user drags
 
-The map makes the change and calls `onStoreChange(newStore)`. Keep the new store and pass it back in as `store`.
+The map makes the change and calls `onStoreChange(newStore, { changed, removed })`. Keep the new store and pass it back in as `store`, and save what changed ([Connect your database](#connect-your-database)).
 
 | The user takes …    | What moves                                                                                                    |
 | ------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -274,19 +270,40 @@ By default a dragged point moves only across the time axis (`timeLocked: true`),
 **Clicking a line.** `onLineSelect({ from, to, x, y, date, lanes, at })` comes when the user clicks or right-clicks a line. `from` and `to` are its two ends, `date` is the date where it was clicked, and `lanes` the lane of every path, so `y - lanes[pathId]` is the height for a new point. Show a `LineMenu` at `at`, for example with **Insert point**.
 
 
+### Connect your database
+
+One rule: **the unit is the path.** What you save and what you load are whole paths, and the map tells you which ones changed.
+
+```tsx
+<PathWorld
+  store={store}
+  view={view}
+  onStoreChange={(next, { changed, removed }) => {
+    setStore(next); // your state, passed back in as `store`
+    changed.forEach(savePath); // new or different paths, whole, with their layout
+    removed.forEach(deletePath); // ids of paths that are gone
+  }}
+/>
+```
+
+- **Into the map:** `store = { paths }`. Load your paths from the database as they are and pass them in. Nothing else.
+- **Out of the map:** `onStoreChange(store, { changed, removed })`. `store` is the new whole store for your state. `changed` holds the paths that are new or different, each one whole. `removed` holds the ids of paths that are gone. Save `changed`, delete `removed`, nothing more. How you save a path (one row, one document, one file) is up to you.
+- **Where it comes from.** The map hands over `changed` after every move. The functions that change the store (`movePoint`, `updatePoint`, `addPoint`, …) keep every path they do not touch as the same object, so `storeChanges(before, after)` gives the same answer for changes you make yourself. Moving a point can touch two paths: the arrows of a fork that leaves from that point belong to the fork's path.
+- **Something changed in the database by someone else?** Replace that path with `replacePath(store, path)` and pass the store in again. Other paths stay the same objects.
+
 ### Big data, small updates
 
 The store is your state, so you change it in small pieces and the map only works on what changed:
 
 - **Replace one path.** Put a new path object in the place of the old one and keep all other paths as they are: `replacePath(store, path)`, or `paths.map(...)` yourself. Paths that are the same objects as before are not worked out again, because the map keeps its results per path (`createStoreCache`, used inside the map; you can pass your own to `placeLevel` and `pathsInView`). A fork is worked out again when the path it leaves from changed.
 - **Show only some paths.** `pathIds` limits the paths. Only these are worked out, the rest of the store is not touched.
-- **Load in pieces.** The library does not load anything. Load by path (a page of paths), by prio (a year needs only prio 5, a month 3 to 5) or by time window with one neighbour point before and after the window for the arrows. Keep your `heights` and `free` and swap only `paths`.
-- **Save only what changed.** `onStoreChange` gives the whole store, but the map only changes `heights` and `free`. `changedParts(before, after)` lists exactly the entries that changed, for example `{ kind: 'pointHeight', level: 'week', id: 'gym-18', y: -38 }`. `y: null` means the height was forgotten. Write those to your database. Paths you changed yourself you know already.
+- **Load in pieces.** The library does not load anything. Load by path (a page of paths), by prio (a year needs only prio 5, a month 3 to 5) or by time window with one neighbour point before and after the window for the arrows. Every path comes with its own `layout`, so loading a path loads its heights.
+- **Save only what changed.** See [Connect your database](#connect-your-database).
 
 Measured with 80,000 points in 100 paths (a week of 2 paths, in a Node script, best of 5): about 70 ms without the cache, about 0.2 ms with it. The free view of 2 paths went from about 74 ms to 3 ms. Finding out which paths have something in a view (`pathsInView`) still looks at every path and took about 10 ms.
 ### The free view
 
-Every view that is not a period shows all points of all paths. With the option `freeMove` on, points and whole paths can be moved freely in every direction, without a time axis. These places are kept in `store.free`, apart from the heights of the levels, so week, month and year do not change. It is meant for arranging things your own way, for example to lay points out as a figure. With `freeMove` off, the free view is only an overview.
+Every view that is not a period shows all points of all paths. With the option `freeMove` on, points and whole paths can be moved freely in every direction, without a time axis. These places are kept in the `layout.free` of each path, apart from the heights of the levels, so week, month and year do not change. It is meant for arranging things your own way, for example to lay points out as a figure. With `freeMove` off, the free view is only an overview.
 
 ### Add points and paths
 
@@ -357,7 +374,7 @@ The option `orientation` sets which way time runs: `horizontal` (left to right),
 | `note`     | `string` (optional)                               | Free text for your app.                                                                         |
 | `strength` | `number` (0–4, optional)                          | Tier of the line leading to this point. See [Make paths stronger](#make-paths-stronger).        |
 
-**`Branch`** is `{ id, splitsAt?, points }`. **`StorePath`** is `{ id, name, color, lane?, branches }`. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order. **`Store`** is `{ paths, heights, free }`, made by `createStore(paths)`.
+**`Branch`** is `{ id, splitsAt?, points }`. **`StorePath`** is `{ id, name, color, lane?, branches, layout? }`. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order. **`Store`** is `{ paths }`, made by `createStore(paths)`. **`PathLayout`** is `{ heights?, free? }`: what the user arranged on a path.
 
 The data is checked when it arrives. Invalid data is reported through `onError`, the message says where the problem is, and nothing is drawn. Without `onError` the messages go to `console.error`. `validateStore(paths)` runs the same check yourself.
 
@@ -367,7 +384,7 @@ All events are options of `PathWorld` and `createPathWorld`.
 
 | Callback                                                | When                                                                                                                                                                                  |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onStoreChange(store)`                                  | The user moved a point, an arrow or a path. Keep the new store and pass it back as `store`. Without it nothing can be moved.                                                          |
+| `onStoreChange(store, { changed, removed })`            | The user moved a point, an arrow or a path. Keep the new store and pass it back as `store`, and save `changed` and `removed`. Without it nothing can be moved.                                                          |
 | `onSelect(id \| null)`                                  | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                           |
 | `onPointAdd({ x, y, date, lanes })`                     | The empty area was double-clicked. In a period `date` follows the horizontal position. `lanes` holds the lane of every path.                                                          |
 | `onPointDoubleClick({ id, date })`                      | A point was double-clicked. Your app decides what happens, for example a finer view.                                                                                                  |
@@ -483,7 +500,7 @@ The library draws and reports, your app holds the state. That is a choice, not a
 - **Undo and redo** work on your state. The demo keeps a history of its states (`demo/app-logic/history.ts`, `stateHistory.ts`).
 - **Saving and loading** are yours, in whatever store you use. The store is plain JSON.
 - **Week, month and year** are views of the same store. You do not build them: the library does, from the prio of the points.
-- **Strength and time travel:** statuses and strengths as of a day are your app's to work out. The demo does it by passing a copy of the store with other `status` and `strength` values (`demo/app-logic/appearance.ts`). Take only `heights` and `free` from the store you get back, so that look does not become your data.
+- **Strength and time travel:** statuses and strengths as of a day are your app's to work out. The demo does it by passing a copy of the store with other `status` and `strength` values (`demo/app-logic/appearance.ts`). Take only the `layout` of the paths in `changed`, so that look does not become your data.
 
 Controls are provided for React only; the map itself works with any framework.
 
@@ -497,8 +514,8 @@ Yes, again. We are sorry. It is the last time we ask you to rewrite your data, a
 | Points linked with `next`, even across paths                         | Branches: a point is linked to its neighbours in the branch. Forks use `splitsAt`. |
 | `incoming`, `outgoing`, `through` on points and paths                | Gone. The library makes the arrows at the borders itself.                        |
 | `importance` on a point, filtered by your app                        | `prio` (1–5). Week 1–5, month 3–5, year 5, built in.                             |
-| `x`, `y`, `seed`, pins, `offsets`, `positions`                       | Gone. Heights are kept per level in `store.heights`.                             |
-| `onPointMove`, `onLineEndMove` and your own bookkeeping              | `onStoreChange(store)`. Keep the store.                                          |
+| `x`, `y`, `seed`, pins, `offsets`, `positions`                       | Gone. Heights are kept per level in the `layout` of each path.                           |
+| `onPointMove`, `onLineEndMove` and your own bookkeeping              | `onStoreChange(store, changes)`. Keep it, save `changed`.                                        |
 | `PathPoint`, `Path`, `PeriodData`, `PeriodMap`, `validatePeriodData` | `StorePoint`, `StorePath`, `Store`, `createStore`, `validateStore`               |
 | Points push each other away, layouts could differ between periods    | No collision search. Two periods next to each other agree on every border.       |
 | Connect two points, merge branches                                   | Gone. A branch can only fork off.                                                |

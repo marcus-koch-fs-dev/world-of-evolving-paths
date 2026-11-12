@@ -1,6 +1,7 @@
 import { fromDay, toDay } from '../dates.js';
 import type { Position } from '../types.js';
 import { createLookup, type Lookup } from './chains.js';
+import { keptFreePlace, keptPointHeight, withFreePlaces } from './layout.js';
 import { defaultHeight } from './reader.js';
 import type { Store } from './types.js';
 
@@ -15,22 +16,21 @@ export function createFreeReader(store: Store, lookup: Lookup = createLookup(sto
       .map((path, index) => [path.id, (index - (store.paths.length - 1) / 2) * LANE_GAP]),
   );
   return (id: string): Position => {
-    const info = lookup.point(id)?.info;
-    if (!info) return store.free[id] ?? { x: 0, y: 0 };
+    const found = lookup.point(id);
+    if (!found) return { x: 0, y: 0 };
+    const { info, path } = found;
     return (
-      store.free[id] ?? {
+      keptFreePlace(path, id) ?? {
         x: toDay(info.point.date) * WORLD_PER_DAY,
-        y: (laneOf.get(info.pathId) ?? 0) + (store.heights.week.points[id] ?? defaultHeight(info)),
+        y: (laneOf.get(info.pathId) ?? 0) + (keptPointHeight(path, 'week', id) ?? defaultHeight(info)),
       }
     );
   };
 }
 
 /** Moves one point to a free position. The levels do not know about it. */
-export const moveFreePoint = (store: Store, id: string, to: Position): Store => ({
-  ...store,
-  free: { ...store.free, [id]: { x: Math.round(to.x), y: Math.round(to.y) } },
-});
+export const moveFreePoint = (store: Store, id: string, to: Position): Store =>
+  withFreePlaces(store, { [id]: { x: Math.round(to.x), y: Math.round(to.y) } });
 
 /** Moves all points of a path by a distance in the free arrangement. */
 export function moveFreePath(store: Store, pathId: string, by: Position): Store {
@@ -41,7 +41,7 @@ export function moveFreePath(store: Store, pathId: string, by: Position): Store 
       return [point.id, { x: Math.round(from.x + by.x), y: Math.round(from.y + by.y) }];
     }),
   );
-  return { ...store, free: { ...store.free, ...Object.fromEntries(moved) } };
+  return withFreePlaces(store, Object.fromEntries(moved));
 }
 
 /** The date at an x of the free arrangement, the inverse of how a point without a place is spread over time. */

@@ -154,7 +154,7 @@ export function App() {
         wavy={values.wavy}
         pointsLocked={values.pointsLocked}
         freeMove={freeMove}
-        onStoreChange={(next) => dispatch({ type: 'setLayout', heights: next.heights, free: next.free })}
+        onStoreChange={(_next, { changed }) => dispatch({ type: 'setLayout', changed })}
         snap={values.snap ? SNAP_STEP : undefined}
         animate={values.animate}
         locale={values.locale}

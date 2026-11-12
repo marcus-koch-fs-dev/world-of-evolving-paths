@@ -1,4 +1,4 @@
-import type { Level, Store } from 'world-of-evolving-paths';
+import type { Level, Store, StorePath } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
 import { hasCheckedIn } from './checkIn';
 import { pointActions } from './pointActions';
@@ -7,15 +7,15 @@ import type { CheckIn } from './types';
 
 /** What the demo app keeps. The library keeps none of it. */
 export type DemoState = {
-  /** The paths with their branches and points, the heights per level, and the free positions. */
+  /** The paths with their branches, points and layout (heights per level, free places). */
   store: Store;
   checkIns: CheckIn[];
   nextId: number;
 };
 
 export type DemoAction =
-  // The user moved something on the map: a point, an arrow, a whole path. The map hands over the new heights and places.
-  | { type: 'setLayout'; heights: Store['heights']; free: Store['free'] }
+  // The user moved something on the map: a point, an arrow, a whole path. The map hands over the paths it touched.
+  | { type: 'setLayout'; changed: StorePath[] }
   // A point on the map or in a line. A `level` of null is an overview, which keeps no heights.
   | { type: 'add'; level: Level | null; branchId: string; height: number; date: string; prio: number }
   | { type: 'addNext'; fromId: string; input: NextPointInput }

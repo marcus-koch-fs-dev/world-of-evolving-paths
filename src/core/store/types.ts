@@ -25,7 +25,25 @@ export type StorePoint = {
  */
 export type Branch = { id: string; splitsAt?: string; points: StorePoint[] };
 
+/**
+ * The heights kept for one level, as a distance from the lane of the path. `points` by point id, `arrows` by the key of
+ * a border crossing (see `arrowKey`).
+ */
+export type LevelHeights = { points: Record<string, number>; arrows: Record<string, number> };
+
+/**
+ * What the user arranged on a path: the heights per level and the free places of the overview. It lives in the path,
+ * so one path holds everything about itself and saving a path saves its arrangement. All of it is optional: what is
+ * missing falls back to a default.
+ */
+export type PathLayout = {
+  heights?: Partial<Record<Level, Partial<LevelHeights>>>;
+  /** Positions in the free arrangement of the view "All". They never touch the levels. */
+  free?: Record<string, Position>;
+};
+
 export type StorePath = {
+  /** Must not contain a slash: the keys of the arrows start with it. */
   id: string;
   name: string;
   /** `#rrggbb`. */
@@ -33,18 +51,12 @@ export type StorePath = {
   /** Paths are stacked by `lane`, lowest first. Defaults to the order in the list. */
   lane?: number;
   branches: Branch[];
+  /** What the user arranged. The map writes it when something is moved. */
+  layout?: PathLayout;
 };
 
-/**
- * The heights kept for one level, as a distance from the lane of the path. `points` by point id, `arrows` by the key of
- * a border crossing (see `arrowKey`).
- */
-export type LevelHeights = { points: Record<string, number>; arrows: Record<string, number> };
+/** Everything the app keeps: the paths. Each one holds its own layout. */
+export type Store = { paths: StorePath[] };
 
-/** Everything the app keeps: the paths, the heights per level, and the free positions of the overview. */
-export type Store = {
-  paths: StorePath[];
-  heights: Record<Level, LevelHeights>;
-  /** Positions in the free arrangement of the view "All". They never touch the levels. */
-  free: Record<string, Position>;
-};
+/** What a change of the store touched: the paths that are new or different (whole), and the ids of removed paths. */
+export type StoreChanges = { changed: StorePath[]; removed: string[] };

@@ -1,24 +1,32 @@
+import { withoutPointLayout } from '../layout.js';
 import { compareByDate, indexPoints, sortedPoints } from '../order.js';
-import type { Branch, LevelHeights, Store, StorePath, StorePoint } from '../types.js';
+import type { Branch, Store, StorePath, StorePoint } from '../types.js';
 import { keepArrows } from './reshape.js';
 
 /** The fields of a point the app may change. */
 export type StorePointPatch = Partial<Omit<StorePoint, 'id'>>;
 
+/** Changes branches. A branch that comes back the same keeps its object, and so does a path with only such branches. */
 const mapBranches = (store: Store, change: (branch: Branch, path: StorePath) => Branch): Store => ({
   ...store,
-  paths: store.paths.map((path) => ({ ...path, branches: path.branches.map((branch) => change(branch, path)) })),
+  paths: store.paths.map((path) => {
+    const branches = path.branches.map((branch) => change(branch, path));
+    return branches.every((branch, index) => branch === path.branches[index]) ? path : { ...path, branches };
+  }),
 });
+
+const holds = (branch: Branch, id: string) => branch.points.some((point) => point.id === id);
 
 /**
  * Changes a point. The heights stay valid: a new prio only decides on which levels the point shows, and the arrows
- * next to a point that appears or disappears there keep their heights.
+ * next to a point that appears or disappears there keep their heights. Only the path of the point changes.
  */
 export function updatePoint(store: Store, id: string, patch: StorePointPatch): Store {
-  const changed = mapBranches(store, (branch) => ({
-    ...branch,
-    points: branch.points.map((point) => (point.id === id ? { ...point, ...patch } : point)),
-  }));
+  const changed = mapBranches(store, (branch) =>
+    holds(branch, id)
+      ? { ...branch, points: branch.points.map((point) => (point.id === id ? { ...point, ...patch } : point)) }
+      : branch,
+  );
   return patch.prio !== undefined || patch.date !== undefined ? keepArrows(store, changed, id) : changed;
 }
 
@@ -49,14 +57,6 @@ export const updatePath = (
   paths: store.paths.map((path) => (path.id === id ? { ...path, ...patch } : path)),
 });
 
-const without = (record: Record<string, number>, id: string) =>
-  Object.fromEntries(Object.entries(record).filter(([key]) => key !== id));
-
-const withoutPoint = (heights: LevelHeights, id: string): LevelHeights => ({
-  ...heights,
-  points: without(heights.points, id),
-});
-
 /**
  * Removes a point with its kept heights. A branch that forked off from it now forks off from the point before it in
  * its branch, or from nowhere when there is none.
@@ -71,19 +71,14 @@ export function removePoint(store: Store, id: string): Store {
   )
     .filter((point) => compareByDate(point, info.point) < 0)
     .at(-1);
-  const cleaned = mapBranches(store, (branch) => ({
-    ...branch,
-    points: branch.points.filter((point) => point.id !== id),
-    ...(branch.splitsAt === id ? { splitsAt: before?.id } : {}),
-  }));
-  const kept = keepArrows(store, cleaned, id);
-  return {
-    ...kept,
-    heights: {
-      week: withoutPoint(kept.heights.week, id),
-      month: withoutPoint(kept.heights.month, id),
-      year: withoutPoint(kept.heights.year, id),
-    },
-    free: Object.fromEntries(Object.entries(store.free).filter(([key]) => key !== id)),
-  };
+  const cleaned = mapBranches(store, (branch) =>
+    holds(branch, id) || branch.splitsAt === id
+      ? {
+          ...branch,
+          points: branch.points.filter((point) => point.id !== id),
+          ...(branch.splitsAt === id ? { splitsAt: before?.id } : {}),
+        }
+      : branch,
+  );
+  return withoutPointLayout(keepArrows(store, cleaned, id), info.pathId, id);
 }
