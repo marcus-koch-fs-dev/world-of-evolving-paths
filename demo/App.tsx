@@ -84,7 +84,7 @@ export function App() {
     state,
     navigation,
     today,
-    values.allPaths,
+    values.pathsPerPage,
   );
   const lineSelection = useLineSelection(tileKey);
   const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
@@ -179,6 +179,9 @@ export function App() {
           onDockChange={(main) => settings.setDocks({ ...docks, main })}
           navigation={navigation}
           paging={paging}
+          pathsPerPage={values.pathsPerPage}
+          pathCount={state.store.paths.length}
+          onPathsPerPageChange={(pathsPerPage) => settings.change({ pathsPerPage })}
           locale={values.locale}
           levels={offeredLevels}
           onReroll={() => {

@@ -25,9 +25,6 @@ type Props = {
   children?: ReactNode;
 };
 
-/** The numbers of paths the free view can show on one page. 0 shows all of them. */
-const ALL_PATH_COUNTS = [0, 2, 4, 8, 16];
-
 type FlagKey = 'wavy' | 'pointsLocked' | 'snap' | 'animate';
 
 const FLAGS: { key: FlagKey; label: string }[] = [
@@ -77,17 +74,6 @@ export function SettingsPanel({ values, onChange, children }: Props) {
           {ORIENTATIONS.map((option) => (
             <option key={option.orientation} value={option.orientation}>
               {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label>
-        Paths per page in All
-        <select value={values.allPaths} onChange={(event) => onChange({ allPaths: Number(event.target.value) })}>
-          {ALL_PATH_COUNTS.map((count) => (
-            <option key={count} value={count}>
-              {count === 0 ? 'All paths' : `${count} paths`}
             </option>
           ))}
         </select>

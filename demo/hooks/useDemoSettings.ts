@@ -35,8 +35,8 @@ export type SettingsValues = {
   /** The levels the view bar offers. */
   levels: ViewLevel[];
   locale: string;
-  /** How many paths the free view shows on one page. 0 shows all of them. */
-  allPaths: number;
+  /** How many paths one page shows, in every view. */
+  pathsPerPage: number;
 };
 
 // An older version of the demo could store an image in the background settings. It is dropped, it can be megabytes.
@@ -67,7 +67,7 @@ export function useDemoSettings() {
   );
   const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
   const [docks, setDocks] = useStoredState<Docks>('wep-demo:docks', DEFAULT_DOCKS);
-  const [allPaths, setAllPaths] = useStoredState<number>('wep-demo:all-paths', 0);
+  const [pathsPerPage, setPathsPerPage] = useStoredState<number>('wep-demo:paths-per-page', 2);
 
   const values: SettingsValues = {
     wavy,
@@ -77,7 +77,7 @@ export function useDemoSettings() {
     orientation,
     levels,
     locale: isValidLocale(storedLocale) ? storedLocale : FALLBACK_LOCALE,
-    allPaths,
+    pathsPerPage,
   };
 
   /** Applies the changed settings; each one goes to where it is kept. */
@@ -89,7 +89,7 @@ export function useDemoSettings() {
     if (patch.orientation !== undefined) setOrientation(patch.orientation);
     if (patch.levels !== undefined) setLevels(patch.levels);
     if (patch.locale !== undefined) setLocale(patch.locale);
-    if (patch.allPaths !== undefined) setAllPaths(patch.allPaths);
+    if (patch.pathsPerPage !== undefined) setPathsPerPage(patch.pathsPerPage);
   };
 
   return { values, change, background, setBackground, customColors, setCustomColors, docks, setDocks };

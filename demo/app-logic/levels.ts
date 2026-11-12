@@ -1,10 +1,7 @@
 import { MIN_PRIO, VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
 
-// The free view shows every point.
+// The free view shows every point. Which points a level shows is the core's rule (`MIN_PRIO`).
 export const FREE_VIEW_MIN_PRIO = 1;
-
-// How many paths one page shows. Which points a level shows is the core's rule (`MIN_PRIO`).
-export const GRAPHS_PER_PAGE = 2;
 
 /** The least prio a point needs to show in a period, or in the free view when there is no period. */
 export const minPrioOf = (period: { level: ViewLevel } | null): number =>

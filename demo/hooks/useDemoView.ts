@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { createStoreCache, fromDay, indexPoints, pathsInView, placeLevel } from 'world-of-evolving-paths';
 import { withLook } from '../app-logic/appearance';
 import { heightLevelOf } from '../app-logic/heightLevel';
-import { GRAPHS_PER_PAGE } from '../app-logic/levels';
 import { pagesOf } from '../app-logic/paging';
 import type { DemoState } from '../app-logic/state';
 import { viewRange } from '../app-logic/timeTravel';
@@ -11,15 +10,14 @@ import type { ViewNavigation } from './useViewNavigation';
 
 const FREE_VIEW = 'free';
 
-/** How many paths a page shows: a few in a period, in the free view what the user chose (0 is all of them). */
-const pageSizeOf = (period: unknown, allPaths: number) =>
-  period ? GRAPHS_PER_PAGE : allPaths > 0 ? allPaths : Number.MAX_SAFE_INTEGER;
+/** How many paths a page shows, in every view. */
+const pageSizeOf = (pathsPerPage: number) => Math.max(1, pathsPerPage);
 
 /**
  * Everything the map needs for the view that is shown: its key, the days the time slider reaches, time travel, the
  * paths of the page, and the store with the look of the day (statuses and strength).
  */
-export function useDemoView(state: DemoState, navigation: ViewNavigation, today: string, allPaths: number) {
+export function useDemoView(state: DemoState, navigation: ViewNavigation, today: string, pathsPerPage: number) {
   const period = navigation.level === null ? null : navigation.period;
   const view = period ? period.key : FREE_VIEW;
   const tileKey = `${view}:p${navigation.page}`;
@@ -44,8 +42,8 @@ export function useDemoView(state: DemoState, navigation: ViewNavigation, today:
 
   // The paths that have something in this view, a few of them on each page
   const pages = useMemo(
-    () => pagesOf(pathsInView(state.store, view, cache), pageSizeOf(period, allPaths)),
-    [state.store, view, period, allPaths, cache],
+    () => pagesOf(pathsInView(state.store, view, cache), pageSizeOf(pathsPerPage)),
+    [state.store, view, pathsPerPage, cache],
   );
   const page = Math.min(Math.max(0, navigation.page), Math.max(0, pages.length - 1));
   const pathIds = useMemo(() => pages[page] ?? [], [pages, page]);

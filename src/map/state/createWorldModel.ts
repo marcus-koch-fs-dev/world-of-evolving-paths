@@ -12,6 +12,7 @@ type Config = { store: Store; view: string; today: string; pathIds?: readonly st
 type Changes = {
   /** Anything changed: data, view, paths or today. */
   changed: boolean;
+  /** Another view, or other paths in it: the map frames the world again. */
   viewChanged: boolean;
   /** The app passed a new store. */
   dataChanged: boolean;
@@ -60,11 +61,12 @@ export function createWorldModel(onError: (errors: string[]) => void): WorldMode
       const delta = configDelta(snapshot, { ...config, pathIds: config.pathIds });
       if (!anyChange(delta)) return NOTHING;
       if (delta.dataChanged) valid = check(config.store);
-      if (delta.dataChanged || delta.viewChanged) overrides.clearAll();
+      if (delta.dataChanged || delta.viewChanged || delta.pathsChanged) overrides.clearAll();
       snapshot = { store: config.store, view: config.view, today: config.today, pathIds: config.pathIds };
       level = periodFromKey(config.view)?.level ?? null;
       base = valid ? placeLevel(valid, config.view, config.today, config.pathIds, cache) : null;
-      return { changed: true, viewChanged: delta.viewChanged, dataChanged: delta.dataChanged };
+      // Other paths on the page are another picture of the world: the camera frames it again
+      return { changed: true, viewChanged: delta.viewChanged || delta.pathsChanged, dataChanged: delta.dataChanged };
     },
 
     store: () => valid,
