@@ -4,7 +4,7 @@
 
 ### Data model rework (breaking)
 
-The library no longer asks you to build every view. You give it one store of paths, branches and points. It builds week, month and year itself and hands you the new store when the user moves something. See the README, section "Breaking change".
+The library no longer asks you to build every view. You give it one store of paths, branches and points. It builds week, month and year itself and hands you the new store when the user moves something.
 
 - **Breaking:** `periods: PeriodMap` is now `store: Store` (made with `createStore(paths)`). The option `seed` is gone.
 - **Breaking:** a path has `branches`, a branch has `points` in time order and an optional `splitsAt`. `next`, `incoming`, `outgoing`, `through` and the pins `x` and `y` are gone, and so is merging two branches or connecting two paths. `PathPoint`, `Path`, `PathThrough`, `PeriodData`, `PeriodMap` and `validatePeriodData` are replaced by `StorePoint`, `StorePath`, `Branch`, `Store` and `validateStore`.
@@ -16,7 +16,7 @@ The library no longer asks you to build every view. You give it one store of pat
 - New option `freeMove`: in the free view, points and paths move freely in every direction. The places are kept apart in `layout.free` and do not touch the levels.
 - New option `pathIds` and function `pathsInView(store, view, cache?)` to page through many paths. Only the shown paths are worked out.
 - Paths that did not change are not worked out again (`createStoreCache`). New helper `replacePath` to swap one path.
-- **Breaking:** the store is `{ paths }`. The heights and free places moved into the path (`path.layout`), so one path holds everything about itself. `onStoreChange(store, { changed, removed })` says which paths are new or different (whole) and which ids are gone: save `changed`, delete `removed`. `storeChanges(before, after)` gives the same for your own changes. Path ids must not contain a slash. New section "Connect your database" in the README.
+- **Breaking:** the store is `{ paths }`. The heights and free places moved into the path (`path.layout`), so one path holds everything about itself. `onStoreChange(store, { changed, removed })` says which paths are new or different (whole) and which ids are gone: save `changed`, delete `removed`. `storeChanges(before, after)` gives the same for your own changes. Path ids must not contain a slash. New section "Save and load your data" in the README.
 - The marker for today and the lit part of a line that leaves the view now agree.
 - New functions `placeLevel`, `lanesOf`, `weekdayOf`, `addPoint`, `updatePoint`, `removePoint`, `addBranch`, `addPath`, `updatePath`, `forgetHeights`, `moveFreePoint` and `moveFreePath`.
 - The points no longer push each other away, and the thin rings while dragging are gone. Heights are chosen by the user, not by a layout search.
