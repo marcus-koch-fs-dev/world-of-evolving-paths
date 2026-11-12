@@ -54,9 +54,6 @@ export type HereDraw = {
   onPoint: boolean;
 };
 
-/** A thin circle that shows how much room a point keeps around it. */
-export type RingDraw = { id: string; x: number; y: number; radius: number; dragged: boolean };
-
 /** The label at the end of a line that leaves the view: the title and date of the point out there. */
 export type LeadDraw = {
   id: string;
@@ -83,10 +80,12 @@ export type LeadDraw = {
   anchor: Position;
   /** For a line that spans the whole view: both points it leads from and to, as `pointId` is empty then. */
   span?: { from: Lead; to: Lead };
-  /** The key of the line among the lines that run along the time axis. The end of the line can be dragged by it. */
+  /** The key of the arrow at the end of the line. The end can be dragged by it. */
   trackKey: string;
   /** The y of the lane of the path the line belongs to. A height in the data is a distance from it. */
   lane: number;
+  /** The path the line belongs to. */
+  pathId: string;
 };
 
 export type SceneState = {
@@ -98,8 +97,8 @@ export type SceneState = {
   locale?: string;
   /** Writes the date under a point instead of the built-in short form. */
   formatDate?: (iso: string) => string;
-  /** Heights the user is dragging lines to right now, by `trackKey` of the line. */
+  /** Heights the user is dragging arrows to right now, by the key of the arrow. */
   lineOverrides?: ReadonlyMap<string, number>;
 };
 
-export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; rings: RingDraw[]; leads: LeadDraw[] };
+export type Scene = { edges: EdgeDraw[]; nodes: NodeDraw[]; heres: HereDraw[]; leads: LeadDraw[] };

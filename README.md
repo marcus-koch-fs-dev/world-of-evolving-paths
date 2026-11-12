@@ -18,10 +18,10 @@ A pannable, zoomable canvas for milestones, branches and goals. Think of a skill
 
 |     |                                                                                                                                                         |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 📚  | **A library, not an app.** It stores nothing and prepares no data. Your app gives it data, it draws the data and tells you what the user does.          |
-| 🗓️  | **Time-aware views.** Show a week, a month or one to ten years. Each view gets its own data, so a year view can show only the big milestones.           |
+| 📚  | **A library, not an app.** It stores nothing. Your app gives it a store of paths, it draws the views and hands you the new store when the user moves something. |
+| 🗓️  | **A tower of views.** Week, month and year are built from one store by the prio of the points: a week shows prio 1–5, a month 3–5, a year only 5. |
 | 🛣️  | **Paths that evolve.** Lines you have reached get wider and start to shine the more often you walk the path: from a faint trail to a highway.           |
-| 🧲  | **Points keep their distance.** A dragged point stops where there is room. Otherwise it moves back. The same data and seed always give the same layout. |
+| 🧲  | **Borders that match.** The arrow where a line crosses the border between two periods has the same height on both sides. Points move alone, paths move as a whole. |
 | 🧩  | **Framework-free core.** The map works on any element. A React binding and ready-made controls are included.                                            |
 
 > Status: early (0.x). The API can still change.
@@ -36,6 +36,7 @@ A pannable, zoomable canvas for milestones, branches and goals. Think of a skill
 | build it into my app               | [🧩 Building your app](#-building-your-app)           |
 | look up an object, event or option | [📚 Reference](#-reference)                           |
 | know the limits                    | [📈 Performance and limits](#-performance-and-limits) |
+| move over from 0.0.x                | [⚠️ Breaking change](#️-breaking-change-the-data-model)  |
 | work on the library itself         | [🔧 Contributing](#-contributing)                     |
 
 ## 📦 Install
@@ -51,33 +52,43 @@ npm install world-of-evolving-paths
 ### With React
 
 ```tsx
-import { periodOf, type PeriodMap } from 'world-of-evolving-paths';
+import { useState } from 'react';
+import { createStore, periodOf } from 'world-of-evolving-paths';
 import { PathWorld, ZoomControls } from 'world-of-evolving-paths/react';
 import 'world-of-evolving-paths/style.css';
 
 const period = periodOf('week', '2026-11-04');
 
-// One entry per view: period key → the paths of that view, each with its points
-const periods: PeriodMap = {
-  [period.key]: {
-    paths: [
+// Your data: paths, each with branches, each with points in time order
+const start = createStore([
+  {
+    id: 'combat',
+    name: 'Combat',
+    color: '#ff3b3b',
+    branches: [
       {
-        id: 'combat',
-        name: 'Combat',
-        color: '#ff3b3b',
+        id: 'combat-main',
         points: [
-          { id: 'a', date: '2026-11-02', title: 'Sword basics', kind: 'start', status: 'done', next: ['b'] },
-          { id: 'b', date: '2026-11-05', title: 'Parry', kind: 'milestone', status: 'current', next: [] },
+          { id: 'a', date: '2026-11-02', title: 'Sword basics', kind: 'start', status: 'done', prio: 5 },
+          { id: 'b', date: '2026-11-05', title: 'Parry', kind: 'milestone', status: 'current', prio: 2 },
         ],
+      },
+      // A fork: a branch that leaves from a point of another branch
+      {
+        id: 'combat-shield',
+        splitsAt: 'a',
+        points: [{ id: 'c', date: '2026-11-06', title: 'Shield', kind: 'goal', status: 'open', prio: 3 }],
       },
     ],
   },
-};
+]);
 
 export function Example() {
+  const [store, setStore] = useState(start);
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <PathWorld periods={periods} view={period.key}>
+      {/* The map hands you a new store whenever the user moves something. Keep it. */}
+      <PathWorld store={store} onStoreChange={setStore} view={period.key}>
         <ZoomControls />
       </PathWorld>
     </div>
@@ -91,41 +102,19 @@ export function Example() {
 ### Without a framework
 
 ```ts
-import {
-  createPathWorld,
-  periodOf,
-  type PathWorldOptions,
-  type PeriodData,
-  type PeriodMap,
-  type Position,
-} from 'world-of-evolving-paths';
+import { createPathWorld, createStore, periodOf, type PathWorldOptions } from 'world-of-evolving-paths';
 
 const period = periodOf('week', '2026-11-04');
-let periods: PeriodMap = {
-  [period.key]: {
-    paths: [
-      /* your paths, as in the React example */
-    ],
-  },
-};
+let store = createStore([/* your paths, as in the React example */]);
 
 // The element needs a size, the map fills it
 const element = document.getElementById('map')!;
 
-// Pins every point where the user sees it, as a new object
-const pinned = (data: PeriodData, positions: Record<string, Position>): PeriodData => ({
-  paths: data.paths.map((path) => ({
-    ...path,
-    points: path.points.map((point) => ({ ...point, ...positions[point.id] })),
-  })),
-});
-
 const options = (): PathWorldOptions => ({
-  periods,
+  store,
   view: period.key,
-  onPointMove: ({ positions }) => {
-    // Store the positions, then pass a new object back in (see Events)
-    periods = { ...periods, [period.key]: pinned(periods[period.key], positions) };
+  onStoreChange: (next) => {
+    store = next; // keep it, then pass it back in
     handle.update(options());
   },
 });
@@ -137,7 +126,7 @@ handle.destroy();
 ```
 
 > [!IMPORTANT]
-> **`handle.update(options)` replaces all options, it does not merge them.** Always pass the full set, callbacks included. An option you leave out is gone: without `onPointMove` a dragged point moves back. The easiest way is one function that builds the options, as above.
+> **`handle.update(options)` replaces all options, it does not merge them.** Always pass the full set, callbacks included. An option you leave out is gone: without `onStoreChange` nothing can be moved. The easiest way is one function that builds the options, as above.
 
 The stylesheet is only needed for the React binding and its controls. The map itself sets the styles of its element in code (inline styles).
 
@@ -150,24 +139,22 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | I want to …                      | Do this                                                                                                                                                                      |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Select a point and open its menu | Click it. Click the empty area to deselect.                                                                                                                                  |
-| Move a point                     | Drag it up or down. It stays on its date, so it only moves across the time axis. It keeps that height in every view. It stops where there is room, otherwise it moves back.  |
-| Add a point                      | Double-click the empty area. It joins the path of the selected point, or the first path. The new point gets the importance the current view needs, so you see it right away. |
+| Move a point                     | Drag it up or down. It stays on its date, so it only moves across the time axis. Its height is kept for the level of the view (week, month or year). The arrows next to it stay where they are. |
+| Add a point                      | Double-click the empty area. It joins the branch of the selected point, or the first path. The new point gets the prio the current view needs, so you see it right away. |
 | Add the next point               | Point menu → **Next point** → name and date → **Create**.                                                                                                                    |
 | Start a **new path**             | Point menu → **Next point** → tick **On a new path (own color)**, give the path a name (optional) and pick a color → **Create**.                                             |
-| Connect two points               | Point menu → **Connect**, then click the point to connect to. Escape cancels.                                                                                                |
 | Change status, kind, name, color | Point menu → **Properties**: Status, Kind, Name, Path color.                                                                                                                 |
 | Delete a point                   | Point menu → **Delete**. The path stays connected: the point before and the point after are joined.                                                                          |
-| Point hidden after a change      | If you lower the importance of a point, the view may no longer show it. A message says which view shows it, and its button goes there.                                       |
+| Point hidden after a change      | If you lower the prio of a point, the view may no longer show it. A message says which view shows it, and its button goes there.                                       |
 
 **Lines**
 
 | I want to …                  | Do this                                                                                                                                                                      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Insert a point into a line   | Click or right-click the line → **Insert point**. The new point sits between the two points, on the date where you clicked.                                                  |
-| Move a line                  | Drag the arrow at its end, at the edge of the view, up or down. A line without a point in the view moves as a whole. A line from a point moves only its end at the edge.     |
-| Keep the height of a line    | Nothing to do. A dragged end is kept for that period. Without one, the line runs straight to the heights of its points, in week and month alike.                             |
+| Move a line                  | Drag the arrow at its end, at the border of the view, up or down: only this arrow moves. Drag the line itself: the whole path moves, with all its points and arrows. |
+| Keep the height of a line    | Nothing to do. The arrow on a border has one height for both periods next to it. Until you drag it, it lies on the straight line between its two points. |
 | See a path that skips a view | A path with points before and after the period, but none inside, runs across the whole view, with the names and dates at both ends. At a fork each branch gets its own line. |
-| Keep lines apart             | Nothing to do. Lines that would lie on top of each other move apart by themselves.                                                                                           |
 
 **Paths grow**
 
@@ -189,10 +176,10 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 | Show several years       | In the year view, the counter **− 1 +** next to the chips: 1, 2, 5 or 10 years. The keys + and − do the same.                                                                                                       |
 | Change the period        | The arrows ◀ ▶ on both sides of the period, or the arrow keys ← →. **Today** (key T) goes to the week of today.                                                                                                     |
 | Pick a period directly   | Click the period in the top bar (for example "2026 ▾"). A list opens with the weeks, months and years. The view jumps to the one you pick.                                                                          |
-| See which points show    | The **Legend** in the corner (closed at first). It shows, for each importance, from which view on such a point appears.                                                                                             |
+| See which points show    | The **Legend** in the corner (closed at first). It shows, for each prio, from which view on such a point appears.                                                                                             |
 | Snap to a grid           | Menu (▦) → **Mode** → Settings → **Snap to grid**. Dragged and added points then sit on a grid.                                                                                                                     |
 | Go one level deeper      | Double-click a point. From the year you go to the month, then the week.                                                                                                                                             |
-| See where a path goes on | At the start and end of a view, a line leaves the point towards the edge. At its end you read the name and date of the next or earlier point. Double-click the line or its text to go there. **⤴** brings you back. |
+| See where a path goes on | At the start and end of a view, a line runs to the border with an arrow. Next to it you read the name and date of the next or earlier point. Double-click the line or its text to go there. **⤴** brings you back. |
 | Go back                  | The **⤴** button in the top bar. It returns to the view before the last double-click.                                                                                                                               |
 | Travel through time      | The time slider at the bottom (on a small screen the bar starts closed, open it with **+**). **Play** runs through the days of the view.                                                                            |
 | Turn the map             | Menu (▦) → **Map** → Turn left / Turn right.                                                                                                                                                                        |
@@ -204,20 +191,43 @@ The [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) s
 
 ## 🧩 Building your app
 
-You own the data. The library turns what you pass in into a picture and tells you what the user did. It never changes your objects.
+You own the data. The library turns your `store` into a picture, and when the user moves something it hands you the new store.
 
 ```
-your app ── periods, view, options ──▶  PathWorld  ──▶  canvas
-   ▲                                       │
-   └────────── events (onPointMove, ...) ──┘
+your app ── store, view, options ──▶  PathWorld  ──▶  canvas
+   ▲                                      │
+   └──────── onStoreChange(newStore) ─────┘
 ```
 
 > [!NOTE]
-> **The library stores nothing.** Undo, saving and loading are your app's job. The demo shows one way in `demo/app-logic/`.
+> **The library stores nothing.** Undo, saving and loading are your app's job. A store is plain JSON, so you can save it as it is. If you work with several graphs, keep a map of stores yourself (`{ sport: store1, work: store2 }`) and pass the chosen one. The demo shows one way in `demo/app-logic/`.
+
+### The data
+
+```ts
+type Store = {
+  paths: StorePath[]; // what you provide
+  heights: …; // the heights the user chose, per level (the library fills it)
+  free: …; // the places the user chose in the free view (the library fills it)
+};
+```
+
+You only write the `paths`. Pass them to `createStore(paths)`:
+
+| Object  | Fields                                                                                                         |
+| ------- | -------------------------------------------------------------------------------------------------------------- |
+| Path    | `{ id, name, color, lane?, branches }`. `color` is `#rrggbb` and stays the same along the whole path.         |
+| Branch  | `{ id, splitsAt?, points }`. A branch with `splitsAt` (the id of a point) forks off from that point.         |
+| Point   | `{ id, date, title, kind, status, prio, note?, strength? }`. `date` is `YYYY-MM-DD`, `prio` is 1 to 5.        |
+
+- The points of a branch stand in time order. At the same date the id decides. There is no `next`: a line always connects a point with the one before and the one after it in its branch.
+- A branch can only fork off. Two branches do not run together again, and two paths are not connected.
+- Heights and arrows are **not** your input. They come from dragging and are kept per level.
+- `validateStore(paths)` lists what is wrong (double ids, a bad date, a prio outside 1 to 5, a `splitsAt` that does not exist, a fork in a circle). The map runs it and reports through `onError`.
 
 ### Show a view
 
-A view is a period of a level: `week`, `month` or `year` (one to ten years). Its key is made by the calendar helpers, and `periods` holds the data of each key.
+A view is a period of a level: `week`, `month` or `year` (one to ten years). Its key comes from the calendar helpers:
 
 ```ts
 import { periodOf, shiftPeriod, periodFromKey } from 'world-of-evolving-paths';
@@ -227,79 +237,63 @@ const nextWeek = shiftPeriod(week, 1);
 const sameWeek = periodFromKey('week:2026-11-02'); // back from a key
 
 periodOf('week', '2026-11-04', { weekStart: 4 }); // weeks that start on a Friday (0 = Monday ... 6 = Sunday)
-periodOf('year', '2026-11-04', { years: 5 }); // key 'year:2022-01-01+5', label '2022–2026': 1 to 10 years, ending with the year of the date
+periodOf('year', '2026-11-04', { years: 5 }); // key 'year:2022-01-01+5', label '2022–2026': 1 to 10 years
 ```
 
-```ts
-const periods: PeriodMap = {
-  'week:2026-11-02': { paths }, // the paths of that week, each with its points
-  'month:2026-11-01': { paths }, // other points: only the more important ones
-};
-```
+**The levels are a tower by prio.** A week shows the points with prio 1 to 5, a month 3 to 5, a year only 5. The same function builds every level, and it works from the whole store, so two periods next to each other always agree.
 
-- The key decides the calendar span the points are spread over. Any other key (for example `'free'`) is a free view: the points are spread over the span of their own dates.
-- **What a view shows is up to your app.** The library does not filter. A year view typically gets only the important points, a week view all of them. The demo shows one way to do it (`demo/app-logic/`): filter by period and importance, connect across hidden points, split many paths into pages.
-- Typically `periods` holds only the view you show, and you load the next one when the user changes the view.
-- If `periods` has no entry for `view`, the map stays empty and reports nothing, so make sure the view you show has data.
+- Any key that is not a period (for example `'free'`) shows **the free view** with everything. See [The free view](#the-free-view).
+- `pathIds` limits the paths shown. Use it to page through many paths: `pathsInView(store, view)` gives the ids that have something in a view.
+- `buildLevel(store, level, period)` is the function behind a level. You do not need it to draw, but it shows the elements a branch runs through: its points and its arrows.
 
-### Show where a path comes from and goes
+### Where lines cross the border
 
-A view shows only some points. A point at the start of the period has a path that came from before, and the last point has a path that goes on after. Without a hint it looks as if the path ended there, and that looks like a mistake.
+A line of a branch that continues outside the view ends in an **arrow** on the border of the period, at the exact place of the border. It shows the title and date of the point out there. A branch with no point in the view is drawn as a line across the whole view with an arrow at both borders.
 
-Tell the map about those connections with `incoming` and `outgoing` on the point. Each entry has the `title` and the `date` of the point out there, and its `id` if your app wants to go there:
+Both periods that share a border show the arrow at the **same height**: there is one entry per path, branch and border date, not two. Until the user drags it, the arrow lies on the straight line between its two neighbour points.
 
-```ts
-const point = {
-  id: 'pull-up',
-  date: '2026-03-23',
-  title: '5 pull-ups',
-  kind: 'milestone',
-  status: 'done',
-  next: [],
-  incoming: [{ title: 'First pull-up', date: '2026-02-09', id: 'first' }], // the path comes from here
-  outgoing: [{ title: '10 pull-ups', date: '2026-06-08', id: 'ten' }], // and goes on to here
-};
-```
+A double-click on the line or its text calls `onLeadDoubleClick({ pointId, side, title, date, id })`. Your app decides what happens. The demo goes to the period of that date and selects the point out there.
 
-The map draws a line from the point towards the edge of the view. At its end sits an arrow that points out of the view, with the title and date next to it. The arrow and the text get bigger and brighter when the pointer is on the line, so it is clear that you can click it. The line looks like the path: wide when it was walked, dotted when it is still ahead. A point can have several, for example at a fork.
+### What happens when the user drags
 
-A double-click on the line or its text calls `onLeadDoubleClick({ pointId, side, title, date, id })`. Your app decides what happens. The demo goes to the period of that date, in the same level, and selects the point out there. The **Back** button returns.
+The map makes the change and calls `onStoreChange(newStore)`. Keep the new store and pass it back in as `store`.
 
-Sometimes a path has points before and after the period, but none inside it. Pass such a connection in `through` on the path: `{ from, to, strength?, y? }`, where `from` and `to` look like an entry of `incoming`. The map draws a line across the whole view, with an arrow, the title and the date at each end. At a fork, give one entry per branch.
+| The user takes …    | What moves                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| a point             | Only this point. The arrows next to it stay where they are.                                                   |
+| an arrow            | Only this end. The period on the other side of the border shows it at the same height.                       |
+| a line              | The whole path with all its branches: its points and its arrows. Forks of other paths keep their own arrows. |
+| (prio changes)      | The point appears or disappears on levels. Heights that were kept stay valid.                                 |
 
-The map does not look for these points itself, because it only knows the points of this view. Your app finds them when it builds the view. The demo does it in `demo/app-logic/leads.ts`: it follows the connections over hidden points until it reaches the first point outside the period.
+**Heights are per level.** A week, a month and a year have different scales, so each keeps its own heights. A point without a height on a level takes the one from the week, and without any it gets a fixed default that depends only on the point itself. Heights are distances from the lane of the path (0 = on the lane, negative = above when time runs left to right).
 
-### Keep the layout
+The update functions behind it are exported, so you can call them yourself: `movePoint`, `moveArrow`, `movePath`, `addPoint`, `updatePoint`, `removePoint`, `addBranch`, `addPath`, `updatePath` and `forgetHeights`. All are pure: they return a new store.
 
-You give points without positions and the library lays them out:
+By default a dragged point moves only across the time axis (`timeLocked: true`), so it stays on its date. Set `timeLocked: false` to let it leave its date. With `snap` (a distance in world units) dragged and added points sit on a grid.
 
-- The date decides the rough x position inside the calendar span.
-- Each path has a lane (its row). Paths in upper lanes bend up, middle ones stay straight, lower ones bend down.
-- Where a path splits, the branches move apart.
-- Points keep `radius + radius` from each other and stay off foreign lines. Lines may cross.
-- The same input and `seed` always give the same layout. Change `seed` for another one.
+**Clicking a line.** `onLineSelect({ from, to, x, y, date, lanes, at })` comes when the user clicks or right-clicks a line. `from` and `to` are its two ends, `date` is the date where it was clicked, and `lanes` the lane of every path, so `y - lanes[pathId]` is the height for a new point. Show a `LineMenu` at `at`, for example with **Insert point**.
 
-**Heights.** Every path has a lane, and where the lane lies depends on how many paths the view shows: a path can be the first of two in a week and the third of six in the overview. So heights in your data are **distances from the lane of the path** (0 = on the lane, negative = above when time runs left to right). The same number puts a point or a line at the same place next to its path in every view and on every page.
 
-**Fixing a position (pinning).** A point with only `y` sits on its date along the time axis, `y` away from its lane. That is the way to keep a height in every view. When the user drops a dragged point, `onPointMove` gives that height as `offset`: store it per point and pass it back as `y`. A point with `x` and `y` is different: it stays exactly at that place of this one view, and the others make room around it. `positions` in `onPointMove` holds every point of the view for that case.
+### Big data, small updates
 
-A point that is not pinned follows the point before it in the layout, so when you pass back the new height of a moved point, the points after it move along. To move one point alone, pass back the `offsets` of the points after it as well (as `y`), so they stay where they are. The demo does this.
+The store is your state, so you change it in small pieces and the map only works on what changed:
 
-By default a dragged point moves only across the time axis (`timeLocked: true`), so it always stays on its date and agrees with the marker for today. Set `timeLocked: false` to let it move freely. With `snap` (a distance in world units) dragged and added points sit on a grid.
+- **Replace one path.** Put a new path object in the place of the old one and keep all other paths as they are: `replacePath(store, path)`, or `paths.map(...)` yourself. Paths that are the same objects as before are not worked out again, because the map keeps its results per path (`createStoreCache`, used inside the map; you can pass your own to `placeLevel` and `pathsInView`). A fork is worked out again when the path it leaves from changed.
+- **Show only some paths.** `pathIds` limits the paths. Only these are worked out, the rest of the store is not touched.
+- **Load in pieces.** The library does not load anything. Load by path (a page of paths), by prio (a year needs only prio 5, a month 3 to 5) or by time window with one neighbour point before and after the window for the arrows. Keep your `heights` and `free` and swap only `paths`.
+- **Save only what changed.** `onStoreChange` gives the whole store, but the map only changes `heights` and `free`. `changedParts(before, after)` lists exactly the entries that changed, for example `{ kind: 'pointHeight', level: 'week', id: 'gym-18', y: -38 }`. `y: null` means the height was forgotten. Write those to your database. Paths you changed yourself you know already.
 
-**Lines the user moves.** Lines that run along the time axis (the lines that leave the view and the ones in `through`) keep apart from each other by themselves. The user can drag the arrow at the end of such a line up or down. `onLineEndMove({ from, to, y })` then tells you the two points of that connection and the new height, as a distance from the lane. Store it and pass it back as `y` on the lead (in `incoming` or `outgoing`) or on the entry in `through`. The line stays where it was dragged until your new data arrives. The edge of a week lies on another day than the edge of a month, so keep this height per period. The demo does, and without a stored height it puts the edge on the straight line between the heights of the two points (`demo/app-logic/edgeHeight.ts`), so week and month agree.
+Measured with 80,000 points in 100 paths (a week of 2 paths, in a Node script, best of 5): about 70 ms without the cache, about 0.2 ms with it. The free view of 2 paths went from about 74 ms to 3 ms. Finding out which paths have something in a view (`pathsInView`) still looks at every path and took about 10 ms.
+### The free view
 
-**Clicking a line.** `onLineSelect({ from, to, x, y, date, lanes, at })` comes when the user clicks or right-clicks a line: a connection between two points, a line that leaves the view, or one that spans it. `from` and `to` are its two ends (`{ id?, title, date }`), `date` is the date where it was clicked, and `lanes` the lane of every path, so `y - lanes[pathId]` is the height for a new point. Show a `LineMenu` at `at`, for example with **Insert point**. The demo inserts a point there and puts it between the two points in `next`.
-
-> [!WARNING]
-> Answer a move with a **new** `PeriodData` object within 80 ms, otherwise the point moves back. Changing the old object in place does not count, the map compares by reference. See [Events](#events).
+Every view that is not a period shows all points of all paths. With the option `freeMove` on, points and whole paths can be moved freely in every direction, without a time axis. These places are kept in `store.free`, apart from the heights of the levels, so week, month and year do not change. It is meant for arranging things your own way, for example to lay points out as a figure. With `freeMove` off, the free view is only an overview.
 
 ### Add points and paths
 
-- The user double-clicks the empty area: `onPointAdd({ x, y, date, lanes })` tells you where. You decide whether and how to add a point. `y - lanes[pathId]` is its height for the path you put it on.
-- The user double-clicks a point: `onPointDoubleClick({ id, date })` tells you which one. The demo uses it to go one level deeper, to the period of that date.
-- The `PointMenu` control has a **Next point** panel. It calls your `onAddNext({ title, date, newPath, color, pathName })`. With `newPath` you create a new `Path` with that color and `pathName` (if empty, use the title) and put the point on it. Without it, the point joins the path of the selected point.
-- A new path is just another entry in `paths`. Give it an `id`, a `name`, a `color` and its points.
+- The user double-clicks the empty area: `onPointAdd({ x, y, date, lanes })` tells you where. You decide whether and how to add a point, for example with `addPoint(store, branchId, point)`. `y - lanes[pathId]` is its height for the path you put it on.
+- The user double-clicks a point: `onPointDoubleClick({ id, date })` tells you which one. The demo uses it to go one level deeper.
+- The `PointMenu` control has a **Next point** panel. It calls your `onAddNext({ title, date, newPath, color, pathName })`. The demo adds the point to the same branch, and with `newPath` as the first point of a new branch that forks off.
+- A new path is `addPath(store, { id, name, color, branches })`.
 
 ### Make paths stronger
 
@@ -328,9 +322,9 @@ The tier counts the **active days in the last 12 weeks** up to the date of the p
 
 A highway is a real habit. It shrinks slowly when the habit stops. Pass your own rule as the third argument: `{ weeks, minActiveDays }`.
 
-The strength of a path arrives at its next point: the border of a reached point is thicker the stronger the path that led to it. The importance of a point is separate. It is your own rating from 1 to 5 and decides the size of the symbol and the room it keeps. Your app can also use it to decide which views show the point (the demo does). A strong path does not make a point more important.
+The strength of a path arrives at its next point: the border of a reached point is thicker the stronger the path that led to it. The prio of a point is separate. It is your own rating from 1 to 5 and decides the size of the symbol and on which levels the point shows. A strong path does not make a point more important.
 
-Lines to points that are not reached yet stay thin and are drawn with dots. While a point is dragged, thin rings show how much room it needs.
+Lines to points that are not reached yet stay thin and are drawn with dots.
 
 ### Dates and language
 
@@ -350,63 +344,55 @@ The option `orientation` sets which way time runs: `horizontal` (left to right),
 
 ### Objects
 
-**`PathPoint`** is one point on a path.
+**`StorePoint`** is one point of a branch.
 
-| Field        | Type                                              | Meaning                                                                                                                                                                                         |
-| ------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | `string`                                          | Unique within the view.                                                                                                                                                                         |
-| `date`       | `string`                                          | ISO date `YYYY-MM-DD`. Decides the rough horizontal position.                                                                                                                                   |
-| `title`      | `string`                                          | Shown under the point.                                                                                                                                                                          |
-| `kind`       | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when two or more points follow), otherwise ●.                                                                                                                     |
-| `status`     | `'done' \| 'current' \| 'open' \| 'abandoned'`    | Looks and animation.                                                                                                                                                                            |
-| `next`       | `string[]`                                        | Ids of the points this one leads to. Draws the connections.                                                                                                                                     |
-| `importance` | `number` (1–5, optional)                          | Bigger points keep more distance.                                                                                                                                                               |
-| `note`       | `string` (optional)                               | Free text for your app.                                                                                                                                                                         |
-| `strength`   | `number` (0–4, optional)                          | Tier of the connection leading to this point. See [Make paths stronger](#make-paths-stronger).                                                                                                  |
-| `incoming`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that lead to this point. The map draws a line from the edge, with title and date. See [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes). |
-| `outgoing`   | `{ title, date, id?, y? }[]` (optional)           | Points outside this view that this point leads to. The map draws a line to the edge, with title and date. `y` is the height of the line at the edge, from the lane (see `onLineEndMove`).       |
-| `x`, `y`     | `number` (optional)                               | Only `y`: the height from the lane of the path, on its date, in every view. Both: exactly there in this view. `x` needs `y`.                                                                    |
+| Field      | Type                                              | Meaning                                                                                         |
+| ---------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                          | Unique in the whole store.                                                                      |
+| `date`     | `string`                                          | ISO date `YYYY-MM-DD`. Decides the place along the time axis and the order in its branch.      |
+| `title`    | `string`                                          | Shown under the point.                                                                          |
+| `kind`     | `'start' \| 'milestone' \| 'crossroad' \| 'goal'` | Start ▲, goal ★, fork ◆ (also when a branch forks off), otherwise ●.                            |
+| `status`   | `'done' \| 'current' \| 'open' \| 'abandoned'`    | Looks and animation.                                                                            |
+| `prio`     | `number` (1–5)                                    | Decides on which levels the point shows, and its size. Week 1–5, month 3–5, year 5.             |
+| `note`     | `string` (optional)                               | Free text for your app.                                                                         |
+| `strength` | `number` (0–4, optional)                          | Tier of the line leading to this point. See [Make paths stronger](#make-paths-stronger).        |
 
-**`Path`** is one graph with its points: `{ id, name, color, lane?, points, through? }`. `through` lists the connections that span the whole period without a point inside (`PathThrough`, see [Show where a path comes from and goes](#show-where-a-path-comes-from-and-goes)). `color` is `#rrggbb` and stays the same along the whole path. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order.
+**`Branch`** is `{ id, splitsAt?, points }`. **`StorePath`** is `{ id, name, color, lane?, branches }`. Paths are placed one below the other by `lane` (lowest number first), otherwise in list order. **`Store`** is `{ paths, heights, free }`, made by `createStore(paths)`.
 
-**`PeriodData`** is everything one view needs: `{ paths: Path[] }`. Points can lead to points on other paths with `next`, so paths can branch off and merge. A `next` to a point that is not in the view is dropped. Connections never form a circle: such data is rejected with a message. Point ids may not contain `->`, it separates the ids in the id of a line.
-
-**`PeriodMap`** is an object that maps a period key to its `PeriodData`.
-
-The data is checked when it arrives. Invalid data (a bad date, a duplicate id, a circle of connections, ...) is reported through `onError`. The message says where the problem is, and nothing is drawn. Without `onError` the messages go to `console.error`. `validatePeriodData(data)` runs the same check yourself.
+The data is checked when it arrives. Invalid data is reported through `onError`, the message says where the problem is, and nothing is drawn. Without `onError` the messages go to `console.error`. `validateStore(paths)` runs the same check yourself.
 
 ### Events
 
 All events are options of `PathWorld` and `createPathWorld`.
 
-| Callback                                                | When                                                                                                                                                                                                                                            |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onSelect(id \| null)`                                  | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                                                                                     |
-| `onPointMove({ id, x, y, offset, offsets, positions })` | A dragged point was released at its final position. `offset` is its height from the lane of its path: pass it back as `y` to keep it in every view. `offsets` holds that height for every point of the view.                                    |
-| `onPointAdd({ x, y, date, lanes })`                     | The empty area was double-clicked. In a calendar view `date` follows the horizontal position, otherwise it is today. `x`/`y` are map coordinates (not screen pixels), already moved to a free spot. `lanes` holds the lane of every path.       |
-| `onPointDoubleClick({ id, date })`                      | A point was double-clicked. `date` is the date of the point. Your app decides what happens, for example a finer view.                                                                                                                           |
-| `onLeadDoubleClick({ pointId, side, title, date, id })` | A line that leaves the view was double-clicked, on its text or on the line. `side` is `'before'` for a line that comes from outside and `'after'` for one that goes on. `title`, `date` and `id` are what you gave in `incoming` or `outgoing`. |
-| `onLineSelect({ from, to, x, y, date, lanes, at })`     | A line was clicked or right-clicked. `from` and `to` are its ends, `x`/`y`/`date` the place on the line, `lanes` the lane of every path, `at` the place for a `LineMenu`. See [Keep the layout](#keep-the-layout).                              |
-| `onLineEndMove({ from, to, y })`                        | The arrow at the end of a line that leaves or spans the view was dragged and let go. `y` is the height from the lane. Pass it back on the lead or on the `through` entry.                                                                       |
-| `onError(errors)`                                       | The data of the current view is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                                                                          |
+| Callback                                                | When                                                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onStoreChange(store)`                                  | The user moved a point, an arrow or a path. Keep the new store and pass it back as `store`. Without it nothing can be moved.                                                          |
+| `onSelect(id \| null)`                                  | A point was pressed (also when it is then dragged), or the empty area was clicked (`null`).                                                                                           |
+| `onPointAdd({ x, y, date, lanes })`                     | The empty area was double-clicked. In a period `date` follows the horizontal position. `lanes` holds the lane of every path.                                                          |
+| `onPointDoubleClick({ id, date })`                      | A point was double-clicked. Your app decides what happens, for example a finer view.                                                                                                  |
+| `onLeadDoubleClick({ pointId, side, title, date, id })` | A line that crosses the border was double-clicked, on its text or on the line. `side` is `'before'` for a line that comes from outside and `'after'` for one that goes on.           |
+| `onLineSelect({ from, to, x, y, date, lanes, at })`     | A line was clicked or right-clicked. `from` and `to` are its ends, `x`/`y`/`date` the place on the line, `at` the place for a `LineMenu`.                                             |
+| `onError(errors)`                                       | The data is invalid, or an option such as `today`, `locale` or a background color is invalid (it is then replaced by its default).                                                    |
 
-Update your data in these callbacks and pass the new objects back in. The data is yours. If you do not answer a move within 80 ms with a **new** `PeriodData` object for the current view, the point moves back to where it was. Changing the old object in place does not count, the map compares by reference. Sometimes a point cannot stay where it was dropped (no room, or on a foreign line). Then it moves back along its way until it finds a free spot. That spot is what `onPointMove` reports.
+If you do not answer a move within 80 ms with a **new** `store` object, the point moves back to where it was. Changing the old object in place does not count, the map compares by reference.
 
 ### Options
 
-**Copy this object.** It lists every option of `PathWorld` and `createPathWorld` with its default value. Only `periods` and `view` are needed, so you can delete every other line.
+**Copy this object.** It lists every option of `PathWorld` and `createPathWorld` with its default value. Only `store` and `view` are needed, so you can delete every other line.
 
 ```ts
 import type { PathWorldOptions } from 'world-of-evolving-paths';
 
 const options: PathWorldOptions = {
-  periods, // required: the PeriodMap
-  view: period.key, // required: the key of the period to show
+  store, // required: from createStore(paths)
+  view: period.key, // required: the key of the period to show; any other key is the free view
+  // pathIds: ['gym', 'reading'], // no default: show only these paths (for paging)
   today: '2026-11-10', // default: today's local date
-  seed: 1, // another number gives another layout
   editable: true, // false: no moving and no adding of points
   pointsLocked: false, // true: points cannot be dragged
   timeLocked: true, // false: a dragged point may leave its date
+  freeMove: false, // true: in the free view, points and paths can be moved freely
   // snap: 40, // no default: dragged and added points snap to a grid with this distance
   wavy: false, // true: a slight wave on the lines
   animate: true, // false: no moving parts (also the default for users who prefer reduced motion)
@@ -427,30 +413,7 @@ const options: PathWorldOptions = {
   },
   // formatDate: (iso) => iso, // no default: write the date under a point yourself
   // The events, all optional (see Events above):
-  // onSelect, onPointMove, onPointAdd, onPointDoubleClick, onLeadDoubleClick, onLineSelect, onLineEndMove, onError
-};
-```
-
-**What the demo editor starts with.** These are the values of the live demo when you open it for the first time. The demo keeps some of them in the browser (levels, direction, language, background and the place of the bars).
-
-```ts
-const demoEditorAtStart = {
-  mode: 'editor', // 'map' is read only, with few controls
-  view: 'year', // the first view; 'free' shows everything
-  levels: ['week', 'month', 'year'], // the chips in the top bar
-  years: 1, // how many years the year view spans: 1, 2, 5 or 10
-  settings: {
-    wavy: false,
-    pointsLocked: false,
-    snap: false,
-    animate: true,
-    orientation: 'auto',
-    locale: 'the language of the browser', // fallback: 'en-GB'
-  },
-  background: { fill: 'gradient', base: '#3a1f6b', color2: '#1f5a9e', angle: 150, pattern: 'stars', intensity: 0.5 },
-  bars: { main: 'top-left', time: 'bottom-left' }, // the user can drag both bars to another place
-  seed: 1,
-  customColors: [], // colors the user saved in the color picker
+  // onStoreChange, onSelect, onPointAdd, onPointDoubleClick, onLeadDoubleClick, onLineSelect, onError
 };
 ```
 
@@ -458,13 +421,14 @@ The `PointMenu` has options too. These are the defaults:
 
 ```tsx
 <PointMenu
-  point={point}
+  point={point} // a StorePoint
   path={path}
-  onUpdate={onUpdate}
+  onUpdate={onUpdate} // gets a patch such as { prio: 4 }
   onAddNext={onAddNext}
   onPathColor={onPathColor}
   onDelete={onDelete}
   canComplete // true: false while earlier points are not done yet
+  isFork={false} // true: a branch forks off from this point
   importanceRange={[1, 5]}
   placement="auto" // 'below' | 'above' | 'right' | 'left'
   hide={[]} // tiles to leave out: 'status' | 'next' | 'connect' | 'kind' | 'color' | 'rename' | 'details' | 'remove'
@@ -472,28 +436,6 @@ The `PointMenu` has options too. These are the defaults:
 />;
 ```
 
-<details>
-<summary><b>The same options as a table, with an explanation of each</b> (click to open)</summary>
-
-| Option         | Default        | Meaning                                                                                                                                                                                                                             |
-| -------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `periods`      | —              | The `PeriodMap`.                                                                                                                                                                                                                    |
-| `view`         | —              | Key of the period to show.                                                                                                                                                                                                          |
-| `today`        | local date     | Today as `YYYY-MM-DD`. Marks "today" on the lines, only in a view that holds it.                                                                                                                                                    |
-| `seed`         | `1`            | Changes the generated layout.                                                                                                                                                                                                       |
-| `editable`     | `true`         | Allow moving and adding points.                                                                                                                                                                                                     |
-| `pointsLocked` | `false`        | Points cannot be dragged.                                                                                                                                                                                                           |
-| `timeLocked`   | `true`         | A dragged point moves only across the time axis and stays on its date.                                                                                                                                                              |
-| `snap`         | —              | Distance of a grid in world units. Dragged and added points snap to it.                                                                                                                                                             |
-| `wavy`         | `false`        | A slight wave on the lines.                                                                                                                                                                                                         |
-| `background`   | dark, plain    | `{ pattern: 'stars' \| 'hex' \| 'dots' \| 'none', fill: 'solid' \| 'gradient', base, color, color2, angle, mid, intensity, scale }`.                                                                                                |
-| `orientation`  | `'horizontal'` | Which way time runs: `horizontal`, `horizontal-inverted`, `vertical`, `vertical-inverted` or `auto`. See [Camera and direction of time](#camera-and-direction-of-time). Only the picture turns, your data and events stay the same. |
-| `animate`      | `true`         | Moving dashes, pulsing rings and a soft pulsing light. Off by default for users who prefer reduced motion.                                                                                                                          |
-| `locale`       | browser        | Language of the dates under the points, such as `de`.                                                                                                                                                                               |
-| `formatDate`   | —              | Writes the date under a point yourself. It is used instead of `locale`.                                                                                                                                                             |
-| `shortcuts`    | `true`         | Keys `M` (center) and `E` (fit), only while the pointer is over the map or the focus is inside it.                                                                                                                                  |
-
-</details>
 
 ### Controls (React)
 
@@ -510,7 +452,7 @@ Ready-made controls are imported from `world-of-evolving-paths/react`. In the re
 | `TilePanel`       | One button (`▦`) that opens a small panel of buttons (tiles) in groups, like a number pad. You give the groups and tiles (glyph, label, `active`, `disabled`, `onClick`). It opens away from the edge of its `ControlBar` and stays open until the button is clicked again or Escape is pressed. `ViewBar` with `periodOnly` pairs with it: the period stays in the bar, everything else goes into tiles.                            |
 | `SidePanel`       | A panel over the full height at the left or right side, with a close button. Scrolls when long. For settings.                                                                                                                                                                                                                                                                                                                        |
 | `BackgroundPanel` | Fill (plain or gradient with two colors), pattern, brightness and size. Holds no state.                                                                                                                                                                                                                                                                                                                                              |
-| `PointMenu`       | Menu with buttons at a selected point. Actions: next point, connect (needs `onConnect`), delete. Properties: status, kind, name, path color (with slots for your own colors) and details. The menu shows the name of the path of the point. `checkInCount` shows the check-ins of the path. It moves with the map and sits below the point, or above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
+| `PointMenu`       | Menu with buttons at a selected point. Actions: next point, delete. Properties: status, kind, name, path color (with slots for your own colors) and details. The menu shows the name of the path of the point. `checkInCount` shows the check-ins of the path. It moves with the map and sits below the point, or above when there is no room (`placement`: `auto`, `below`, `above`, `right`, `left`). |
 | `Toast`           | A short message at the top of the map that slides in and goes away by itself (`durationMs`, default 6 s) or when closed. For hints and problems of your app. With `action` it shows a button. Holds no state.                                                                                                                                                                                                                        |
 | `LineMenu`        | Tile menu at a clicked line, in the look of `PointMenu`. Place it inside `PathWorld` at `at` of `onLineSelect`; you give the title and the tiles.                                                                                                                                                                                                                                                                                    |
 | `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today` and the today markers move along the paths. Holds no state.                                                                                                                                                                                                                                                                                            |
@@ -529,29 +471,46 @@ Besides what is shown above, the package exports helpers you may want for your o
 
 ## 📈 Performance and limits
 
-- Pass a **new object for every period that changed** and keep unchanged ones as they are. The map compares periods by reference and calculates again only when one changed. Changing an object in place is not noticed.
+- Pass a **new `store` object** whenever something changed and keep it as it is otherwise. The map compares by reference and builds the view again only when the store, the view, the shown paths or `today` changed.
 - Camera movement and hover never touch React state. Zooming does not re-render your tree.
 - Only changed lines and points are redrawn. The map keeps drawing at up to 40 frames per second while something moves on its own (today markers, moving dashes, the soft light). Set `animate: false` to stop that; the map is then only redrawn when something changes. Users who prefer reduced motion get that by default.
 - Keep `background` and other object options stable between renders (define them once). They are compared field by field.
-- The first layout of a view costs time with many points: about 150 ms for 200 points and well over a second beyond 500, when none of them is pinned. Pinned points cost almost nothing, so store the positions the user chose (see `onPointMove`). Plan on views with a few dozen points.
-- Adding a point to a path can make the view wider and move points that are not pinned. Pin points to keep them where they are.
 
 ### What your app does
 
 The library draws and reports, your app holds the state. That is a choice, not a gap:
 
 - **Undo and redo** work on your state. The demo keeps a history of its states (`demo/app-logic/history.ts`, `stateHistory.ts`).
-- **Saving and loading** are yours, in whatever store you use.
-- **Week, month and year** are views of the same data. Keep one list of points and build each view from it, filtered by date and importance, as the demo does (`demo/app-logic/periodData.ts`).
-- **Heights** the user chose come back through `onPointMove` (`offset`) and `onLineEndMove` (`y`). Store them, per point and per period, and pass them back.
+- **Saving and loading** are yours, in whatever store you use. The store is plain JSON.
+- **Week, month and year** are views of the same store. You do not build them: the library does, from the prio of the points.
+- **Strength and time travel:** statuses and strengths as of a day are your app's to work out. The demo does it by passing a copy of the store with other `status` and `strength` values (`demo/app-logic/appearance.ts`). Take only `heights` and `free` from the store you get back, so that look does not become your data.
 
 Controls are provided for React only; the map itself works with any framework.
+
+## ⚠️ Breaking change: the data model
+
+Yes, again. We are sorry. It is the last time we ask you to rewrite your data, and this time it gets simpler. 🙈
+
+| Before (0.0.x)                                                       | Now                                                                              |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `periods: PeriodMap` (one `PeriodData` per view, built by you)       | `store: Store` (one store, the library builds every view)                        |
+| Points linked with `next`, even across paths                         | Branches: a point is linked to its neighbours in the branch. Forks use `splitsAt`. |
+| `incoming`, `outgoing`, `through` on points and paths                | Gone. The library makes the arrows at the borders itself.                        |
+| `importance` on a point, filtered by your app                        | `prio` (1–5). Week 1–5, month 3–5, year 5, built in.                             |
+| `x`, `y`, `seed`, pins, `offsets`, `positions`                       | Gone. Heights are kept per level in `store.heights`.                             |
+| `onPointMove`, `onLineEndMove` and your own bookkeeping              | `onStoreChange(store)`. Keep the store.                                          |
+| `PathPoint`, `Path`, `PeriodData`, `PeriodMap`, `validatePeriodData` | `StorePoint`, `StorePath`, `Store`, `createStore`, `validateStore`               |
+| Points push each other away, layouts could differ between periods    | No collision search. Two periods next to each other agree on every border.       |
+| Connect two points, merge branches                                   | Gone. A branch can only fork off.                                                |
+
+How to move over: put your points into branches (one main branch per path, a `splitsAt` branch for every fork), turn `importance` into `prio`, drop `next`, `incoming`, `outgoing`, `through` and all pinned positions, and pass `store` instead of `periods`.
+
 
 ## 🔧 Contributing
 
 ### Run the demo
 
-`demo/` is a complete example app: six everyday topics over one year, two paths per page, with check-ins that make the paths stronger. It holds the data, builds the `PeriodMap` for each view, handles the events and keeps the pinned positions, using only the public API.
+`demo/` is a complete example app: four everyday topics over about half a year, one point per week, two paths per page, with check-ins that make the paths stronger. It holds the paths, passes the store to the map, keeps what the map hands back (with undo), and uses only the public API.
 
 ```bash
 npm install
@@ -572,19 +531,7 @@ npm run dev     # http://localhost:5173
 
 ### Project layout
 
-```
-src/
-  core/            Pure logic, no framework, no Pixi, no browser: dates, calendar, layout,
-                   collision, strength tiers, validation, scene model, background CSS
-  map/             Framework-free map: createPathWorld wires small parts together:
-                   engine/ (orientation, framing, keyboard), interaction/ (pointer, gestures,
-                   dragging), render/ (Pixi layers), state/ (world model), camera/, dom/
-  react/           React binding (PathWorld) and controls
-    controls/      One folder per control (see the table above)
-    hooks/         One job per hook
-demo/              The demo app (not published)
-tests/             Cross-cutting tests and fixtures
-```
+src/  core/            Pure logic, no framework, no Pixi, no browser: dates, calendar, the store (paths,                   levels, heights, update functions), placing a view, scene model, strength tiers,                   background CSS  map/             Framework-free map: createPathWorld wires small parts together:                   engine/ (orientation, framing, keyboard, store edits), interaction/ (pointer,                   gestures, dragging), render/ (Pixi layers), state/ (world model), camera/, dom/  react/           React binding (PathWorld) and controls    controls/      One folder per control (see the table above)    hooks/         One job per hookdemo/              The demo app (not published)tests/             Cross-cutting tests and fixtures
 
 Layers only depend downwards: `core` ← `map` ← `react`. A test (`tests/architecture.test.ts`) enforces this, and that the library never touches `localStorage`.
 

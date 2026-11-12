@@ -6,7 +6,6 @@ export type {
   CameraListener,
   LeadDoubleClickEvent,
   LineEnd,
-  LineEndMoveEvent,
   LineSelectEvent,
   Orientation,
   PathWorldEvents,
@@ -14,5 +13,4 @@ export type {
   PathWorldOptions,
   PointAddEvent,
   PointDoubleClickEvent,
-  PointMoveEvent,
 } from './options.js';

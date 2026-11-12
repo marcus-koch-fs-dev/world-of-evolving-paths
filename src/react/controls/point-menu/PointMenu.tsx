@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PATH_PALETTE, type PathInfo, type PathPoint } from '../../../core/index.js';
+import { PATH_PALETTE, type PathInfo, type StorePoint } from '../../../core/index.js';
 import { useWorldVersion } from '../../hooks/useWorldVersion.js';
 import { usePathWorldHandle } from '../../PathWorldContext.js';
 import { MenuTiles } from './MenuTiles.js';
@@ -12,7 +12,7 @@ import { TILES, visibleTiles } from './tiles.js';
 import type { NextPointInput, PointPatch, TileId } from './types.js';
 
 export type PointMenuProps = {
-  point: PathPoint;
+  point: StorePoint;
   /** The path the point belongs to. Its color is shown on the color tile. */
   path: PathInfo;
   onUpdate: (patch: PointPatch) => void;
@@ -20,6 +20,8 @@ export type PointMenuProps = {
   onAddNext: (input: NextPointInput) => string | null;
   onPathColor: (color: string) => void;
   onDelete: () => void;
+  /** True when a branch forks off from this point. The kind panel then explains the fork shape. Default false. */
+  isFork?: boolean;
   /** False while earlier points are not done yet. Default true. */
   canComplete?: boolean;
   importanceRange?: [number, number];

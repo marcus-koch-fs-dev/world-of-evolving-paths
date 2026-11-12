@@ -1,27 +1,29 @@
-import { layoutPeriod, type PeriodLayout, placeWorld } from '../../core/layout.js';
-import { layoutSignature, reuseLayout } from '../../core/layoutCache.js';
-import type { PeriodData, PeriodMap, PlacedWorld, Position } from '../../core/types.js';
-import { validatePeriodData } from '../../core/validate.js';
-import { anyChange, type ConfigSnapshot, configDelta, EMPTY_SNAPSHOT, needsLayout } from './configDelta.js';
+import { periodFromKey } from '../../core/calendar.js';
+import { placeLevel } from '../../core/place/placeLevel.js';
+import { createStoreCache } from '../../core/store/cache.js';
+import type { Store } from '../../core/store/types.js';
+import { validateStore } from '../../core/store/validate.js';
+import type { PlacedWorld, Position } from '../../core/types.js';
+import { anyChange, type ConfigSnapshot, configDelta, EMPTY_SNAPSHOT } from './configDelta.js';
 import { createOverrides, positionIn } from './createOverrides.js';
 
-type Config = { periods: PeriodMap; view: string; seed: number; today: string };
+type Config = { store: Store; view: string; today: string; pathIds?: readonly string[] };
 
 type Changes = {
-  /** Anything changed: data, view, seed or today. */
+  /** Anything changed: data, view, paths or today. */
   changed: boolean;
   viewChanged: boolean;
-  /** The app passed new data. */
+  /** The app passed a new store. */
   dataChanged: boolean;
-  /** The points have to be laid out again. */
-  layoutChanged: boolean;
 };
 
 export type WorldModel = {
   /** Applies the options and says what changed. */
   configure(config: Config): Changes;
-  /** The valid data of the current view, or null. */
-  periodData(): PeriodData | null;
+  /** The valid store, or null when the data is wrong. */
+  store(): Store | null;
+  /** The level of the shown period, or null in the overview. */
+  level(): 'week' | 'month' | 'year' | null;
   /** The world to draw, with the positions of points that are being dragged. */
   world(): PlacedWorld | null;
   positionOf(id: string): Position;
@@ -29,26 +31,25 @@ export type WorldModel = {
   clearOverride(id: string): void;
 };
 
-const NOTHING: Changes = { changed: false, viewChanged: false, dataChanged: false, layoutChanged: false };
+const NOTHING: Changes = { changed: false, viewChanged: false, dataChanged: false };
 
 /**
- * The world to draw, derived from the options. The points are laid out again only when something the layout depends
- * on changed (see `layoutSignature`), the view or the seed. New titles, statuses or strengths, or a new `today`,
- * reuse the layout, so moving through time is cheap even when the app builds new objects for every step.
- * Positions set while dragging live in the overrides until the app passes new data.
+ * The world to draw, derived from the options. It is made again whenever the store, the view, the shown paths or
+ * today change. Positions set while dragging live in the overrides until the app passes a new store.
  */
 export function createWorldModel(onError: (errors: string[]) => void): WorldModel {
   const overrides = createOverrides();
+  // Paths that did not change are not worked out again
+  const cache = createStoreCache();
   let snapshot: ConfigSnapshot = EMPTY_SNAPSHOT;
-  let data: PeriodData | null = null;
-  let layout: PeriodLayout | null = null;
+  let valid: Store | null = null;
   let base: PlacedWorld | null = null;
+  let level: ReturnType<WorldModel['level']> = null;
 
-  const validate = (raw: PeriodData | undefined): PeriodData | null => {
-    if (raw === undefined) return null;
-    const result = validatePeriodData(raw);
-    if (result.ok) return result.data;
-    onError(result.errors);
+  const check = (store: Store): Store | null => {
+    const errors = validateStore(store.paths);
+    if (errors.length === 0) return store;
+    onError(errors);
     return null;
   };
 
@@ -56,22 +57,18 @@ export function createWorldModel(onError: (errors: string[]) => void): WorldMode
 
   return {
     configure(config) {
-      const raw = config.periods[config.view];
-      const delta = configDelta(snapshot, { ...config, raw });
+      const delta = configDelta(snapshot, { ...config, pathIds: config.pathIds });
       if (!anyChange(delta)) return NOTHING;
-
-      if (delta.dataChanged) data = validate(raw);
-      if (delta.dataChanged || delta.viewChanged || delta.seedChanged) overrides.clearAll();
-      const signature = data ? layoutSignature(data) : '';
-      const layoutChanged = needsLayout(delta, signature !== snapshot.signature);
-      snapshot = { raw, view: config.view, seed: config.seed, today: config.today, signature };
-      if (layoutChanged) layout = data ? layoutPeriod(data, config.view, config.seed) : null;
-      else if (delta.dataChanged && data && layout) layout = reuseLayout(data, layout);
-      base = layout ? placeWorld(layout, config.today) : null;
-      return { changed: true, viewChanged: delta.viewChanged, dataChanged: delta.dataChanged, layoutChanged };
+      if (delta.dataChanged) valid = check(config.store);
+      if (delta.dataChanged || delta.viewChanged) overrides.clearAll();
+      snapshot = { store: config.store, view: config.view, today: config.today, pathIds: config.pathIds };
+      level = periodFromKey(config.view)?.level ?? null;
+      base = valid ? placeLevel(valid, config.view, config.today, config.pathIds, cache) : null;
+      return { changed: true, viewChanged: delta.viewChanged, dataChanged: delta.dataChanged };
     },
 
-    periodData: () => data,
+    store: () => valid,
+    level: () => level,
     world,
     positionOf: (id) => positionIn(world(), id),
     setOverride: overrides.set,

@@ -1,43 +1,36 @@
-import { VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
+import { MIN_PRIO, VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
 
-// The free view shows everything that is at least this important.
-export const FREE_VIEW_MIN_IMPORTANCE = 2;
+// The free view shows every point.
+export const FREE_VIEW_MIN_PRIO = 1;
 
-// What each view shows is the app's decision, not the library's.
-// `minImportance`: points less important than this are left out. `graphsPerPage`: paths on one page.
-export const LEVEL_SETTINGS: Record<ViewLevel, { minImportance: number; graphsPerPage: number }> = {
-  week: { minImportance: 1, graphsPerPage: 2 },
-  month: { minImportance: 2, graphsPerPage: 2 },
-  year: { minImportance: 3, graphsPerPage: 2 },
-};
+// How many paths one page shows. Which points a level shows is the core's rule (`MIN_PRIO`).
+export const GRAPHS_PER_PAGE = 2;
 
-/** The least importance a point needs to show in a period, or in the free view when there is no period. */
-export const minImportanceOf = (period: { level: ViewLevel } | null): number =>
-  period ? LEVEL_SETTINGS[period.level].minImportance : FREE_VIEW_MIN_IMPORTANCE;
+/** The least prio a point needs to show in a period, or in the free view when there is no period. */
+export const minPrioOf = (period: { level: ViewLevel } | null): number =>
+  period ? MIN_PRIO[period.level] : FREE_VIEW_MIN_PRIO;
 
-/** The widest offered level that shows a point of this importance, or null when none does. */
+/** The widest offered level that shows a point of this prio, or null when none does. */
 export function widestLevelShowing(
-  importance: number,
+  prio: number,
   offered: readonly ViewLevel[],
 ): { level: ViewLevel; label: string } | null {
   return (
-    VIEW_LEVELS.filter(
-      (option) => offered.includes(option.level) && LEVEL_SETTINGS[option.level].minImportance <= importance,
-    ).at(-1) ?? null
+    VIEW_LEVELS.filter((option) => offered.includes(option.level) && MIN_PRIO[option.level] <= prio).at(-1) ?? null
   );
 }
 
 /**
- * Where a point of this importance shows when the shown view hides it: the widest offered level that is fine
+ * Where a point of this prio shows when the shown view hides it: the widest offered level that is fine
  * enough. Null when the shown view shows it already (or the free view), or no offered level does.
  */
 export function levelThatShows(
-  importance: number,
+  prio: number,
   current: ViewLevel | null,
   offered: readonly ViewLevel[],
 ): { level: ViewLevel; label: string } | null {
-  if (current === null || LEVEL_SETTINGS[current].minImportance <= importance) return null;
-  return widestLevelShowing(importance, offered);
+  if (current === null || MIN_PRIO[current] <= prio) return null;
+  return widestLevelShowing(prio, offered);
 }
 
 // The levels the demo offers at first: the week is the finest view and the year the widest. The user can switch

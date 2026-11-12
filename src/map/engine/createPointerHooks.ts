@@ -1,11 +1,10 @@
-import { layoutOf, nearestFree } from '../../core/collision.js';
-import { lanesOf } from '../../core/layout.js';
+import { lanesOf } from '../../core/lanes.js';
 import type { Turn } from '../../core/orientation.js';
 import { hitLead, hitNode, reachAt } from '../../core/scene/hit.js';
 import { lineTargetAt } from '../../core/scene/lineTarget.js';
-import { dateAxisX } from '../../core/scene/viewEdges.js';
+import { dateAtAxisX, dateAxisX } from '../../core/scene/viewEdges.js';
 import { snapToGrid } from '../../core/snap.js';
-import { dateAtX } from '../../core/timeAxis.js';
+import { dateAtFreeX } from '../../core/store/free.js';
 import type { Position } from '../../core/types.js';
 import type { Viewport } from '../dom/createViewport.js';
 import type { PointDragger } from '../interaction/createPointDragger.js';
@@ -15,6 +14,7 @@ import type { WorldModel } from '../state/createWorldModel.js';
 import type { InteractionState } from './createInteractionState.js';
 import { createLineGrabs } from './createLineGrabs.js';
 import type { SceneHolder } from './createSceneHolder.js';
+import type { StoreEdits } from './createStoreEdits.js';
 import { rounded } from './events.js';
 
 type Dependencies = {
@@ -23,6 +23,7 @@ type Dependencies = {
   scene: SceneHolder;
   interaction: InteractionState;
   dragger: PointDragger;
+  edits: StoreEdits;
   viewport: Pick<Viewport, 'setCursor'>;
   toLayout: Turn;
   /** The zoom of the camera now: lines are as easy to hit when the view is small. */
@@ -38,12 +39,19 @@ export function createPointerHooks({
   scene,
   interaction,
   dragger,
+  edits,
   viewport,
   toLayout,
   zoom,
   today,
 }: Dependencies): PointerHooks {
-  const canDrag = () => options().editable !== false && options().pointsLocked !== true;
+  const canDrag = edits.canMove;
+
+  /** The date at a place on the map: along the time axis of a period, or in the free arrangement of the overview. */
+  const dateAt = (x: number, current: PathWorldOptions) => {
+    const world = model.world();
+    return (world && dateAtAxisX(world, x)) ?? (world ? dateAtFreeX(x) : today(current));
+  };
 
   /** The position with its place along the time axis put back to the date of the point. */
   const onItsDate = (id: string, position: Position): Position => {
@@ -53,7 +61,7 @@ export function createPointerHooks({
     return x === null ? position : { x, y: position.y };
   };
 
-  const lineGrabs = createLineGrabs({ options, model, scene, interaction, toLayout, zoom, canDrag });
+  const lineGrabs = createLineGrabs({ model, scene, interaction, edits, toLayout, zoom });
 
   return {
     ...lineGrabs,
@@ -111,9 +119,14 @@ export function createPointerHooks({
       const target = current.onLineSelect ? lineTargetAt(scene.current(), points, at, reachAt(zoom())) : null;
       if (!current.onLineSelect || !target) return false;
       const place = rounded(toLayout(at));
-      const date = dateAtX(place.x, model.periodData(), current.view, today(current));
       const world = model.world();
-      current.onLineSelect({ ...target, ...place, date, lanes: world ? lanesOf(world) : {}, at });
+      current.onLineSelect({
+        ...target,
+        ...place,
+        date: dateAt(place.x, current),
+        lanes: world ? lanesOf(world) : {},
+        at,
+      });
       return true;
     },
 
@@ -131,12 +144,9 @@ export function createPointerHooks({
     onBackgroundDoubleClick(onScreen: Position) {
       const current = options();
       if (current.editable === false) return;
-      const points = model.world()?.points ?? [];
-      const target = snapToGrid(toLayout(onScreen), current.snap);
-      const free = rounded(nearestFree(layoutOf(points), { id: '', kind: 'start' }, target));
-      const date = dateAtX(free.x, model.periodData(), current.view, today(current));
+      const place = rounded(snapToGrid(toLayout(onScreen), current.snap));
       const world = model.world();
-      current.onPointAdd?.({ ...free, date, lanes: world ? lanesOf(world) : {} });
+      current.onPointAdd?.({ ...place, date: dateAt(place.x, current), lanes: world ? lanesOf(world) : {} });
     },
   };
 }

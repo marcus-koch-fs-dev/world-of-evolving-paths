@@ -1,6 +1,6 @@
 # CLAUDE.md — World of Evolving Paths
 
-A TypeScript library for date-based, evolving paths on a pannable, zoomable canvas. The library stores nothing and prepares no data: the app passes objects in, the library draws them and reports user events.
+A TypeScript library for date-based, evolving paths on a pannable, zoomable canvas. The library stores nothing: the app passes a store of paths, branches and points in, the library builds week, month and year from it, draws them and hands back the new store when the user moves something.
 
 ## Language and commits
 

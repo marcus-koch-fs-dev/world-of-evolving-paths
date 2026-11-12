@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import type { PathPoint } from '../../../../core/index.js';
+import type { StorePoint } from '../../../../core/index.js';
 import type { PointPatch } from '../types.js';
 import { InfoToggle } from './InfoToggle.js';
 
 type Props = {
-  point: Pick<PathPoint, 'date' | 'importance' | 'note'>;
+  point: Pick<StorePoint, 'date' | 'prio' | 'note'>;
   importanceRange: [number, number];
   onUpdate: (patch: PointPatch) => void;
 };
@@ -37,8 +37,8 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
         </div>
         <select
           aria-label="Importance"
-          value={point.importance ?? min}
-          onChange={(event) => onUpdate({ importance: Number(event.target.value) })}
+          value={point.prio ?? min}
+          onChange={(event) => onUpdate({ prio: Number(event.target.value) })}
         >
           {values.map((value) => (
             <option key={value} value={value}>

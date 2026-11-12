@@ -31,6 +31,8 @@ type Props = {
   /** The levels the view bar offers. */
   levels: readonly { level: ViewLevel; label: string }[];
   onReroll: () => void;
+  freeMove: boolean;
+  onFreeMoveToggle: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onModeChange: (mode: DemoMode) => void;
@@ -49,6 +51,8 @@ export function TopBar({
   locale,
   levels,
   onReroll,
+  freeMove,
+  onFreeMoveToggle,
   onOrientationChange,
   mode,
   onModeChange,
@@ -82,7 +86,7 @@ export function TopBar({
         onNext={() => navigation.move(1)}
         onToday={navigation.goToToday}
         page={paging.page}
-        pages={navigation.level === null ? 0 : paging.pages}
+        pages={paging.pages}
         onPageChange={navigation.setPage}
       />
       <BackButton canGoBack={navigation.canGoBack} onBack={navigation.back} />
@@ -92,6 +96,8 @@ export function TopBar({
         level={navigation.level}
         onLevelChange={navigation.chooseLevel}
         onReroll={onReroll}
+        freeMove={freeMove}
+        onFreeMoveToggle={onFreeMoveToggle}
         onOrientationChange={onOrientationChange}
         mode={mode}
         onModeChange={onModeChange}

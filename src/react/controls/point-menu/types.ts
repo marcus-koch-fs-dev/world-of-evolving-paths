@@ -1,6 +1,6 @@
-import type { PathPoint } from '../../../core/index.js';
+import type { StorePoint } from '../../../core/index.js';
 
-export type PointPatch = Partial<Pick<PathPoint, 'title' | 'status' | 'kind' | 'date' | 'importance' | 'note'>>;
+export type PointPatch = Partial<Pick<StorePoint, 'title' | 'status' | 'kind' | 'date' | 'prio' | 'note'>>;
 
 export type NextPointInput = {
   title: string;

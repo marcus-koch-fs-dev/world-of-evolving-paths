@@ -29,9 +29,7 @@ const PANELS: Record<PanelId, (context: Context) => ReactNode> = {
   next: ({ menu, colors, close }) => (
     <NextPointPanel colors={colors} defaultDate={menu.point.date} onAddNext={menu.onAddNext} onDone={close} />
   ),
-  kind: ({ menu }) => (
-    <KindPanel kind={menu.point.kind} branches={menu.point.next.length >= 2} onUpdate={menu.onUpdate} />
-  ),
+  kind: ({ menu }) => <KindPanel kind={menu.point.kind} branches={menu.isFork ?? false} onUpdate={menu.onUpdate} />,
   color: ({ menu, colors }) => (
     <ColorPanel
       colors={colors}

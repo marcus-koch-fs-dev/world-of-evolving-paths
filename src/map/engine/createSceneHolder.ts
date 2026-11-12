@@ -8,7 +8,7 @@ import type { WorldModel } from '../state/createWorldModel.js';
 import type { InteractionState } from './createInteractionState.js';
 import type { OrientationState } from './createOrientationState.js';
 
-const EMPTY_SCENE: Scene = { edges: [], nodes: [], heres: [], rings: [], leads: [] };
+const EMPTY_SCENE: Scene = { edges: [], nodes: [], heres: [], leads: [] };
 
 type Dependencies = {
   model: WorldModel;

@@ -1,14 +1,16 @@
+import type { Position } from '../../core/types.js';
+
 /**
- * A drag of a line: where the pointer is now and where it was taken. With `scope` `end` only the end of the line moves.
- * With `path` the whole path of the line goes along, and `pathId` says which one.
+ * A drag of a line: where the pointer is now and where it was taken. With `scope` `end` only the arrow at the end of
+ * the line moves. With `path` the whole path of the line goes along, and `pathId` says which one.
  */
 export type LineDrag = {
+  x: number;
   y: number;
+  startX: number;
   startY: number;
   scope: 'end' | 'path';
   pathId?: string;
-  /** For a line across the whole view that is taken by its body: its two ends, which go along by the same distance. */
-  ends?: { key: string; startY: number }[];
 };
 
 export type InteractionState = {
@@ -18,15 +20,15 @@ export type InteractionState = {
   drag(id: string | null): void;
   /** The lines the user is dragging, by the key of the line. */
   lineDrags(): ReadonlyMap<string, LineDrag>;
-  /** Heights the user is dragging lines to, by the key of the line. */
+  /** Heights the user is dragging arrows to, by the key of the arrow. */
   lineHeights(): ReadonlyMap<string, number>;
-  /** How far the user has moved each path by dragging the end of one of its lines, by path id. */
-  pathShifts(): ReadonlyMap<string, number>;
+  /** How far the user has moved each path by dragging one of its lines, by path id. */
+  pathShifts(): ReadonlyMap<string, Position>;
   /** A line is dragged. */
   dragLine(key: string, drag: LineDrag): void;
   /** The line is let go. */
   dropLine(key: string): void;
-  /** All lines are let go, for when the app answered with new data that holds their heights. */
+  /** All lines are let go, for when the app answered with a new store that holds their heights. */
   dropLines(): void;
   /** Nothing is hovered or dragged any more, for when the view underneath was replaced. */
   clear(): void;
@@ -49,15 +51,11 @@ export function createInteractionState(): InteractionState {
     },
     lineDrags: () => lineDrags,
     lineHeights: () =>
-      new Map(
-        [...lineDrags].flatMap(([key, { y, startY, scope, ends = [] }]): [string, number][] =>
-          scope === 'end' ? [[key, y]] : ends.map((end) => [end.key, end.startY + (y - startY)]),
-        ),
-      ),
+      new Map([...lineDrags].flatMap(([key, { y, scope }]): [string, number][] => (scope === 'end' ? [[key, y]] : []))),
     pathShifts: () =>
       new Map(
-        [...lineDrags.values()].flatMap(({ pathId, y, startY, scope }): [string, number][] =>
-          scope === 'path' && pathId !== undefined ? [[pathId, y - startY]] : [],
+        [...lineDrags.values()].flatMap(({ pathId, x, y, startX, startY, scope }): [string, Position][] =>
+          scope === 'path' && pathId !== undefined ? [[pathId, { x: x - startX, y: y - startY }]] : [],
         ),
       ),
     dragLine(key, drag) {

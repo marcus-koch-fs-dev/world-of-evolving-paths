@@ -1,5 +1,5 @@
 import type { Position } from '../types.js';
-import { LEAD_FONT_SIZE } from './leads.js';
+import { LEAD_FONT_SIZE } from './arrows.js';
 import type { EdgeDraw, LeadDraw, NodeDraw } from './types.js';
 
 /** The node under a world position. Later drawn nodes lie on top and are hit first. */

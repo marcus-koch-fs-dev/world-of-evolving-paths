@@ -1,5 +1,5 @@
 ﻿import { useCallback, useMemo, useReducer, useState } from 'react';
-import { toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
+import { indexPoints, type PathInfo, toDay, todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import {
   BackgroundPanel,
   ControlBar,
@@ -11,28 +11,23 @@ import {
 } from 'world-of-evolving-paths/react';
 import { checkInMessage, hasCheckedIn } from './app-logic/checkIn';
 import { rememberColor } from './app-logic/customColors';
-import { heightOnPath } from './app-logic/heightOnPath';
 import { canRedo, canUndo } from './app-logic/history';
-import { levelThatShows, minImportanceOf, steppedYears } from './app-logic/levels';
-import { lineEndAction } from './app-logic/lineEndAction';
+import { levelThatShows, minPrioOf, steppedYears } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
-import { importanceOf } from './app-logic/periodData';
-import { createBorderKeyOf } from './app-logic/reach';
+import { nextPointProblem } from './app-logic/pointActions';
 import { canComplete } from './app-logic/rules';
-import { keptHeights } from './app-logic/shiftPath';
-import { customPointId, DEFAULT_SEED, initialState, nextPointProblem } from './app-logic/state';
+import { initialState } from './app-logic/state';
 import { createStateHistory, historyReduce } from './app-logic/stateHistory';
-import { finerLevel } from './app-logic/zoom';
 import { DemoLineMenu } from './components/DemoLineMenu';
 import { Legend } from './components/Legend';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
 import { createHabits } from './data/habits';
-import { useConnectMode } from './hooks/useConnectMode';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoView } from './hooks/useDemoView';
 import { useLineSelection } from './hooks/useLineSelection';
+import { useMapEvents } from './hooks/useMapEvents';
 import { useNotice } from './hooks/useNotice';
 import { useUndoShortcuts } from './hooks/useUndoShortcuts';
 import { useViewNavigation } from './hooks/useViewNavigation';
@@ -45,7 +40,7 @@ const SMALL_SCREEN = window.matchMedia('(max-width: 600px)').matches;
 
 function createInitialState(today: string) {
   const habits = createHabits(today);
-  return initialState(habits.paths, habits.points, habits.checkIns);
+  return initialState(habits.store, habits.checkIns);
 }
 
 /** The demo app: holds all data and state and wires the map and its controls to it. */
@@ -59,6 +54,7 @@ export function App() {
   const [mode, setMode] = useState<DemoMode>('edit');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [freeMove, setFreeMove] = useState(false);
   const notice = useNotice();
   const setNotice = notice.set;
   // The settings slide in from the side the menu bar is not on
@@ -84,24 +80,40 @@ export function App() {
     else if (navigation.level !== null) navigation.move(shortcut.count);
   });
 
-  const { period, level, view, tileKey, range, travel, result, periods } = useDemoView(state, navigation, today);
+  const { period, level, view, tileKey, range, travel, store, pathIds, paging, visibleIds, arrowKeys } = useDemoView(
+    state,
+    navigation,
+    today,
+    values.allPaths,
+  );
   const lineSelection = useLineSelection(tileKey);
+  const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
 
   // A point that is not in the current view is not selected, so its menu and check-in button do not linger
-  const viewPoints = result.data.paths.flatMap((path) => path.points);
-  const visibleIds = new Set(viewPoints.map((point) => point.id));
-  const selected = state.points.find((point) => point.id === selectedId && visibleIds.has(point.id));
-  const selectedPath = state.paths.find((path) => path.id === selected?.pathId);
+  const infos = useMemo(() => indexPoints(state.store.paths), [state.store.paths]);
+  const selectedInfo = selectedId !== null && visibleIds.has(selectedId) ? infos.get(selectedId) : undefined;
+  const selectedStorePath = state.store.paths.find((path) => path.id === selectedInfo?.pathId);
+  const selected = selectedInfo?.point;
+  const selectedPath: PathInfo | undefined = selectedStorePath && {
+    id: selectedStorePath.id,
+    name: selectedStorePath.name,
+    color: selectedStorePath.color,
+    lane: selectedStorePath.lane,
+  };
   const checkedInToday = selectedPath !== undefined && hasCheckedIn(state.checkIns, selectedPath.id, today);
-  const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
-  const minImportance = minImportanceOf(period);
+  const minPrio = minPrioOf(period);
 
-  const connecting = useConnectMode({
-    points: state.points,
+  const events = useMapEvents({
+    store: state.store,
+    nextId: state.nextId,
+    dispatch,
+    level,
+    period,
+    pathIds,
+    navigation,
+    offeredLevels: values.levels,
     selectedId: selected?.id ?? null,
-    connect: (fromId, toId) => dispatch({ type: 'connect', fromId, toId }),
     select: setSelectedId,
-    setNotice,
   });
 
   const changeSettings = (patch: Partial<SettingsValues>) => {
@@ -112,36 +124,13 @@ export function App() {
 
   /** A point that was made less important may drop out of this view. Say where it shows now, and offer to go there. */
   const hintIfHidden = (patch: PointPatch) => {
-    if (!selected || patch.importance === undefined) return;
-    const importance = importanceOf({ kind: selected.kind, importance: patch.importance });
-    const target = levelThatShows(importance, navigation.level, values.levels);
+    if (!selected || patch.prio === undefined) return;
+    const target = levelThatShows(patch.prio, navigation.level, values.levels);
     if (!target) return;
     notice.show(`This point is hidden here. It shows from the ${target.label.toLowerCase()} view on.`, {
       label: `Go to ${target.label.toLowerCase()}`,
       onClick: () => navigation.zoomInto(target.level, selected.date),
     });
-  };
-
-  /** A new point goes into the line that was clicked, where it was clicked, and its menu opens. */
-  const insertIntoLine = () => {
-    const { line } = lineSelection;
-    if (!line?.from.id || !line.to.id) return;
-    const { y, date, lanes } = line;
-    // The new point joins the path of the first point of the line, at the height of the click above its lane
-    const pathId = state.points.find((point) => point.id === line.from.id)?.pathId ?? '';
-    const height = heightOnPath(y, lanes, pathId);
-    if (height === null) return;
-    dispatch({
-      type: 'insert',
-      level,
-      fromId: line.from.id,
-      toId: line.to.id,
-      height,
-      date,
-      importance: minImportanceOf(period),
-    });
-    setSelectedId(customPointId(state.nextId));
-    lineSelection.clear();
   };
 
   const addNext = (fromId: string, input: Parameters<typeof nextPointProblem>[0]) => {
@@ -157,14 +146,15 @@ export function App() {
   return (
     <div className="demo-stage">
       <PathWorld
-        periods={periods}
+        store={store}
         view={view}
+        pathIds={pathIds}
         today={travel.shownToday}
-        seed={state.seeds[tileKey] ?? DEFAULT_SEED}
         editable={editing}
         wavy={values.wavy}
-        // An overview (several years, everything) keeps no heights, so nothing can be moved there
-        pointsLocked={values.pointsLocked || level === null}
+        pointsLocked={values.pointsLocked}
+        freeMove={freeMove}
+        onStoreChange={(next) => dispatch({ type: 'setLayout', heights: next.heights, free: next.free })}
         snap={values.snap ? SNAP_STEP : undefined}
         animate={values.animate}
         locale={values.locale}
@@ -172,59 +162,30 @@ export function App() {
         orientation={values.orientation}
         onSelect={(id) => {
           lineSelection.clear();
-          connecting.handleSelect(id);
+          setSelectedId(id);
         }}
-        onLineEndMove={
-          level === null
-            ? undefined
-            : (event) => {
-                // The path of the line moves in this view, on this level. Where it meets the edge follows from that
-                const action = lineEndAction(event, period, result.data.paths, createBorderKeyOf(state.points));
-                if (action) dispatch(action);
-              }
-        }
         onLineSelect={(line) => {
-          // While waiting for the point to connect to, a line is not a choice
-          if (!editing || connecting.from !== null) return;
+          if (!editing) return;
           setSelectedId(null);
           lineSelection.select(line);
         }}
-        onPointMove={({ id, offset, offsets }) => {
-          // Every other point of the view stays where it is, so a point moves alone and nothing is pushed around
-          const others = viewPoints.map((point) => point.id).filter((otherId) => otherId !== id);
-          dispatch({ type: 'move', level, id, height: offset, followers: keptHeights(others, offsets) });
-        }}
-        onPointAdd={({ y, date, lanes }) => {
-          // The new point is as important as the view needs, so it shows where it was added
-          const importance = minImportanceOf(period);
-          // A path that is not on this page has no lane here, so the point goes to the selected path or the first one shown
-          const pathId = selected?.pathId ?? result.data.paths[0]?.id;
-          const height = pathId === undefined ? null : heightOnPath(y, lanes, pathId);
-          if (pathId === undefined || height === null) return;
-          dispatch({ type: 'add', level, pathId, height, date, importance });
-          setSelectedId(customPointId(state.nextId));
-        }}
-        onPointDoubleClick={({ date }) => {
-          // A double-click on a point goes one level finer, to the period of its date
-          const finer = finerLevel(navigation.level, values.levels);
-          if (finer) navigation.zoomInto(finer, date);
-        }}
-        onLeadDoubleClick={({ id, date }) => {
-          // A double-click on a line that leaves the view goes to the period of the point out there, in the same level
-          if (navigation.level === null) return;
-          navigation.zoomInto(navigation.level, date);
-          if (id) setSelectedId(id);
-        }}
+        onPointAdd={events.onPointAdd}
+        onPointDoubleClick={events.onPointDoubleClick}
+        onLeadDoubleClick={events.onLeadDoubleClick}
         onError={(errors) => console.error(errors.join('\n'))}
       >
         <TopBar
           dock={docks.main}
           onDockChange={(main) => settings.setDocks({ ...docks, main })}
           navigation={navigation}
-          paging={result}
+          paging={paging}
           locale={values.locale}
           levels={offeredLevels}
-          onReroll={() => dispatch({ type: 'reroll', level, viewKey: tileKey, pointIds: [...visibleIds] })}
+          onReroll={() => {
+            if (level !== null) dispatch({ type: 'resetView', level, pointIds: [...visibleIds], arrowKeys });
+          }}
+          freeMove={freeMove}
+          onFreeMoveToggle={() => setFreeMove((on) => !on)}
           onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
           onModeChange={setMode}
@@ -241,7 +202,7 @@ export function App() {
           </SidePanel>
         )}
 
-        <Legend dock="bottom-right" levels={offeredLevels} minImportance={minImportance} startCollapsed />
+        <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrio} startCollapsed />
 
         <TimeBar
           dock={docks.time}
@@ -264,22 +225,28 @@ export function App() {
                 dispatch({ type: 'checkIn', pathId: selectedPath.id, date: today });
               }}
             >
-              {checkedInToday ? `âœ“ Checked in today: ${selectedPath.name}` : `Check in: ${selectedPath.name}`}
+              {checkedInToday ? `✓ Checked in today: ${selectedPath.name}` : `Check in: ${selectedPath.name}`}
             </button>
           </ControlBar>
         )}
 
         <Toast message={notice.text} action={notice.action} onDismiss={notice.clear} />
 
-        {editing && lineSelection.line && <DemoLineMenu line={lineSelection.line} onInsert={insertIntoLine} />}
+        {editing && lineSelection.line && (
+          <DemoLineMenu
+            line={lineSelection.line}
+            onInsert={() => {
+              if (lineSelection.line && events.insertIntoLine(lineSelection.line)) lineSelection.clear();
+            }}
+          />
+        )}
 
         {editing && selected && selectedPath && (
           <PointMenu
             point={selected}
             path={selectedPath}
-            canComplete={canComplete(state.points, selected.id)}
-            connecting={connecting.from === selected.id}
-            onConnect={() => connecting.toggle(selected.id)}
+            isFork={state.store.paths.some((path) => path.branches.some((branch) => branch.splitsAt === selected.id))}
+            canComplete={canComplete(state.store, selected.id)}
             checkInCount={state.checkIns.filter((checkIn) => checkIn.pathId === selectedPath.id).length}
             customColors={settings.customColors}
             onCustomColor={(color) => settings.setCustomColors((colors) => rememberColor(colors, color))}

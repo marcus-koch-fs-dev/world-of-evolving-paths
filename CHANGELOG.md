@@ -2,6 +2,27 @@
 
 ## 0.1.0 (unreleased)
 
+### Data model rework (breaking)
+
+The library no longer asks you to build every view. You give it one store of paths, branches and points. It builds week, month and year itself and hands you the new store when the user moves something. See the README, section "Breaking change".
+
+- **Breaking:** `periods: PeriodMap` is now `store: Store` (made with `createStore(paths)`). The option `seed` is gone.
+- **Breaking:** a path has `branches`, a branch has `points` in time order and an optional `splitsAt`. `next`, `incoming`, `outgoing`, `through` and the pins `x` and `y` are gone, and so is merging two branches or connecting two paths. `PathPoint`, `Path`, `PathThrough`, `PeriodData`, `PeriodMap` and `validatePeriodData` are replaced by `StorePoint`, `StorePath`, `Branch`, `Store` and `validateStore`.
+- **Breaking:** `importance` is `prio` (1 to 5). A week shows prio 1 to 5, a month 3 to 5, a year only 5. The levels are built by `buildLevel(store, level, period)`.
+- **Breaking:** `onPointMove` and `onLineEndMove` are replaced by `onStoreChange(store)`. The map makes the change with `movePoint`, `moveArrow` and `movePath`, which you can also call yourself.
+- Lines that cross the border of a period end in an arrow at the exact place of the border. Both periods next to a border show the arrow at the same height: one entry per path, branch and border date. Until the user drags it, it lies on the straight line between its two neighbours.
+- Heights are kept per level. A point without a height on a level takes the one from the week, then a default that depends only on the point.
+- A dragged point moves alone. Moving a line moves the whole path with all its branches, points and arrows.
+- New option `freeMove`: in the free view, points and paths move freely in every direction. The places are kept apart in `store.free` and do not touch the levels.
+- New option `pathIds` and function `pathsInView(store, view, cache?)` to page through many paths. Only the shown paths are worked out.
+- Paths that did not change are not worked out again (`createStoreCache`). New helpers `replacePath` and `changedParts(before, after)` to swap one path and to save only what the user changed.
+- The marker for today and the lit part of a line that leaves the view now agree.
+- New functions `placeLevel`, `lanesOf`, `weekdayOf`, `addPoint`, `updatePoint`, `removePoint`, `addBranch`, `addPath`, `updatePath`, `forgetHeights`, `moveFreePoint` and `moveFreePath`.
+- The points no longer push each other away, and the thin rings while dragging are gone. Heights are chosen by the user, not by a layout search.
+- `PointMenu` takes a `StorePoint` and its patch uses `prio`. New prop `isFork`.
+
+The entries below that mention `through`, `Lead.y`, `onLineEndMove`, `onPointMove`, `offsets` or `PathThrough` describe what this rework replaced.
+
 ### Library
 
 - **Breaking:** the levels `day` and `halfYear` are gone. `ViewLevel` is `'week' | 'month' | 'year'` and `VIEW_LEVELS` has these three. A key such as `day:2026-11-07` or `halfYear:2026-01-01` is no longer a period, so `periodFromKey` returns `null` for it. If you used them, show a week or a month instead.
