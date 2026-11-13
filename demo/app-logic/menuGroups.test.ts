@@ -8,6 +8,7 @@ const state: MenuState = {
   ],
   level: 'week',
   mode: 'edit',
+  locked: true,
   zoom: 0.5,
   canGoBack: false,
   canUndo: true,
@@ -27,6 +28,7 @@ const createActions = (): MenuActions => ({
   changePathsPerPage: vi.fn(),
   reroll: vi.fn(),
   openSettings: vi.fn(),
+  toggleLock: vi.fn(),
   zoomBy: vi.fn(),
   fit: vi.fn(),
   center: vi.fn(),
@@ -66,6 +68,29 @@ describe('Menu groups', () => {
           ?.filter((tile) => tile.disabled)
           .map((tile) => tile.id),
       ).toEqual(['previous', 'next', 'today', 'back']);
+    });
+  });
+
+  describe('the lock for moving in the overview', () => {
+    const lockTile = (current: MenuState, actions = createActions()) =>
+      tilesOf('view', current, actions)?.find((tile) => tile.id === 'lock');
+
+    it('is a tile of the view group that works only in the overview', () => {
+      expect(lockTile({ ...state, level: 'week' })?.disabled).toBe(true);
+      expect(lockTile({ ...state, level: null })?.disabled).toBe(false);
+    });
+
+    it('shows a closed lock while locked and a lit, open one when it can be moved', () => {
+      expect(lockTile({ ...state, level: null })).toMatchObject({ icon: 'lock', active: false });
+      expect(lockTile({ ...state, level: null, locked: false })).toMatchObject({ icon: 'unlock', active: true });
+    });
+
+    it('switches the lock when it is clicked', () => {
+      const actions = createActions();
+
+      lockTile({ ...state, level: null }, actions)?.onClick();
+
+      expect(actions.toggleLock).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -13,6 +13,8 @@ export type MenuState = {
   /** The level shown, or null for the free view. */
   level: ViewLevel | null;
   mode: DemoMode;
+  /** In the overview points and paths cannot be moved while this is true. */
+  locked: boolean;
   /** The zoom of the map, 1 is 100 %. */
   zoom: number;
   canGoBack: boolean;
@@ -33,6 +35,7 @@ export type MenuActions = {
   changePathsPerPage: (count: number) => void;
   reroll: () => void;
   openSettings: () => void;
+  toggleLock: () => void;
   zoomBy: (factor: number) => void;
   fit: () => void;
   center: () => void;
@@ -40,7 +43,7 @@ export type MenuActions = {
   rotate: (turn: 'left' | 'right') => void;
 };
 
-const viewGroup = ({ levels, level }: MenuState, actions: MenuActions): PanelGroup => ({
+const viewGroup = ({ levels, level, locked }: MenuState, actions: MenuActions): PanelGroup => ({
   id: 'view',
   label: 'View',
   tiles: [
@@ -52,6 +55,15 @@ const viewGroup = ({ levels, level }: MenuState, actions: MenuActions): PanelGro
       active: level === option.level,
       onClick: () => actions.changeLevel(option.level),
     })),
+    {
+      id: 'lock',
+      label: 'Move',
+      title: locked ? 'Unlock to move points and paths in All' : 'Lock points and paths',
+      icon: locked ? 'lock' : 'unlock',
+      active: !locked,
+      disabled: level !== null,
+      onClick: actions.toggleLock,
+    },
   ],
 });
 

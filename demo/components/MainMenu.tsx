@@ -15,6 +15,9 @@ type Props = {
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onOpenSettings: () => void;
+  /** The overview can be arranged by hand when this is false. */
+  locked: boolean;
+  onLockToggle: () => void;
   /** The tiles show their names under the symbols. */
   tileLabels: boolean;
   closeOnSelect: boolean;
@@ -31,6 +34,7 @@ export function MainMenu(props: Props) {
       levels: props.levels,
       level: navigation.level,
       mode: props.mode,
+      locked: props.locked,
       zoom,
       canGoBack: navigation.canGoBack,
       canUndo: undoRedo.canUndo,
@@ -49,6 +53,7 @@ export function MainMenu(props: Props) {
       changePathsPerPage: props.onPathsPerPageChange,
       reroll: props.onReroll,
       openSettings: props.onOpenSettings,
+      toggleLock: props.onLockToggle,
       zoomBy: handle.zoomBy,
       fit: handle.fit,
       center: handle.center,

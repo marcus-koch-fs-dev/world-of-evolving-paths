@@ -83,6 +83,8 @@ export function TopBar({
         onOrientationChange={onOrientationChange}
         mode={mode}
         onOpenSettings={onOpenSettings}
+        locked={locked}
+        onLockToggle={onLockToggle}
         tileLabels={tileLabels}
         closeOnSelect={closeMenuOnSelect}
       />
