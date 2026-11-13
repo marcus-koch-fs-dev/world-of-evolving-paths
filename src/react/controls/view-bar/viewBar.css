@@ -1,14 +1,14 @@
 .pw-view-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: var(--pw-gap);
   align-items: center;
 }
 
 .pw-view-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--pw-gap-s);
   align-items: center;
 }
 
@@ -35,10 +35,10 @@
 }
 
 .pw-select {
-  height: 1.625rem;
+  height: var(--pw-btn-h);
   padding: 0 0.5rem;
   border: 1px solid var(--pw-line);
-  border-radius: 0.5rem;
+  border-radius: var(--pw-btn-radius);
   background: var(--pw-field);
   color: inherit;
   font: inherit;

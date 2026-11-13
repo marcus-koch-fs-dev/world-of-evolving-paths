@@ -15,6 +15,8 @@ type Props = {
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onOpenSettings: () => void;
+  /** The tiles show their names under the symbols. */
+  tileLabels: boolean;
   closeOnSelect: boolean;
 };
 
@@ -54,5 +56,5 @@ export function MainMenu(props: Props) {
     },
   );
 
-  return <TilePanel groups={groups} label="Menu" labels={false} closeOnSelect={props.closeOnSelect} />;
+  return <TilePanel groups={groups} label="Menu" labels={props.tileLabels} closeOnSelect={props.closeOnSelect} />;
 }

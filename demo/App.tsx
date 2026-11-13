@@ -7,7 +7,7 @@ import { isEmbedded, phoneOrientation } from './app-logic/device';
 import { minPrioOf, steppedYears } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
 import type { SettingsSection } from './app-logic/settingsSections';
-import { scalePercent } from './app-logic/uiSize';
+import { showsTileLabels, sizeClass } from './app-logic/uiSize';
 import { DemoLineMenu } from './components/DemoLineMenu';
 import { Legend } from './components/Legend';
 import { type DeviceToggle, ModeToggle } from './components/ModeToggle';
@@ -23,7 +23,6 @@ import { useMapEvents } from './hooks/useMapEvents';
 import { useNotice } from './hooks/useNotice';
 import { usePointMenuActions } from './hooks/usePointMenuActions';
 import { useSelection } from './hooks/useSelection';
-import { useUiScale } from './hooks/useUiScale';
 import { useUndoShortcuts } from './hooks/useUndoShortcuts';
 import { useViewNavigation } from './hooks/useViewNavigation';
 import { useViewShortcuts } from './hooks/useViewShortcuts';
@@ -48,7 +47,6 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   const navigation = useViewNavigation(today);
   const settings = useDemoSettings();
   const { values, docks } = settings;
-  useUiScale(scalePercent(values.uiSize));
   const [mode, setMode] = useState<DemoMode>(PHONE ? 'map' : 'edit');
   const [section, setSection] = useState<SettingsSection | null>(null);
   // In the overview points and paths can be moved by hand, by anyone, once the lock is open
@@ -104,7 +102,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   return (
     <div className="demo-stage">
       <PathWorld
-        className={values.transparent ? 'pw-transparent' : undefined}
+        className={[sizeClass(values.uiSize), values.transparent ? 'pw-transparent' : ''].filter(Boolean).join(' ')}
         store={store}
         view={view}
         pathIds={pathIds}
@@ -154,6 +152,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
           onOpenSettings={() => setSection('display')}
+          tileLabels={showsTileLabels(values.uiSize)}
           undoRedo={undoRedo}
         />
 

@@ -17,7 +17,7 @@ export function DisplaySettings({ values, onChange }: Props) {
     <>
       <Group
         title="Size"
-        hint="Small is tiny and clean, Large has bigger icons and text. Changes show when you close this window."
+        hint="Small is tiny and clean. Regular has the names under the symbols. Large is a little bigger. Changes show when you close this window."
       >
         <div className="demo-choice">
           {UI_SIZES.map((choice) => (

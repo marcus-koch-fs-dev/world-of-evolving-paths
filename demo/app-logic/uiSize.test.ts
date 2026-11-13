@@ -1,18 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { scalePercent, UI_SIZES } from './uiSize';
+import { showsTileLabels, sizeClass, UI_SIZES } from './uiSize';
 
 describe('Size of the controls', () => {
-  it('has three fixed forms, each bigger than the one before', () => {
+  it('has three fixed forms', () => {
     expect(UI_SIZES.map((entry) => entry.value)).toEqual(['small', 'regular', 'large']);
-    expect(scalePercent('small')).toBeLessThan(scalePercent('regular'));
-    expect(scalePercent('regular')).toBeLessThan(scalePercent('large'));
   });
 
-  it('draws small in the sizes of the stylesheets', () => {
-    expect(scalePercent('small')).toBe(100);
+  it('gives each form its class, and none for Regular', () => {
+    expect(sizeClass('small')).toBe('pw-compact');
+    expect(sizeClass('regular')).toBe('');
+    expect(sizeClass('large')).toBe('pw-large');
   });
 
   it('falls back to small for a value that is not a form', () => {
-    expect(scalePercent('huge' as never)).toBe(100);
+    expect(sizeClass('huge' as never)).toBe('pw-compact');
+  });
+
+  it('shows the names of the tiles in Regular and Large, symbols alone in Small', () => {
+    expect(showsTileLabels('small')).toBe(false);
+    expect(showsTileLabels('regular')).toBe(true);
+    expect(showsTileLabels('large')).toBe(true);
   });
 });

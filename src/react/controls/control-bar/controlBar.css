@@ -1,21 +1,21 @@
 /* The two rows along the edges. Bars inside sit side by side and wrap. */
 .pw-dock {
   position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
+  left: var(--pw-inset);
+  right: var(--pw-inset);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 0.375rem;
+  gap: var(--pw-gap);
   pointer-events: none;
 }
 
 .pw-dock-top {
-  top: 0.5rem;
+  top: var(--pw-inset);
 }
 
 .pw-dock-bottom {
-  bottom: 0.5rem;
+  bottom: var(--pw-inset-bottom);
   align-items: flex-end;
 }
 
@@ -25,11 +25,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.375rem;
+  gap: var(--pw-gap);
   max-width: 100%;
-  padding: 0.125rem;
+  padding: var(--pw-bar-pad);
   border: 1px solid var(--pw-line);
-  border-radius: 0.5rem;
+  border-radius: var(--pw-bar-radius);
   background: var(--pw-panel);
   backdrop-filter: var(--pw-panel-blur);
 }

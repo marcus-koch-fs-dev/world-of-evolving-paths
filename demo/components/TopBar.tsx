@@ -30,6 +30,7 @@ type Props = {
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
   onOpenSettings: () => void;
+  tileLabels: boolean;
   undoRedo: UndoRedoProps;
 };
 
@@ -52,6 +53,7 @@ export function TopBar({
   onOrientationChange,
   mode,
   onOpenSettings,
+  tileLabels,
   undoRedo,
 }: Props) {
   return (
@@ -81,6 +83,7 @@ export function TopBar({
         onOrientationChange={onOrientationChange}
         mode={mode}
         onOpenSettings={onOpenSettings}
+        tileLabels={tileLabels}
         closeOnSelect={closeMenuOnSelect}
       />
     </ControlBar>
