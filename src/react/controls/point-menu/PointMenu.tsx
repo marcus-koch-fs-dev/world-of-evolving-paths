@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PATH_PALETTE, type PathInfo, type StorePoint } from '../../../core/index.js';
 import { useWorldVersion } from '../../hooks/useWorldVersion.js';
+import { Icon } from '../../icons/Icon.js';
 import { usePathWorldHandle } from '../../PathWorldContext.js';
 import { closingAfterActions } from './closingAfterActions.js';
 import { MenuTiles } from './MenuTiles.js';
 import { type PanelId, panelFor } from './panels/panelFor.js';
 import { STATUS_LABELS } from './panels/StatusPanel.js';
-import { anchorFor, type MenuPlacement, resolvePlacement } from './placement.js';
+import { anchorFor, type MenuPlacement, nextSubPlacement, resolvePlacement, type SubPlacement } from './placement.js';
 import './pointMenu.css';
 import { TILES, visibleTiles } from './tiles.js';
 import type { NextPointInput, PointPatch, TileId } from './types.js';
@@ -36,6 +37,10 @@ export type PointMenuProps = {
   hide?: readonly TileId[];
   /** Where the menu sits next to the point. Default auto: below, or above when there is no room below. */
   placement?: MenuPlacement;
+  /** Where the panel of a tile opens around the tiles. Default `right`. On a narrow screen `below` fits better. */
+  subPlacement?: SubPlacement;
+  /** The user turned the panel to another place. With it the menu shows a button that goes around: above, right, below, left. Keep the place in your app and pass it back in `subPlacement`. */
+  onSubPlacementChange?: (placement: SubPlacement) => void;
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
   /** The menu wants to close, after an action when `closeAfterAction` is on. Deselect the point to close it. */
@@ -72,10 +77,15 @@ function PointMenuBody(props: PointMenuProps) {
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
   const placement = resolvePlacement(props.placement ?? 'auto', position.y * camera.zoom + camera.y, room);
 
+  const sub = props.subPlacement ?? 'right';
   const toggle = (id: TileId) => setOpen((current) => (current === id ? null : id));
 
   return createPortal(
-    <div className={`pw-point-menu pw-menu-${placement}`} data-pw-ui style={anchorFor(placement, position)}>
+    <div
+      className={`pw-point-menu pw-menu-${placement} pw-sub-${sub}`}
+      data-pw-ui
+      style={anchorFor(placement, position)}
+    >
       <div className="pw-menu-grid">
         <div className="pw-menu-title">
           <strong>{point.title}</strong>
@@ -84,6 +94,17 @@ function PointMenuBody(props: PointMenuProps) {
               ? STATUS_LABELS[point.status]
               : `${STATUS_LABELS[point.status]} · ${checkInLabel(props.checkInCount)}`}
           </span>
+          {props.onSubPlacementChange && (
+            <button
+              type="button"
+              className="pw-sub-turn"
+              aria-label="Move the panel around the menu"
+              title="Move the panel around the menu"
+              onClick={() => props.onSubPlacementChange?.(nextSubPlacement(sub))}
+            >
+              <Icon name="turnRight" />
+            </button>
+          )}
         </div>
         <div className="pw-menu-path">Path: {path.name}</div>
         <MenuTiles tiles={tiles} open={open} pathColor={path.color} onToggle={toggle} />

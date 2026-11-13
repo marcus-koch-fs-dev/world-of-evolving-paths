@@ -3,6 +3,17 @@ import type { Position } from '../../../core/index.js';
 export type MenuPlacement = 'auto' | 'below' | 'above' | 'right' | 'left';
 type ResolvedPlacement = Exclude<MenuPlacement, 'auto'>;
 
+/** Where the panel of a tile (status, details ...) opens, around the grid of tiles. */
+export type SubPlacement = 'right' | 'below' | 'left' | 'above';
+
+const AROUND: readonly SubPlacement[] = ['above', 'right', 'below', 'left'];
+
+/** The next place clockwise: above, right, below, left, and above again. Anything else starts at `right`. */
+export function nextSubPlacement(current: SubPlacement): SubPlacement {
+  const index = AROUND.indexOf(current);
+  return index < 0 ? 'right' : AROUND[(index + 1) % AROUND.length];
+}
+
 const ROOM_NEEDED_BELOW = 380; // screen pixels the menu with its open panel needs under the point
 const BELOW_OFFSET = 72; // world units under the point, past its name and date
 const ABOVE_OFFSET = -44;

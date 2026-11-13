@@ -237,6 +237,8 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
             onAddNext={(input) => pointActions.addNext(selection.point?.id ?? '', input)}
             onDeleted={() => selection.select(null)}
             closeAfterAction={values.pointMenuCloses}
+            subPlacement={values.pointPanel}
+            onSubPlacementChange={(pointPanel) => settings.change({ pointPanel })}
             onClose={() => selection.select(null)}
           />
         )}

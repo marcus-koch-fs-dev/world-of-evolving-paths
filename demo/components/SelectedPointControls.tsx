@@ -1,6 +1,6 @@
 import type { Dispatch } from 'react';
 import type { StorePath, StorePoint } from 'world-of-evolving-paths';
-import { ControlBar, PointMenu, type PointPatch } from 'world-of-evolving-paths/react';
+import { ControlBar, PointMenu, type PointPatch, type SubPlacement } from 'world-of-evolving-paths/react';
 import { checkInMessage } from '../app-logic/checkIn';
 import { canComplete } from '../app-logic/rules';
 import type { DemoAction, DemoState } from '../app-logic/state';
@@ -24,6 +24,9 @@ type Props = {
   /** The point menu wants to close: deselect the point. */
   onClose: () => void;
   closeAfterAction: boolean;
+  /** Where the panel of a tile opens, and what to do when the user turns it. */
+  subPlacement: SubPlacement;
+  onSubPlacementChange: (placement: SubPlacement) => void;
 };
 
 /** What the demo offers for the selected point: a check-in button for its path, and the point menu. */
@@ -43,6 +46,8 @@ export function SelectedPointControls({
   onDeleted,
   onClose,
   closeAfterAction,
+  subPlacement,
+  onSubPlacementChange,
 }: Props) {
   return (
     <>
@@ -76,6 +81,8 @@ export function SelectedPointControls({
         onAddNext={onAddNext}
         onClose={onClose}
         closeAfterAction={closeAfterAction}
+        subPlacement={subPlacement}
+        onSubPlacementChange={onSubPlacementChange}
         onPathColor={(color) => dispatch({ type: 'pathColor', pathId: path.id, color })}
         onDelete={() => {
           dispatch({ type: 'delete', id: point.id });

@@ -11,7 +11,7 @@ export type { MoveLockProps } from './controls/move-lock/MoveLock.js';
 export { MoveLock } from './controls/move-lock/MoveLock.js';
 export type { PointMenuProps } from './controls/point-menu/PointMenu.js';
 export { PointMenu } from './controls/point-menu/PointMenu.js';
-export type { MenuPlacement } from './controls/point-menu/placement.js';
+export type { MenuPlacement, SubPlacement } from './controls/point-menu/placement.js';
 export type { NextPointInput, PointPatch, TileId } from './controls/point-menu/types.js';
 export type { SidePanelProps } from './controls/side-panel/SidePanel.js';
 export { SidePanel } from './controls/side-panel/SidePanel.js';
