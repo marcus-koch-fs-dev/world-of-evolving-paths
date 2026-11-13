@@ -399,11 +399,11 @@ Import them from `world-of-evolving-paths/react`. They hold no map logic: they g
 | `ZoomControls`    | Zoom out, zoom in, center, fit.                                                                                                                  |
 | `ViewBar`         | Level buttons, previous and next period, today, pages. With `onDateChange` a click on the period opens a date picker.                            |
 | `ControlBar`      | A bar fixed to an edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). With `onDockChange` the user can drag it to another place. |
-| `TilePanel`       | A button that opens a panel of tiles in groups, as keys (`variant="tiles"`) or rows (`"list"`). With `closeOnSelect` it closes after a tap.        |
-| `MoveLock`        | A lock to arrange the overview "All" by hand. Pair it with `freeMove={!locked}`. It works for viewers too, also without `editable`.             |
-| `Icon`            | A small icon (Phosphor, regular or fill) in the text color and size. Names: `lock`, `unlock`, `menu`, `zoomIn`, ... (`IconName`).               |
+| `TilePanel`       | A button that opens a panel of tiles in groups, as keys (`variant="tiles"`) or rows (`"list"`). With `closeOnSelect` it closes after a tap.      |
+| `MoveLock`        | A lock to arrange the overview "All" by hand. Pair it with `freeMove={!locked}`. It works for viewers too, also without `editable`.              |
+| `Icon`            | A small icon (Phosphor, regular or fill) in the text color and size. Names: `lock`, `unlock`, `menu`, `zoomIn`, ... (`IconName`).                |
 | `SidePanel`       | A panel at the left or right side, for settings.                                                                                                 |
-| `Dialog`          | A window in the middle over a dimmed background, for settings. Escape and a click beside it call `onClose`. Full screen on a phone.             |
+| `Dialog`          | A window in the middle over a dimmed background, for settings. Escape and a click beside it call `onClose`. Full screen on a phone.              |
 | `BackgroundPanel` | Fill, pattern, brightness and size.                                                                                                              |
 | `PointMenu`       | The menu at a selected point: next point, delete, properties. It sits below the point, or above when there is no room.                           |
 | `LineMenu`        | A tile menu at a clicked line. Place it at `at` of `onLineSelect`.                                                                               |
@@ -431,7 +431,6 @@ These are the defaults of `PointMenu`. It only calls your callbacks, you change 
   onClose={onClose} // the menu wants to close: deselect the point
   closeAfterAction // default true, only with onClose. The path color stays open.
   // subPlacement: 'right' | 'below' | 'left' | 'above', default: the panel of a tile finds its place by itself
-  // onCheckIn / checkedIn: adds a Check in key (and shows when the path is checked in today)
   // onPlacementChange: adds a Turn tile that goes around the point: above, right, below, left; keep the place in `placement`
   placement="auto" // 'below' | 'above' | 'right' | 'left'
   hide={[]} // tiles to leave out: 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove'

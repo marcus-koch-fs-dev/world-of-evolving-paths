@@ -4,6 +4,7 @@ import type { BarItem } from '../app-logic/controls';
 import type { DemoMode } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import { BarContent } from './BarContent';
+import { CheckInButton, type CheckInProps } from './CheckInButton';
 import { MainMenu } from './MainMenu';
 import type { UndoRedoProps } from './UndoRedo';
 
@@ -32,6 +33,7 @@ type Props = {
   onOpenSettings: () => void;
   tileLabels: boolean;
   undoRedo: UndoRedoProps;
+  checkIn: CheckInProps;
 };
 
 /** The main bar: where in time the map is, and the menu with everything else. */
@@ -55,6 +57,7 @@ export function TopBar({
   onOpenSettings,
   tileLabels,
   undoRedo,
+  checkIn,
 }: Props) {
   return (
     <ControlBar dock={dock} onDockChange={onDockChange}>
@@ -72,6 +75,7 @@ export function TopBar({
         mode={mode}
         undoRedo={undoRedo}
       />
+      <CheckInButton {...checkIn} />
       <MainMenu
         levels={levels}
         navigation={navigation}

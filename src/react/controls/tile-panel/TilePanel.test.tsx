@@ -18,4 +18,18 @@ describe('Tile panel', () => {
   it('names the button as asked', () => {
     expect(renderToStaticMarkup(<TilePanel groups={groups} label="Tools" glyph="+" />)).toContain('aria-label="Tools"');
   });
+
+  it('shows a count on the button, and says it in the name', () => {
+    const html = renderToStaticMarkup(<TilePanel groups={groups} label="Check in" badge={2} />);
+
+    expect(html).toContain('aria-label="Check in, 2 open"');
+    expect(html).toContain('pw-tp-badge');
+  });
+
+  it('shows no count when there is nothing open', () => {
+    const html = renderToStaticMarkup(<TilePanel groups={groups} label="Check in" badge={0} />);
+
+    expect(html).toContain('aria-label="Check in"');
+    expect(html).not.toContain('pw-tp-badge');
+  });
 });

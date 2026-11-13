@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
-import { hasCheckedIn, indexPoints } from 'world-of-evolving-paths';
+import { indexPoints } from 'world-of-evolving-paths';
 import type { DemoState } from '../app-logic/state';
 
 /**
  * The point the user selected, with its path. A point that is not in the current view is not selected, so its menu
- * and check-in button do not linger.
+ * does not linger.
  */
-export function useSelection(state: DemoState, visibleIds: ReadonlySet<string>, today: string) {
+export function useSelection(state: DemoState, visibleIds: ReadonlySet<string>) {
   const [selectedId, select] = useState<string | null>(null);
   const infos = useMemo(() => indexPoints(state.store.paths), [state.store.paths]);
   const forkPoints = useMemo(
@@ -23,7 +23,6 @@ export function useSelection(state: DemoState, visibleIds: ReadonlySet<string>, 
     path,
     /** Does a branch of another line leave from the selected point? */
     isFork: info !== undefined && forkPoints.has(info.point.id),
-    checkedInToday: path !== undefined && hasCheckedIn(path, today),
   };
 }
 

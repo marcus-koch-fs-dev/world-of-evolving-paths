@@ -19,6 +19,7 @@ import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
 import { ZoomMemory } from './components/ZoomMemory';
 import { useAppShortcuts } from './hooks/useAppShortcuts';
+import { useCheckIn } from './hooks/useCheckIn';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoState } from './hooks/useDemoState';
 import { useDemoView } from './hooks/useDemoView';
@@ -74,7 +75,8 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   );
   const lineSelection = useLineSelection(tileKey);
   const offeredLevels = VIEW_LEVELS.filter((option) => values.levels.includes(option.level));
-  const selection = useSelection(state, visibleIds, today);
+  const selection = useSelection(state, visibleIds);
+  const checkIn = useCheckIn(state.store.paths, today, dispatch, notice.set);
   const events = useMapEvents({
     store: state.store,
     infos: selection.infos,
@@ -163,6 +165,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           onOpenSettings={() => setSection('display')}
           tileLabels={showsTileLabels(values.uiSize)}
           undoRedo={undoRedo}
+          checkIn={checkIn}
         />
 
         {!PHONE && <ModeToggle mode={mode} onModeChange={setMode} deviceToggle={deviceToggle} />}
@@ -226,13 +229,10 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
             point={selection.point}
             path={selection.path}
             isFork={selection.isFork}
-            checkedInToday={selection.checkedInToday}
             state={state}
-            today={today}
             dispatch={dispatch}
             customColors={settings.customColors}
             onCustomColor={(color) => settings.setCustomColors((colors) => rememberColor(colors, color))}
-            onNotice={notice.set}
             onChanged={pointActions.hintIfHidden}
             onAddNext={(input) => pointActions.addNext(selection.point?.id ?? '', input)}
             onDeleted={() => selection.select(null)}

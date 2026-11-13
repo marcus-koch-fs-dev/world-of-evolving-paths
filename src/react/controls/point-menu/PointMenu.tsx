@@ -50,10 +50,6 @@ export type PointMenuProps = {
   subPlacement?: SubPlacement;
   /** The user turned the menu to another place, with the Turn tile. With it the menu has that tile. Keep the place in your app and pass it back in `placement`. It goes around the point: above, right, below, left. */
   onPlacementChange?: (placement: MenuPlacement) => void;
-  /** The user pressed Check in. With it the menu has that key; without it the key is not there. */
-  onCheckIn?: () => void;
-  /** The path is already checked in today. The key then shows it and cannot be pressed. */
-  checkedIn?: boolean;
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
   /** The menu wants to close, after an action when `closeAfterAction` is on. Deselect the point to close it. */
@@ -84,12 +80,8 @@ function PointMenuBody(props: PointMenuProps) {
   if (!position) return null;
 
   const { point, path } = props;
-  // Turn and Check in are only there when the app wants to hear about them
-  const tiles = visibleTiles(TILES, [
-    ...(props.hide ?? []),
-    ...(props.onPlacementChange ? [] : (['turn'] as const)),
-    ...(props.onCheckIn ? [] : (['checkin'] as const)),
-  ]);
+  // Turn is only there when the app wants to hear about it
+  const tiles = visibleTiles(TILES, [...(props.hide ?? []), ...(props.onPlacementChange ? [] : (['turn'] as const))]);
   const close = () => setOpen(null);
   const camera = handle.getCamera();
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
@@ -98,7 +90,6 @@ function PointMenuBody(props: PointMenuProps) {
   const sub = props.subPlacement ?? subPlacementFor(placement);
   const toggle = (id: TileId) => {
     if (id === 'turn') props.onPlacementChange?.(nextPlacement(placement));
-    else if (id === 'checkin') props.onCheckIn?.();
     else setOpen((current) => (current === id ? null : id));
   };
 
@@ -118,13 +109,7 @@ function PointMenuBody(props: PointMenuProps) {
           </span>
           <span>Path: {path.name}</span>
         </div>
-        <MenuTiles
-          tiles={tiles}
-          open={open}
-          pathColor={path.color}
-          checkedIn={props.checkedIn ?? false}
-          onToggle={toggle}
-        />
+        <MenuTiles tiles={tiles} open={open} pathColor={path.color} onToggle={toggle} />
       </div>
       {open && (
         <div className="pw-menu-sub">

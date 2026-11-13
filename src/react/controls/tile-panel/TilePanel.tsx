@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, useContext, useEffect, useState } from 'react';
+import { type CSSProperties, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { BarSlotContext } from '../../DockContext.js';
 import { Icon } from '../../icons/Icon.js';
 import type { IconName } from '../../icons/iconData.js';
@@ -40,6 +40,8 @@ export type TilePanelProps = {
   variant?: 'tiles' | 'list';
   /** Show the group names and the names under the tiles. Default true. Without them only icons show, with the name as hover text. */
   labels?: boolean;
+  /** A small count on the button, for example how many things are still open. Not shown when 0 or missing. */
+  badge?: number;
   /** Close the panel after a tile was clicked. Default false: it stays open until the button or Escape closes it. */
   closeOnSelect?: boolean;
 };
@@ -56,30 +58,41 @@ export function TilePanel({
   variant = 'tiles',
   labels = true,
   closeOnSelect = false,
+  badge,
 }: TilePanelProps) {
   const slot = useContext(BarSlotContext);
   const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
+    // A tap anywhere outside the button and the panel closes it
+    const onPointer = (event: PointerEvent) => {
+      if (!wrap.current?.contains(event.target as Node)) setOpen(false);
+    };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
   }, [open]);
 
   return (
-    <div className="pw-tile-panel-wrap" style={{ display: 'contents' }}>
+    <div className="pw-tile-panel-wrap" ref={wrap} style={{ display: 'contents' }}>
       <button
         type="button"
         className={`pw-button pw-tile-panel-button${open ? ' is-active' : ''}`}
-        aria-label={label}
+        aria-label={badge ? `${label}, ${badge} open` : label}
         aria-expanded={open}
         title={label}
         onClick={() => setOpen((current) => !current)}
       >
         {glyph}
+        {badge ? <span className="pw-tp-badge">{badge}</span> : null}
       </button>
       {open && (
         <div

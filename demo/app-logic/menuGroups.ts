@@ -162,8 +162,8 @@ const editGroup = ({ mode, level, canUndo, canRedo }: MenuState, actions: MenuAc
           },
           {
             id: 'reroll',
-            label: 'Reset',
-            title: 'Forget the heights you set in this view',
+            label: 'Reset all',
+            title: 'Reset all heights',
             icon: 'reset',
             disabled: level === null,
             onClick: actions.reroll,
