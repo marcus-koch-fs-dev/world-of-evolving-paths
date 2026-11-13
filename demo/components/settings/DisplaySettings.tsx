@@ -1,3 +1,4 @@
+import { ACCENTS, isReadyMade } from '../../app-logic/accent';
 import { UI_SIZES } from '../../app-logic/uiSize';
 import type { SettingsValues } from '../../hooks/useDemoSettings';
 import { Flag } from '../Flags';
@@ -31,6 +32,33 @@ export function DisplaySettings({ values, onChange }: Props) {
             </button>
           ))}
         </div>
+      </Group>
+
+      <Group title="Accent color" hint="The color of what is switched on or selected.">
+        <div className="demo-swatches">
+          {ACCENTS.map((accent) => (
+            <button
+              key={accent.id}
+              type="button"
+              className={`demo-swatch${values.accent === accent.color ? ' is-on' : ''}`}
+              style={{ background: accent.color }}
+              aria-label={accent.label}
+              aria-pressed={values.accent === accent.color}
+              title={accent.label}
+              onClick={() => onChange({ accent: accent.color })}
+            />
+          ))}
+          <label className={`demo-own-color${isReadyMade(values.accent) ? '' : ' is-on'}`}>
+            <input
+              type="color"
+              value={values.accent}
+              aria-label="Own color"
+              onChange={(event) => onChange({ accent: event.target.value })}
+            />
+            Own color
+          </label>
+        </div>
+        <Flag label="Glow" checked={values.glow} onChange={(glow) => onChange({ glow })} />
       </Group>
 
       <Group title="Date format">

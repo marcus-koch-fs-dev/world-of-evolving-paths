@@ -205,8 +205,8 @@ body,
 }
 
 .demo-phone-button.is-on {
-  border-color: #d4f25a;
-  color: #d4f25a;
+  border-color: var(--pw-lit);
+  color: var(--pw-lit);
 }
 
 .demo-order-row {
@@ -221,7 +221,7 @@ body,
 }
 
 .demo-order-row.is-target {
-  box-shadow: 0 -2px 0 #d4f25a;
+  box-shadow: 0 -2px 0 var(--pw-lit);
 }
 
 .demo-grip,
@@ -282,8 +282,8 @@ body,
 }
 
 .demo-window-nav button.is-on {
-  background: rgb(212 242 90 / 0.1);
-  color: #d4f25a;
+  background: color-mix(in srgb, var(--pw-lit) 10%, transparent);
+  color: var(--pw-lit);
 }
 
 .demo-window-pane {
@@ -348,6 +348,53 @@ body,
 
 .demo-state.is-on {
   border-style: solid;
-  border-color: #d4f25a;
-  color: #d4f25a;
+  border-color: var(--pw-lit);
+  color: var(--pw-lit);
+}
+
+/* Accent color choices */
+.demo-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.demo-swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  outline: 1px solid rgb(237 239 230 / 0.14);
+  outline-offset: 2px;
+  cursor: pointer;
+}
+
+.demo-swatch.is-on {
+  border-color: #edefe6;
+  outline-color: var(--pw-lit);
+}
+
+.demo-own-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem 0.125rem 0.125rem;
+  border: 1px solid rgb(237 239 230 / 0.14);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.demo-own-color.is-on {
+  border-color: var(--pw-lit);
+}
+
+.demo-own-color input {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }

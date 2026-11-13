@@ -149,3 +149,9 @@
     height: 2.75rem;
   }
 }
+
+/* Add the class `pw-glow` to the map and everything that is switched on glows a little in the accent color (--pw-lit) */
+.pw-root.pw-glow .pw-button.is-active,
+.pw-root.pw-glow .pw-tp-tile.is-on {
+  box-shadow: 0 0 0.625rem color-mix(in srgb, var(--pw-lit) 55%, transparent);
+}

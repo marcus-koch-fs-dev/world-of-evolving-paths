@@ -7,6 +7,7 @@ import {
   type ViewLevel,
 } from 'world-of-evolving-paths';
 import type { DockSlot } from 'world-of-evolving-paths/react';
+import { accentFrom, DEFAULT_ACCENT } from '../app-logic/accent';
 import { BAR_PRESETS, type BarItem, barItemsFrom, type MenuClose } from '../app-logic/controls';
 import { isEmbedded, profileOf, settingKey } from '../app-logic/device';
 import { DEFAULT_LEVELS } from '../app-logic/levels';
@@ -48,6 +49,9 @@ export type SettingsValues = {
   uiSize: UiSize;
   /** Bars and menus are see-through. */
   transparent: boolean;
+  /** The accent color of the controls (`#rrggbb`), and whether what is switched on glows. */
+  accent: string;
+  glow: boolean;
   /** The bar with the time slider, and the info (legend) at the edge. They can be hidden. */
   timeBar: boolean;
   legend: boolean;
@@ -89,6 +93,8 @@ export function useDemoSettings() {
   const [docks, setDocks] = useStoredState<Docks>(key('docks'), DEFAULT_DOCKS);
   const [pathsPerPage, setPathsPerPage] = useStoredState<number>(key('paths-per-page'), 2);
   const [uiSize, setUiSize] = useStoredState<UiSize>(key('ui-size-v2'), 'small');
+  const [accent, setAccent] = useStoredState<string>(key('accent'), DEFAULT_ACCENT, accentFrom);
+  const [glow, setGlow] = useStoredState<boolean>(key('glow'), false);
   const [timeBar, setTimeBar] = useStoredState<boolean>(key('time-bar'), true);
   const [legend, setLegend] = useStoredState<boolean>(key('legend'), true);
   const [transparent, setTransparent] = useStoredState<boolean>(key('transparent'), false);
@@ -107,6 +113,8 @@ export function useDemoSettings() {
     pathsPerPage,
     uiSize,
     transparent,
+    accent,
+    glow,
     timeBar,
     legend,
     barItems,
@@ -126,6 +134,8 @@ export function useDemoSettings() {
     if (patch.pathsPerPage !== undefined) setPathsPerPage(patch.pathsPerPage);
     if (patch.uiSize !== undefined) setUiSize(patch.uiSize);
     if (patch.transparent !== undefined) setTransparent(patch.transparent);
+    if (patch.accent !== undefined) setAccent(patch.accent);
+    if (patch.glow !== undefined) setGlow(patch.glow);
     if (patch.timeBar !== undefined) setTimeBar(patch.timeBar);
     if (patch.legend !== undefined) setLegend(patch.legend);
     if (patch.barItems !== undefined) setBarItems(patch.barItems);

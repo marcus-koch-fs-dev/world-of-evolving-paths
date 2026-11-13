@@ -16,7 +16,9 @@
 - **New:** `PointMenu` has `onClose` and `closeAfterAction` (default true) to close after a change.
 - **New:** `ViewBar` has `navigation={false}` to keep only the period label.
 - **Changed:** `freeMove` works in "All" also when `editable` is false, so a viewer can arrange the overview.
-- **Changed:** all CSS sizes are in `rem`, touch targets are at least 2.75rem on touch screens, and tiles are bigger.
+- **New:** three fixed sizes as CSS variables: Regular (default), `pw-compact` (Small) and `pw-large`. `TilePanel` has `labels`, `tint`, `closesPanel` and `closeOnSelect`.
+- **New:** the accent color is `--pw-lit`, the class `pw-glow` makes what is switched on glow.
+- **Changed:** all CSS sizes are in `rem`, and touch targets are at least 2.75rem on touch screens.
 
 ## 0.1.0 (2026-11-12)
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { type CSSProperties, useMemo, useState } from 'react';
 import { todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import { PathWorld, Toast } from 'world-of-evolving-paths/react';
 import { closesMenu } from './app-logic/controls';
@@ -102,7 +102,10 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   return (
     <div className="demo-stage">
       <PathWorld
-        className={[sizeClass(values.uiSize), values.transparent ? 'pw-transparent' : ''].filter(Boolean).join(' ')}
+        className={[sizeClass(values.uiSize), values.transparent ? 'pw-transparent' : '', values.glow ? 'pw-glow' : '']
+          .filter(Boolean)
+          .join(' ')}
+        style={{ '--pw-lit': values.accent } as CSSProperties}
         store={store}
         view={view}
         pathIds={pathIds}

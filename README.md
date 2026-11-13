@@ -411,6 +411,8 @@ Import them from `world-of-evolving-paths/react`. They hold no map logic: they g
 
 - **Where they go:** `ZoomControls`, `PointMenu`, `LineMenu` and `ControlBar` go inside `<PathWorld>`.
 - **Styles:** import `world-of-evolving-paths/style.css` once. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...). Give the map the class `pw-transparent` and every bar and panel becomes see-through, with the map blurred behind it.
+- **Sizes:** the controls have three fixed forms, all in rem and em so they follow the screen. No class is Regular (the names under the symbols of a `TilePanel`). `pw-compact` is Small (pass `labels={false}` to the `TilePanel` for symbols only), `pw-large` is Regular a little bigger. The measures are the variables `--pw-btn-h`, `--pw-gap`, `--pw-tile-w` and more on `.pw-root`.
+- **Accent color:** set `--pw-lit` on the map (`style={{ '--pw-lit': '#ff4fd8' }}`) for what is switched on or selected. The class `pw-glow` makes it glow a little.
 
 These are the defaults of `PointMenu`. It only calls your callbacks, you change the data:
 
