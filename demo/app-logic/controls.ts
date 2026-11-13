@@ -2,7 +2,7 @@
 export type BarItem = 'levels' | 'navigation' | 'paths' | 'back' | 'history';
 
 export const BAR_ITEMS: readonly { id: BarItem; label: string; editorOnly?: boolean }[] = [
-  { id: 'levels', label: 'View buttons (W, M, Y, All)' },
+  { id: 'levels', label: 'View buttons (Week, Month, Year, All)' },
   { id: 'navigation', label: 'Arrows and Today' },
   { id: 'paths', label: 'Paths per page' },
   { id: 'back', label: 'Back' },

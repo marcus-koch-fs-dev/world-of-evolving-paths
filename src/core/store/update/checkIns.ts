@@ -37,9 +37,9 @@ export function undoCheckIn(store: Store, pathId: string, date: string): Store {
 export type CheckInStatus = {
   /** The path already has a check-in on that day. */
   checkedIn: boolean;
-  /** Active days in the window of the rule, without a check-in on that day. */
+  /** Active days in the window of the rule, counting the other check-ins but not the one on that day. */
   activeBefore: number;
-  /** Active days in the window, with the check-in. The same as `activeBefore` when it was there before. */
+  /** Active days in the window, with the check-in on that day. Also when it is there already: then it is one more than `activeBefore`, and `tierUp` says whether this day lifts the path. */
   activeAfter: number;
   tierBefore: number;
   tierAfter: number;
@@ -54,7 +54,8 @@ export type CheckInStatus = {
 
 /**
  * What a check-in on `date` does to a path: active days before and after, the tier, and how far the next tier is.
- * Use it for feedback in your own UI ("12 of 18 active days"). It changes nothing.
+ * Use it for feedback in your own UI ("12 of 18 active days"). It changes nothing. Like `toDay` it throws for a date
+ * that is not valid, so check the date first.
  */
 export function checkInStatus(path: StorePath, date: string, rule: StrengthRule = STRENGTH_RULE): CheckInStatus {
   const day = toDay(date);

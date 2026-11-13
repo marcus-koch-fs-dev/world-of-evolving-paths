@@ -13,7 +13,7 @@ const DEFAULT_PARTS: readonly ViewBarPart[] = ['levels', 'period'];
 export type ViewBarProps = {
   /** Which parts to show and in which order. Default: the levels, then the period. Use it to put other controls in between. */
   parts?: readonly ViewBarPart[];
-  /** Levels to offer. Default: day, week, month, half year, year. */
+  /** Levels to offer. Default: week, month, year (`VIEW_LEVELS`). */
   levels?: readonly { level: ViewLevel; label: string; title?: string }[];
   /** The active level, or null for the free view. */
   level: ViewLevel | null;
@@ -49,7 +49,7 @@ export type ViewBarProps = {
   arrowsFirst?: boolean;
   /** Your own control in place of the period label, for example a picker for the period. */
   periodSlot?: ReactNode;
-  /** Your own control right after the levels, for example a counter for how many years the year view spans. */
+  /** Your own control right after the levels, for example a counter for how many years the year view spans. It belongs to the levels part: it is not shown when `parts` leaves `'levels'` out. */
   afterLevels?: ReactNode;
 };
 
@@ -90,7 +90,7 @@ export function ViewBar(props: ViewBarProps) {
 
   const periodPart = (
     <>
-      {props.arrowsFirst && level !== null && (
+      {props.arrowsFirst && props.navigation !== false && level !== null && (
         <div className="pw-view-group">
           {previous}
           {next}

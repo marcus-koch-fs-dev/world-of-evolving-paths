@@ -180,6 +180,24 @@ describe('addNextPoint', () => {
 
     expect(addNextPoint(before, 'nope', { title: 'x' })).toBe(before);
   });
+
+  const taken = twoPaths().paths[0].branches[0].points[0].id;
+
+  it.each([
+    ['a date that does not exist', { date: '2027-02-30' }],
+    ['a date in the wrong form', { date: '1.2.2027' }],
+    ['a prio above 5', { prio: 7 }],
+    ['a prio of 0', { prio: 0 }],
+    ['a prio with decimals', { prio: 2.5 }],
+    ['an id that is taken', { id: taken }],
+  ])('changes nothing for %s, so the data stays valid', (_name, input) => {
+    const before = twoPaths();
+
+    const after = addNextPoint(before, 'a', { title: 'x', ...input });
+
+    expect(after).toBe(before);
+    expect(validateStore(after.paths)).toEqual([]);
+  });
 });
 
 describe('setStatus', () => {

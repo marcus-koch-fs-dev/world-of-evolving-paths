@@ -16,6 +16,11 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
   const [note, setNote] = useState(point.note ?? '');
   // The date is sent the same way: a date field fires a change for each part of the date while it is typed
   const [date, setDate] = useState(point.date);
+  // On blur or Enter. An empty field goes back to the date of the point, so the field never shows something else
+  const commitDate = () => {
+    if (!date) setDate(point.date);
+    else if (date !== point.date) onUpdate({ date });
+  };
   // The note field grows with the text, so it never has to be pulled by hand
   const grow = (field: HTMLTextAreaElement | null) => {
     if (!field) return;
@@ -32,7 +37,8 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
           type="date"
           value={date}
           onChange={(event) => setDate(event.target.value)}
-          onBlur={() => date && date !== point.date && onUpdate({ date })}
+          onBlur={commitDate}
+          onKeyDown={(event) => event.key === 'Enter' && commitDate()}
         />
       </label>
       <div className="pw-field">

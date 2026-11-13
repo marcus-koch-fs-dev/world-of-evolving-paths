@@ -5,7 +5,7 @@
 ### Actions for your own UI
 
 - **New:** `checkIn`, `undoCheckIn`, `hasCheckedIn`, `checkInDays` and `checkInStatus`. Check-ins now live in the path as `path.checkIns` (`YYYY-MM-DD`). `checkInStatus` says what a check-in does: active days before and after, tier, days missing for the next tier.
-- **New:** `addNextPoint(store, pathId, { title, ... })` adds a point at the end of the main branch with defaults and an id made for you. `setStatus(store, pointId, status)` ticks a point off.
+- **New:** `addNextPoint(store, pathId, { title, ... })` adds a point at the end of the main branch with defaults and an id made for you. `setStatus(store, pointId, status)` ticks a point off. `addNextPoint` changes nothing when the point would make the data invalid (a bad date, a prio outside 1 to 5, an id that is taken), so the map never goes blank.
 
 ### Controls
 

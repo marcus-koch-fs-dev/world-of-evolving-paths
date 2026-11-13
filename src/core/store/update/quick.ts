@@ -1,5 +1,6 @@
-import { todayLocal } from '../../dates.js';
+import { isIsoDate, todayLocal } from '../../dates.js';
 import type { PointKind, PointStatus } from '../../types.js';
+import { indexPoints } from '../order.js';
 import type { Store, StorePoint } from '../types.js';
 import { addPoint, updatePoint } from './edit.js';
 
@@ -26,19 +27,25 @@ const newId = (prefix: string): string =>
 /**
  * Adds a point at the end of the main branch of a path (the first branch that does not fork off). Name, date, kind and
  * the rest have defaults, so `addNextPoint(store, 'gym', { title: 'Muscle-up' })` is enough. `today` is the date used
- * when none is given. Changes nothing when the path does not exist.
+ * when none is given. Changes nothing when the path does not exist, or when the point would make the data invalid
+ * (a date that is not `YYYY-MM-DD`, a prio that is not 1 to 5, an id that is taken), so the map never goes blank.
  */
 export function addNextPoint(store: Store, pathId: string, input: NewPointInput, today: string = todayLocal()): Store {
   const path = store.paths.find((candidate) => candidate.id === pathId);
   const branch = path?.branches.find((candidate) => candidate.splitsAt === undefined) ?? path?.branches[0];
   if (!path || !branch) return store;
+  const prio = input.prio ?? 3;
+  const date = input.date ?? today;
+  const id = input.id ?? newId(pathId);
+  if (!isIsoDate(date) || !Number.isInteger(prio) || prio < 1 || prio > 5 || indexPoints(store.paths).has(id))
+    return store;
   const point: StorePoint = {
-    id: input.id ?? newId(pathId),
-    date: input.date ?? today,
+    id,
+    date,
     title: input.title,
     kind: input.kind ?? 'milestone',
     status: input.status ?? 'open',
-    prio: input.prio ?? 3,
+    prio,
     ...(input.note === undefined ? {} : { note: input.note }),
   };
   return addPoint(store, branch.id, point);

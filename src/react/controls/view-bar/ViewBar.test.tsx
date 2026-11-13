@@ -64,5 +64,22 @@ describe('ViewBar', () => {
       expect(html).toContain('Previous period');
       expect(html).toContain('Today');
     });
+
+    it('also leaves out the arrows in front of the levels', () => {
+      const html = render({ navigation: false, arrowsFirst: true });
+
+      expect(html).toContain('CW 45');
+      expect(html).not.toContain('Previous period');
+      expect(html).not.toContain('Next period');
+    });
+  });
+
+  describe('with your own control after the levels', () => {
+    it('shows it with the levels, and not when the levels are left out', () => {
+      const own = <b>own</b>;
+
+      expect(render({ afterLevels: own })).toContain('<b>own</b>');
+      expect(render({ afterLevels: own, parts: ['period'] })).not.toContain('<b>own</b>');
+    });
   });
 });
