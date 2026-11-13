@@ -48,6 +48,9 @@ export type SettingsValues = {
   uiSize: UiSize;
   /** Bars and menus are see-through. */
   transparent: boolean;
+  /** The bar with the time slider, and the info (legend) at the edge. They can be hidden. */
+  timeBar: boolean;
+  legend: boolean;
   /** The controls that sit in the bar. All of them are also tiles in the menu. */
   barItems: BarItem[];
   /** Whether the menu closes after a tile was clicked. */
@@ -86,6 +89,8 @@ export function useDemoSettings() {
   const [docks, setDocks] = useStoredState<Docks>(key('docks'), DEFAULT_DOCKS);
   const [pathsPerPage, setPathsPerPage] = useStoredState<number>(key('paths-per-page'), 2);
   const [uiSize, setUiSize] = useStoredState<UiSize>(key('ui-size-v2'), 'small');
+  const [timeBar, setTimeBar] = useStoredState<boolean>(key('time-bar'), true);
+  const [legend, setLegend] = useStoredState<boolean>(key('legend'), true);
   const [transparent, setTransparent] = useStoredState<boolean>(key('transparent'), false);
   const [barItems, setBarItems] = useStoredState<BarItem[]>(key('bar-items'), [...DEFAULT_BAR_ITEMS], barItemsFrom);
   const [menuClose, setMenuClose] = useStoredState<MenuClose>(key('menu-close'), 'auto');
@@ -102,6 +107,8 @@ export function useDemoSettings() {
     pathsPerPage,
     uiSize,
     transparent,
+    timeBar,
+    legend,
     barItems,
     menuClose,
     pointMenuCloses,
@@ -119,6 +126,8 @@ export function useDemoSettings() {
     if (patch.pathsPerPage !== undefined) setPathsPerPage(patch.pathsPerPage);
     if (patch.uiSize !== undefined) setUiSize(patch.uiSize);
     if (patch.transparent !== undefined) setTransparent(patch.transparent);
+    if (patch.timeBar !== undefined) setTimeBar(patch.timeBar);
+    if (patch.legend !== undefined) setLegend(patch.legend);
     if (patch.barItems !== undefined) setBarItems(patch.barItems);
     if (patch.menuClose !== undefined) setMenuClose(patch.menuClose);
     if (patch.pointMenuCloses !== undefined) setPointMenuCloses(patch.pointMenuCloses);

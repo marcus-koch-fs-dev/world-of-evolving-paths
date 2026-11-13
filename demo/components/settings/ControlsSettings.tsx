@@ -3,10 +3,10 @@ import {
   BAR_ITEMS,
   BAR_PRESETS,
   barItemsFor,
+  layoutOf,
   MENU_CLOSE_CHOICES,
   type MenuClose,
   movedBarItem,
-  presetOf,
   toggledBarItems,
   withHiddenKept,
 } from '../../app-logic/controls';
@@ -24,7 +24,7 @@ type Props = {
 
 /** Which controls sit in the bar and in which order, and how the menu behaves. */
 export function ControlsSettings({ values, onChange, editing }: Props) {
-  const preset = presetOf(values.barItems);
+  const layout = layoutOf(values.barItems, values.timeBar, values.legend);
   const shown = barItemsFor(values.barItems, editing);
   const { drag, register, start } = useDragReorder(shown, (next) =>
     onChange({ barItems: withHiddenKept(next, values.barItems) }),
@@ -45,18 +45,20 @@ export function ControlsSettings({ values, onChange, editing }: Props) {
         <div className="demo-choice">
           <button
             type="button"
-            className={`pw-button${preset === 'bar' ? ' is-active' : ''}`}
-            onClick={() => onChange({ barItems: [...BAR_PRESETS.bar] })}
+            className={`pw-button${layout === 'bar' ? ' is-active' : ''}`}
+            onClick={() => onChange({ barItems: [...BAR_PRESETS.bar], timeBar: true, legend: true })}
           >
             Bar
           </button>
           <button
             type="button"
-            className={`pw-button${preset === 'tiles' ? ' is-active' : ''}`}
-            onClick={() => onChange({ barItems: [...BAR_PRESETS.tiles] })}
+            className={`pw-button${layout === 'tiles' ? ' is-active' : ''}`}
+            onClick={() => onChange({ barItems: [...BAR_PRESETS.tiles], timeBar: true, legend: true })}
           >
             Tiles only
           </button>
+          {/* Not a button to press: it lights up when you have arranged the controls yourself */}
+          <span className={`demo-state${layout === 'customized' ? ' is-on' : ''}`}>Customized</span>
         </div>
         {ordered.map((item) => {
           const chosen = shown.includes(item.id);
@@ -96,6 +98,11 @@ export function ControlsSettings({ values, onChange, editing }: Props) {
             </div>
           );
         })}
+      </Group>
+
+      <Group title="Other bars" hint="The time slider and the info at the edge of the map.">
+        <Flag label="Time bar" checked={values.timeBar} onChange={(timeBar) => onChange({ timeBar })} />
+        <Flag label="Info" checked={values.legend} onChange={(legend) => onChange({ legend })} />
       </Group>
 
       <Group title="Menu">

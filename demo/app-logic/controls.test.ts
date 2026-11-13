@@ -4,6 +4,7 @@ import {
   barItemsFor,
   barItemsFrom,
   closesMenu,
+  layoutOf,
   movedBarItem,
   presetOf,
   toggledBarItems,
@@ -61,6 +62,22 @@ describe('Controls in the bar', () => {
       expect(movedBarItem(['levels', 'paths'], 'levels', -1)).toEqual(['levels', 'paths']);
       expect(movedBarItem(['levels', 'paths'], 'paths', 1)).toEqual(['levels', 'paths']);
       expect(movedBarItem(['levels'], 'back', 1)).toEqual(['levels']);
+    });
+  });
+
+  describe('layoutOf', () => {
+    it('is a ready-made layout while the bar matches it and both other bars are shown', () => {
+      expect(layoutOf([...BAR_PRESETS.bar], true, true)).toBe('bar');
+      expect(layoutOf([], true, true)).toBe('tiles');
+    });
+
+    it('is customized when the bar is arranged differently', () => {
+      expect(layoutOf(['back', 'levels'], true, true)).toBe('customized');
+    });
+
+    it('is customized when the time bar or the info is hidden', () => {
+      expect(layoutOf([...BAR_PRESETS.bar], false, true)).toBe('customized');
+      expect(layoutOf([], true, false)).toBe('customized');
     });
   });
 

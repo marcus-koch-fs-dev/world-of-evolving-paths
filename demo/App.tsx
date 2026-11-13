@@ -171,16 +171,20 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           />
         )}
 
-        <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrioOf(period)} startCollapsed />
+        {values.legend && (
+          <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrioOf(period)} startCollapsed />
+        )}
 
-        <TimeBar
-          dock={docks.time}
-          onDockChange={(time) => settings.setDocks({ ...docks, time })}
-          range={range}
-          travel={travel}
-          locale={values.locale}
-          startCollapsed={SMALL_SCREEN}
-        />
+        {values.timeBar && (
+          <TimeBar
+            dock={docks.time}
+            onDockChange={(time) => settings.setDocks({ ...docks, time })}
+            range={range}
+            travel={travel}
+            locale={values.locale}
+            startCollapsed={SMALL_SCREEN}
+          />
+        )}
 
         <Toast message={notice.text} action={notice.action} onDismiss={notice.clear} />
 

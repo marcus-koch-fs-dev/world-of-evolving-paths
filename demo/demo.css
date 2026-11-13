@@ -335,3 +335,19 @@ body,
     white-space: nowrap;
   }
 }
+
+/* Shows a state without being a button, for example "Customized" */
+.demo-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.625rem;
+  border: 1px dashed rgb(237 239 230 / 0.14);
+  border-radius: 0.5rem;
+  color: #8a8f80;
+}
+
+.demo-state.is-on {
+  border-style: solid;
+  border-color: #d4f25a;
+  color: #d4f25a;
+}

@@ -15,6 +15,18 @@ export const BAR_PRESETS: Record<'bar' | 'tiles', readonly BarItem[]> = {
   tiles: [],
 };
 
+/** The look of the controls as a whole: one of the two ready-made ones, or customized by the user. */
+export type Layout = 'bar' | 'tiles' | 'customized';
+
+/**
+ * The bar items together with the two bars at the edge (time and info). A ready-made layout has both bars shown. As soon
+ * as the user arranges the bar differently, or hides one of the other bars, it is customized.
+ */
+export function layoutOf(barItems: readonly BarItem[], timeBar: boolean, legend: boolean): Layout {
+  const preset = presetOf(barItems);
+  return preset !== null && timeBar && legend ? preset : 'customized';
+}
+
 /** The bar items that make sense now: what only the editor uses is left out in map mode. */
 export const barItemsFor = (items: readonly BarItem[], editing: boolean): BarItem[] =>
   items.filter((id) => editing || !BAR_ITEMS.some((item) => item.id === id && item.editorOnly));
