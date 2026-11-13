@@ -1,5 +1,5 @@
 import type { Orientation, ViewLevel } from 'world-of-evolving-paths';
-import { ControlBar, type DockSlot } from 'world-of-evolving-paths/react';
+import { ControlBar, type DockSlot, type MenuPlacement } from 'world-of-evolving-paths/react';
 import type { BarItem } from '../app-logic/controls';
 import type { DemoMode } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
@@ -26,6 +26,9 @@ type Props = {
   /** The overview is arranged by hand when this is false. */
   locked: boolean;
   onLockToggle: () => void;
+  /** Where the point menu sits next to its point, and the way to turn it around the point. */
+  pointMenuPlace: MenuPlacement;
+  onPointMenuTurn: () => void;
   onReroll: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
@@ -49,6 +52,8 @@ export function TopBar({
   closeMenuOnSelect,
   locked,
   onLockToggle,
+  pointMenuPlace,
+  onPointMenuTurn,
   onReroll,
   onOrientationChange,
   mode,
@@ -85,6 +90,8 @@ export function TopBar({
         onOpenSettings={onOpenSettings}
         locked={locked}
         onLockToggle={onLockToggle}
+        pointMenuPlace={pointMenuPlace}
+        onPointMenuTurn={onPointMenuTurn}
         tileLabels={tileLabels}
         closeOnSelect={closeMenuOnSelect}
       />

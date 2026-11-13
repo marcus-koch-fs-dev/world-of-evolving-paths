@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anchorFor, nextSubPlacement, resolvePlacement } from './placement.js';
+import { anchorFor, resolvePlacement, subPlacementFor } from './placement.js';
 
 describe('Menu placement', () => {
   describe('when the placement is automatic', () => {
@@ -41,14 +41,16 @@ describe('Menu placement', () => {
 });
 
 describe('Place of the panel of a tile', () => {
-  it('goes clockwise around the tiles: above, right, below, left, above', () => {
-    expect(nextSubPlacement('above')).toBe('right');
-    expect(nextSubPlacement('right')).toBe('below');
-    expect(nextSubPlacement('below')).toBe('left');
-    expect(nextSubPlacement('left')).toBe('above');
+  it('goes beside the tiles when the menu is under the point', () => {
+    expect(subPlacementFor('below')).toBe('right');
   });
 
-  it('starts at right for a value that is not a place', () => {
-    expect(nextSubPlacement('sideways' as never)).toBe('right');
+  it('goes up when the menu is over the point', () => {
+    expect(subPlacementFor('above')).toBe('above');
+  });
+
+  it('goes under the tiles when the menu is beside the point', () => {
+    expect(subPlacementFor('right')).toBe('below');
+    expect(subPlacementFor('left')).toBe('below');
   });
 });

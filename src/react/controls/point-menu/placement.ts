@@ -6,13 +6,18 @@ type ResolvedPlacement = Exclude<MenuPlacement, 'auto'>;
 /** Where the panel of a tile (status, details ...) opens, around the grid of tiles. */
 export type SubPlacement = 'right' | 'below' | 'left' | 'above';
 
-const AROUND: readonly SubPlacement[] = ['above', 'right', 'below', 'left'];
+const SUB_PLACEMENTS: Record<ResolvedPlacement, SubPlacement> = {
+  // The menu is under the point: there is room beside it
+  below: 'right',
+  // The menu is over the point: the panel goes up as well, away from the point
+  above: 'above',
+  // The menu is beside the point: the panel goes under it, where the width is free
+  right: 'below',
+  left: 'below',
+};
 
-/** The next place clockwise: above, right, below, left, and above again. Anything else starts at `right`. */
-export function nextSubPlacement(current: SubPlacement): SubPlacement {
-  const index = AROUND.indexOf(current);
-  return index < 0 ? 'right' : AROUND[(index + 1) % AROUND.length];
-}
+/** Where the panel of a tile opens, so that it has room, for the place the menu has next to its point. */
+export const subPlacementFor = (placement: ResolvedPlacement): SubPlacement => SUB_PLACEMENTS[placement];
 
 const ROOM_NEEDED_BELOW = 380; // screen pixels the menu with its open panel needs under the point
 const BELOW_OFFSET = 72; // world units under the point, past its name and date

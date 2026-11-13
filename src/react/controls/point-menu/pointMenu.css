@@ -303,24 +303,3 @@
   bottom: calc(100% + var(--pw-gap));
   left: 0;
 }
-
-/* The button that moves the panel around the tiles */
-.pw-sub-turn {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  padding: 0;
-  border: 1px solid var(--pw-line);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--pw-muted);
-  cursor: pointer;
-}
-
-.pw-sub-turn:hover {
-  border-color: var(--pw-lit);
-  color: var(--pw-lit);
-}

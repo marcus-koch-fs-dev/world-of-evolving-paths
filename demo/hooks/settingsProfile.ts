@@ -1,4 +1,3 @@
-import type { SubPlacement } from 'world-of-evolving-paths/react';
 import { BAR_PRESETS, type BarItem } from '../app-logic/controls';
 import { isEmbedded, profileOf, settingKey } from '../app-logic/device';
 
@@ -10,6 +9,3 @@ export const key = (name: string) => settingKey(PROFILE, name);
 
 // On a phone the bar starts with only the menu, there is no room for more
 export const DEFAULT_BAR_ITEMS: readonly BarItem[] = PROFILE === 'mobile' ? BAR_PRESETS.tiles : BAR_PRESETS.bar;
-
-// The panel of a point menu opens beside the tiles; on a phone it opens below them, where there is more room
-export const DEFAULT_SUB_PLACEMENT: SubPlacement = PROFILE === 'mobile' ? 'below' : 'right';

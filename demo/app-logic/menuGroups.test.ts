@@ -9,6 +9,7 @@ const state: MenuState = {
   level: 'week',
   mode: 'edit',
   locked: true,
+  pointMenuPlace: 'auto',
   zoom: 0.5,
   canGoBack: false,
   canUndo: true,
@@ -29,6 +30,7 @@ const createActions = (): MenuActions => ({
   reroll: vi.fn(),
   openSettings: vi.fn(),
   toggleLock: vi.fn(),
+  turnPointMenu: vi.fn(),
   zoomBy: vi.fn(),
   fit: vi.fn(),
   center: vi.fn(),
@@ -43,7 +45,7 @@ const tileIds = (groupId: string, current: MenuState) => tilesOf(groupId, curren
 describe('Menu groups', () => {
   describe('when editing', () => {
     it('offers undo, redo and reset, and the one settings tile', () => {
-      expect(tileIds('edit', state)).toEqual(['undo', 'redo', 'reroll']);
+      expect(tileIds('edit', state)).toEqual(['undo', 'redo', 'reroll', 'menu-place']);
       expect(tileIds('settings', state)).toEqual(['settings']);
     });
   });
