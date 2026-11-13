@@ -1,7 +1,7 @@
 import { type PointerEvent, type RefObject, useState } from 'react';
 import { type DockSlot, slotAt } from './dock.js';
 
-type Drag = { startX: number; startY: number; x: number; y: number };
+type Drag = { startX: number; startY: number; x: number; y: number; target: DockSlot };
 
 type Handlers = {
   onPointerDown(event: PointerEvent<HTMLButtonElement>): void;
@@ -18,29 +18,40 @@ export function useBarDrag(
   barRef: RefObject<HTMLElement | null>,
   dock: DockSlot,
   onDockChange: ((dock: DockSlot) => void) | undefined,
-): { offset: { x: number; y: number } | null; handlers: Handlers } {
+): { offset: { x: number; y: number } | null; target: DockSlot | null; handlers: Handlers } {
   const [drag, setDrag] = useState<Drag | null>(null);
+
+  // The place nearest to the pointer, in the area the bars are docked in
+  const slotUnder = (event: PointerEvent<HTMLElement>): DockSlot | null => {
+    const area = barRef.current?.closest('.pw-controls')?.getBoundingClientRect();
+    return area ? slotAt(event.clientX - area.left, event.clientY - area.top, area.width, area.height) : null;
+  };
 
   const handlers: Handlers = {
     onPointerDown(event) {
       if (event.button !== 0) return;
       event.currentTarget.setPointerCapture(event.pointerId);
-      setDrag({ startX: event.clientX, startY: event.clientY, x: 0, y: 0 });
+      setDrag({ startX: event.clientX, startY: event.clientY, x: 0, y: 0, target: dock });
     },
     onPointerMove(event) {
       setDrag((current) =>
-        current ? { ...current, x: event.clientX - current.startX, y: event.clientY - current.startY } : current,
+        current
+          ? {
+              ...current,
+              x: event.clientX - current.startX,
+              y: event.clientY - current.startY,
+              target: slotUnder(event) ?? current.target,
+            }
+          : current,
       );
     },
     onPointerUp(event) {
-      const area = barRef.current?.closest('.pw-controls')?.getBoundingClientRect();
+      const next = slotUnder(event);
       setDrag(null);
-      if (!area) return;
-      const next = slotAt(event.clientX - area.left, event.clientY - area.top, area.width, area.height);
-      if (next !== dock) onDockChange?.(next);
+      if (next && next !== dock) onDockChange?.(next);
     },
     onPointerCancel: () => setDrag(null),
   };
 
-  return { offset: drag ? { x: drag.x, y: drag.y } : null, handlers };
+  return { offset: drag ? { x: drag.x, y: drag.y } : null, target: drag?.target ?? null, handlers };
 }

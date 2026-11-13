@@ -1,6 +1,7 @@
 import { type ReactNode, useContext, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BarSlotContext, DockContext } from '../../DockContext.js';
+import { DropZones } from './DropZones.js';
 import type { DockSlot } from './dock.js';
 import { useBarDrag } from './useBarDrag.js';
 import { usePortalHost } from './usePortalHost.js';
@@ -39,7 +40,7 @@ export function ControlBar({
   const barRef = useRef<HTMLDivElement>(null);
   const host = usePortalHost(container);
   const [collapsed, setCollapsed] = useState(label !== undefined && startCollapsed === true);
-  const { offset, handlers } = useBarDrag(barRef, dock, onDockChange);
+  const { offset, target, handlers } = useBarDrag(barRef, dock, onDockChange);
 
   const bar = (
     <div
@@ -75,5 +76,12 @@ export function ControlBar({
   );
 
   const placed = <BarSlotContext.Provider value={dock}>{bar}</BarSlotContext.Provider>;
-  return container ? createPortal(placed, host) : placed;
+  // While the bar is dragged, the places it can go to show on the map
+  const area = target ? barRef.current?.closest('.pw-controls') : null;
+  return (
+    <>
+      {container ? createPortal(placed, host) : placed}
+      {target && area && createPortal(<DropZones target={target} />, area)}
+    </>
+  );
 }

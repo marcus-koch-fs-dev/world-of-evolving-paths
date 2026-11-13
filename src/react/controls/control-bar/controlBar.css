@@ -105,3 +105,50 @@
     padding: 0;
   }
 }
+
+/* The places a bar can be dropped at, shown while a bar is dragged: a strip at each edge, split in three */
+.pw-drop-zones {
+  position: absolute;
+  inset: var(--pw-inset);
+  display: grid;
+  grid-template: 4.5rem 1fr 4.5rem / repeat(3, 1fr);
+  gap: var(--pw-gap);
+  pointer-events: none;
+}
+
+.pw-controls > .pw-drop-zones {
+  pointer-events: none;
+}
+
+.pw-drop-zone {
+  border: 2px dashed var(--pw-line);
+  border-radius: 0.75rem;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+}
+
+.pw-drop-zone.is-target {
+  border-style: solid;
+  border-color: var(--pw-lit);
+  background: color-mix(in srgb, var(--pw-lit) 22%, transparent);
+}
+
+.pw-drop-top-left {
+  grid-area: 1 / 1;
+}
+.pw-drop-top-center {
+  grid-area: 1 / 2;
+}
+.pw-drop-top-right {
+  grid-area: 1 / 3;
+}
+.pw-drop-bottom-left {
+  grid-area: 3 / 1;
+}
+.pw-drop-bottom-center {
+  grid-area: 3 / 2;
+}
+.pw-drop-bottom-right {
+  grid-area: 3 / 3;
+}
