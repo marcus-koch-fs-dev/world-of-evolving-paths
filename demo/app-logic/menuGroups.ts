@@ -13,19 +13,29 @@ export type MenuState = {
   /** The level shown, or null for the free view. */
   level: ViewLevel | null;
   mode: DemoMode;
-  settingsOpen: boolean;
+  /** In the overview points and paths cannot be moved while this is true. */
+  locked: boolean;
   /** The zoom of the map, 1 is 100 %. */
   zoom: number;
-  /** In the free view, points and paths can be moved in every direction. */
-  freeMove: boolean;
+  canGoBack: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  pathsPerPage: number;
+  pathCount: number;
 };
 
 export type MenuActions = {
   changeLevel: (level: ViewLevel | null) => void;
+  previous: () => void;
+  next: () => void;
+  today: () => void;
+  back: () => void;
+  undo: () => void;
+  redo: () => void;
+  changePathsPerPage: (count: number) => void;
   reroll: () => void;
-  toggleFreeMove: () => void;
-  changeMode: (mode: DemoMode) => void;
-  toggleSettings: () => void;
+  openSettings: () => void;
+  toggleLock: () => void;
   zoomBy: (factor: number) => void;
   fit: () => void;
   center: () => void;
@@ -33,11 +43,11 @@ export type MenuActions = {
   rotate: (turn: 'left' | 'right') => void;
 };
 
-const viewGroup = ({ levels, level }: MenuState, actions: MenuActions): PanelGroup => ({
+const viewGroup = ({ levels, level, locked }: MenuState, actions: MenuActions): PanelGroup => ({
   id: 'view',
   label: 'View',
   tiles: [
-    { id: 'free', label: 'Free', glyph: '∞', active: level === null, onClick: () => actions.changeLevel(null) },
+    { id: 'free', label: 'All', icon: 'free', active: level === null, onClick: () => actions.changeLevel(null) },
     ...levels.map((option) => ({
       id: option.level,
       label: option.label,
@@ -45,6 +55,54 @@ const viewGroup = ({ levels, level }: MenuState, actions: MenuActions): PanelGro
       active: level === option.level,
       onClick: () => actions.changeLevel(option.level),
     })),
+    {
+      id: 'lock',
+      label: 'Move',
+      title: locked ? 'Unlock to move points and paths in All' : 'Lock points and paths',
+      icon: locked ? 'lock' : 'unlock',
+      active: !locked,
+      disabled: level !== null,
+      onClick: actions.toggleLock,
+    },
+  ],
+});
+
+const timeGroup = ({ level, canGoBack }: MenuState, actions: MenuActions): PanelGroup => ({
+  id: 'time',
+  label: 'Time',
+  tiles: [
+    { id: 'previous', label: 'Previous', icon: 'previous', disabled: level === null, onClick: actions.previous },
+    { id: 'next', label: 'Next', icon: 'next', disabled: level === null, onClick: actions.next },
+    { id: 'today', label: 'Today', icon: 'today', disabled: level === null, onClick: actions.today },
+    {
+      id: 'back',
+      label: 'Back',
+      title: 'Back to the view before the last double-click',
+      icon: 'back',
+      disabled: !canGoBack,
+      onClick: actions.back,
+    },
+  ],
+});
+
+const pathsGroup = ({ pathsPerPage, pathCount }: MenuState, actions: MenuActions): PanelGroup => ({
+  id: 'paths',
+  label: `Paths per page · ${pathsPerPage}`,
+  tiles: [
+    {
+      id: 'fewer-paths',
+      label: 'Fewer',
+      icon: 'minus',
+      disabled: pathsPerPage <= 1,
+      onClick: () => actions.changePathsPerPage(pathsPerPage - 1),
+    },
+    {
+      id: 'more-paths',
+      label: 'More',
+      icon: 'plus',
+      disabled: pathsPerPage >= pathCount,
+      onClick: () => actions.changePathsPerPage(pathsPerPage + 1),
+    },
   ],
 });
 
@@ -52,75 +110,98 @@ const mapGroup = ({ zoom }: MenuState, actions: MenuActions): PanelGroup => ({
   id: 'map',
   label: `Map · ${Math.round(zoom * 100)} %`,
   tiles: [
-    { id: 'zoom-in', label: 'Zoom in', glyph: '+', onClick: () => actions.zoomBy(ZOOM_STEP) },
-    { id: 'zoom-out', label: 'Zoom out', glyph: '−', onClick: () => actions.zoomBy(1 / ZOOM_STEP) },
-    { id: 'fit', label: 'Fit', title: 'Show everything (key E)', glyph: '⤢', onClick: actions.fit },
+    { id: 'zoom-in', label: 'Zoom in', icon: 'zoomIn', onClick: () => actions.zoomBy(ZOOM_STEP) },
+    { id: 'zoom-out', label: 'Zoom out', icon: 'zoomOut', onClick: () => actions.zoomBy(1 / ZOOM_STEP) },
+    { id: 'fit', label: 'Fit', title: 'Show everything (key E)', icon: 'fit', onClick: actions.fit },
     {
       id: 'center',
       label: 'Center',
       title: 'Put the content in the middle (key M)',
-      glyph: '◎',
+      icon: 'center',
       onClick: actions.center,
     },
     {
       id: 'rotate-left',
-      label: 'Turn left',
+      label: 'Left',
       title: 'Turn the direction of time a quarter to the left',
-      glyph: '↺',
+      icon: 'turnLeft',
       onClick: () => actions.rotate('left'),
     },
     {
       id: 'rotate-right',
-      label: 'Turn right',
+      label: 'Right',
       title: 'Turn the direction of time a quarter to the right',
-      glyph: '↻',
+      icon: 'turnRight',
       onClick: () => actions.rotate('right'),
     },
   ],
 });
 
-const layoutGroup = ({ mode, level, freeMove }: MenuState, actions: MenuActions): PanelGroup => ({
-  id: 'work',
-  label: 'Layout',
+/** What only the editor does: undo and redo, and forgetting the heights of a view. */
+const editGroup = ({ mode, level, canUndo, canRedo }: MenuState, actions: MenuActions): PanelGroup => ({
+  id: 'edit',
+  label: 'Edit',
   tiles:
     mode === 'edit'
       ? [
           {
-            id: 'reroll',
-            label: 'Reset',
-            title: 'Forget the heights you set in this view',
-            glyph: '⟳',
-            disabled: level === null,
-            onClick: actions.reroll,
+            id: 'undo',
+            label: 'Undo',
+            title: 'Undo (Ctrl+Z)',
+            icon: 'undo',
+            disabled: !canUndo,
+            onClick: actions.undo,
           },
           {
-            id: 'free-move',
-            label: 'Move',
-            title: 'Move points and paths freely in the free view, without the time axis',
-            glyph: '✥',
-            active: freeMove,
-            disabled: level !== null,
-            onClick: actions.toggleFreeMove,
+            id: 'redo',
+            label: 'Redo',
+            title: 'Redo (Ctrl+Y)',
+            icon: 'redo',
+            disabled: !canRedo,
+            onClick: actions.redo,
+          },
+          {
+            id: 'reroll',
+            label: 'Reset all',
+            title: 'Reset all heights',
+            icon: 'reset',
+            disabled: level === null,
+            onClick: actions.reroll,
           },
         ]
       : [],
 });
 
-const modeGroup = ({ mode, settingsOpen }: MenuState, actions: MenuActions): PanelGroup => ({
-  id: 'mode',
-  label: 'Mode',
+/** One tile opens the settings window. What belongs to the editor is a section in that window. */
+const settingsGroup = (_state: MenuState, actions: MenuActions): PanelGroup => ({
+  id: 'settings',
+  label: 'Settings',
   tiles: [
-    { id: 'editor', label: 'Editor', glyph: '✎', active: mode === 'edit', onClick: () => actions.changeMode('edit') },
-    { id: 'map-mode', label: 'Map', glyph: '◉', active: mode === 'map', onClick: () => actions.changeMode('map') },
-    ...(mode === 'edit'
-      ? [{ id: 'settings', label: 'Settings', glyph: '⚙', active: settingsOpen, onClick: actions.toggleSettings }]
-      : []),
+    {
+      id: 'settings',
+      label: 'Settings',
+      title: 'Settings: size, bar, map, background',
+      icon: 'settings',
+      closesPanel: true,
+      onClick: actions.openSettings,
+    },
   ],
 });
 
+// A hint of color per group, so the keys can be told apart at a glance
+const GROUP_TINTS: Record<string, string> = {
+  view: '#6f9bff',
+  time: '#3fd0c0',
+  paths: '#b38cf0',
+  map: '#8ccf4a',
+  edit: '#f0b050',
+  settings: '#ff7aa8',
+};
+
 /** The groups of tiles in the demo's menu. Groups without tiles are left out. */
 export function menuGroups(state: MenuState, actions: MenuActions): PanelGroup[] {
-  return [viewGroup, mapGroup, layoutGroup, modeGroup]
+  return [viewGroup, timeGroup, pathsGroup, mapGroup, editGroup, settingsGroup]
     .map((build) => build(state, actions))
-    .filter((group) => group.tiles.length > 0);
+    .filter((group) => group.tiles.length > 0)
+    .map((group) => ({ ...group, tint: GROUP_TINTS[group.id] }));
 }

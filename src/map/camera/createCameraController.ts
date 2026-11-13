@@ -1,4 +1,4 @@
-import { type Bounds, type Camera, centerOn, fitBounds, zoomAt } from '../../core/camera.js';
+import { type Bounds, type Camera, centerOn, clampZoom, fitBounds, zoomAt } from '../../core/camera.js';
 import type { CameraListener } from '../options.js';
 
 type ViewportSize = { width: number; height: number };
@@ -12,7 +12,8 @@ export type CameraController = {
   zoomBy(factor: number): void;
   moveBy(dx: number, dy: number): void;
   fit(bounds: Bounds): void;
-  center(bounds: Bounds): void;
+  /** Puts the content in the middle. The zoom stays, or is the one given. */
+  center(bounds: Bounds, zoom?: number): void;
 };
 
 /** Holds the camera and tells listeners when it changes. The math lives in `core/camera`. */
@@ -47,9 +48,9 @@ export function createCameraController(viewportSize: () => ViewportSize): Camera
       const { width, height } = viewportSize();
       set(fitBounds(bounds, width, height));
     },
-    center(bounds) {
+    center(bounds, zoom) {
       const { width, height } = viewportSize();
-      set(centerOn(bounds, width, height, camera.zoom));
+      set(centerOn(bounds, width, height, clampZoom(zoom ?? camera.zoom)));
     },
   };
 }

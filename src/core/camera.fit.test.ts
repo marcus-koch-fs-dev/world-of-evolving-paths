@@ -14,7 +14,7 @@ describe('Fitting the camera', () => {
     it('does not blow a lone point up', () => {
       const camera = fitBounds({ minX: 10, minY: 10, maxX: 10, maxY: 10 }, 1000, 800);
 
-      expect(camera.zoom).toBeLessThanOrEqual(1.25);
+      expect(camera.zoom).toBeLessThanOrEqual(1);
     });
   });
 });

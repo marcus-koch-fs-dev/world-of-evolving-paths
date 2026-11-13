@@ -3,10 +3,18 @@ import { createPortal } from 'react-dom';
 import { PATH_PALETTE, type PathInfo, type StorePoint } from '../../../core/index.js';
 import { useWorldVersion } from '../../hooks/useWorldVersion.js';
 import { usePathWorldHandle } from '../../PathWorldContext.js';
+import { closingAfterActions } from './closingAfterActions.js';
 import { MenuTiles } from './MenuTiles.js';
 import { type PanelId, panelFor } from './panels/panelFor.js';
 import { STATUS_LABELS } from './panels/StatusPanel.js';
-import { anchorFor, type MenuPlacement, resolvePlacement } from './placement.js';
+import {
+  anchorFor,
+  type MenuPlacement,
+  nextPlacement,
+  resolvePlacement,
+  type SubPlacement,
+  subPlacementFor,
+} from './placement.js';
 import './pointMenu.css';
 import { TILES, visibleTiles } from './tiles.js';
 import type { NextPointInput, PointPatch, TileId } from './types.js';
@@ -35,8 +43,22 @@ export type PointMenuProps = {
   hide?: readonly TileId[];
   /** Where the menu sits next to the point. Default auto: below, or above when there is no room below. */
   placement?: MenuPlacement;
+  /**
+   * Where the panel of a tile opens around the tiles. Default: it finds its place by itself, beside the tiles when the
+   * menu is under the point, up when it is over the point, and under the tiles when the menu is beside the point.
+   */
+  subPlacement?: SubPlacement;
+  /** The user turned the menu to another place, with the Turn tile. With it the menu has that tile. Keep the place in your app and pass it back in `placement`. It goes around the point: above, right, below, left. */
+  onPlacementChange?: (placement: MenuPlacement) => void;
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
+  /** The menu wants to close, after an action when `closeAfterAction` is on. Deselect the point to close it. */
+  onClose?: () => void;
+  /**
+   * Close the menu after the user changed something (status, kind, date, importance, note), added a point or deleted
+   * the point. Only has an effect with `onClose`. Default true. The path color stays open: people try several.
+   */
+  closeAfterAction?: boolean;
 };
 
 const checkInLabel = (count: number) => `${count} check-in${count === 1 ? '' : 's'}`;
@@ -58,16 +80,25 @@ function PointMenuBody(props: PointMenuProps) {
   if (!position) return null;
 
   const { point, path } = props;
-  const tiles = visibleTiles(TILES, props.hide);
+  // Turn is only there when the app wants to hear about it
+  const tiles = visibleTiles(TILES, [...(props.hide ?? []), ...(props.onPlacementChange ? [] : (['turn'] as const))]);
   const close = () => setOpen(null);
   const camera = handle.getCamera();
   const room = handle.overlay.parentElement?.clientHeight ?? Number.POSITIVE_INFINITY;
   const placement = resolvePlacement(props.placement ?? 'auto', position.y * camera.zoom + camera.y, room);
 
-  const toggle = (id: TileId) => setOpen((current) => (current === id ? null : id));
+  const sub = props.subPlacement ?? subPlacementFor(placement);
+  const toggle = (id: TileId) => {
+    if (id === 'turn') props.onPlacementChange?.(nextPlacement(placement));
+    else setOpen((current) => (current === id ? null : id));
+  };
 
   return createPortal(
-    <div className={`pw-point-menu pw-menu-${placement}`} data-pw-ui style={anchorFor(placement, position)}>
+    <div
+      className={`pw-point-menu pw-menu-${placement} pw-sub-${sub}`}
+      data-pw-ui
+      style={anchorFor(placement, position)}
+    >
       <div className="pw-menu-grid">
         <div className="pw-menu-title">
           <strong>{point.title}</strong>
@@ -76,13 +107,13 @@ function PointMenuBody(props: PointMenuProps) {
               ? STATUS_LABELS[point.status]
               : `${STATUS_LABELS[point.status]} · ${checkInLabel(props.checkInCount)}`}
           </span>
+          <span>Path: {path.name}</span>
         </div>
-        <div className="pw-menu-path">Path: {path.name}</div>
         <MenuTiles tiles={tiles} open={open} pathColor={path.color} onToggle={toggle} />
       </div>
       {open && (
         <div className="pw-menu-sub">
-          {panelFor(open, { menu: props, colors: props.colors ?? PATH_PALETTE, close })}
+          {panelFor(open, { menu: closingAfterActions(props), colors: props.colors ?? PATH_PALETTE, close })}
         </div>
       )}
     </div>,

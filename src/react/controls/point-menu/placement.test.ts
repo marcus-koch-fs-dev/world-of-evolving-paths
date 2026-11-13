@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anchorFor, resolvePlacement } from './placement.js';
+import { anchorFor, nextPlacement, resolvePlacement, subPlacementFor } from './placement.js';
 
 describe('Menu placement', () => {
   describe('when the placement is automatic', () => {
@@ -37,5 +37,34 @@ describe('Menu placement', () => {
       expect(anchorFor('right', point).left).toBeGreaterThan(100);
       expect(anchorFor('left', point).left).toBeLessThan(100);
     });
+  });
+});
+
+describe('Place of the panel of a tile', () => {
+  it('goes beside the tiles when the menu is under the point', () => {
+    expect(subPlacementFor('below')).toBe('right');
+  });
+
+  it('goes up when the menu is over the point', () => {
+    expect(subPlacementFor('above')).toBe('above');
+  });
+
+  it('goes under the tiles when the menu is beside the point', () => {
+    expect(subPlacementFor('right')).toBe('below');
+    expect(subPlacementFor('left')).toBe('below');
+  });
+});
+
+describe('Turning the menu around its point', () => {
+  it('goes clockwise: above, right, below, left, and above again', () => {
+    expect(nextPlacement('above')).toBe('right');
+    expect(nextPlacement('right')).toBe('below');
+    expect(nextPlacement('below')).toBe('left');
+    expect(nextPlacement('left')).toBe('above');
+  });
+
+  it('goes on from the place the menu has now, also when it was automatic', () => {
+    // Automatic had put the menu below the point: the next place is left, not a jump back to the start
+    expect(nextPlacement(resolvePlacement('auto', 0, 1000))).toBe('left');
   });
 });

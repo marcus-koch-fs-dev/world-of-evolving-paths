@@ -1,41 +1,41 @@
 .pw-background-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 260px;
-  max-height: calc(100% - 100px);
+  gap: var(--pw-gap);
+  width: var(--pw-sub-w);
+  max-height: calc(100% - 6.25rem);
   overflow-y: auto;
-  padding: 12px;
+  padding: var(--pw-panel-pad);
   border: 1px solid var(--pw-line);
-  border-radius: 12px;
+  border-radius: var(--pw-bar-radius);
   background: var(--pw-panel);
 }
 
 .pw-background-panel h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .pw-segments {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0.375rem;
 }
 
 .pw-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
   color: var(--pw-muted);
 }
 
 .pw-field input[type="color"] {
   width: 100%;
-  height: 30px;
+  height: var(--pw-btn-h);
   padding: 0;
   border: 1px solid var(--pw-line);
-  border-radius: 8px;
+  border-radius: var(--pw-btn-radius);
   background: var(--pw-field);
 }
 

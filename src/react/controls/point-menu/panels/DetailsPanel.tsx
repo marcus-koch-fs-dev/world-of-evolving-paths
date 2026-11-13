@@ -14,6 +14,19 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
   const [min, max] = importanceRange;
   // The note is sent when the field loses focus, not on every key, so the app is not asked to relayout while typing
   const [note, setNote] = useState(point.note ?? '');
+  // The date is sent the same way: a date field fires a change for each part of the date while it is typed
+  const [date, setDate] = useState(point.date);
+  // On blur or Enter. An empty field goes back to the date of the point, so the field never shows something else
+  const commitDate = () => {
+    if (!date) setDate(point.date);
+    else if (date !== point.date) onUpdate({ date });
+  };
+  // The note field grows with the text, so it never has to be pulled by hand
+  const grow = (field: HTMLTextAreaElement | null) => {
+    if (!field) return;
+    field.style.height = 'auto';
+    field.style.height = `${field.scrollHeight + 2}px`;
+  };
   const values = Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i);
 
   return (
@@ -22,8 +35,10 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
         Date
         <input
           type="date"
-          value={point.date}
-          onChange={(event) => event.target.value && onUpdate({ date: event.target.value })}
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+          onBlur={commitDate}
+          onKeyDown={(event) => event.key === 'Enter' && commitDate()}
         />
       </label>
       <div className="pw-field">
@@ -50,9 +65,13 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
       <label>
         Note
         <textarea
+          ref={grow}
           rows={3}
           value={note}
-          onChange={(event) => setNote(event.target.value)}
+          onChange={(event) => {
+            setNote(event.target.value);
+            grow(event.target);
+          }}
           onBlur={() => note !== (point.note ?? '') && onUpdate({ note: note || undefined })}
         />
       </label>

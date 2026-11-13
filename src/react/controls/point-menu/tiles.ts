@@ -5,15 +5,16 @@ export function visibleTiles(tiles: readonly Tile[], hide: readonly TileId[] | u
   return tiles.filter((tile) => !hide?.includes(tile.id));
 }
 
-export type Tile = { id: TileId; label: string; glyph: string; group: 'action' | 'property' };
+export type Tile = { id: TileId; label: string; glyph: string };
 
-// Things you do with a point come first, then the properties of the point.
+// A keypad of four keys in two rows: what you do with the point, what the point is, then the details and the turn.
 export const TILES: readonly Tile[] = [
-  { id: 'next', label: 'Next point', glyph: '+', group: 'action' },
-  { id: 'remove', label: 'Delete', glyph: '×', group: 'action' },
-  { id: 'status', label: 'Status', glyph: '✓', group: 'property' },
-  { id: 'kind', label: 'Kind', glyph: '▲', group: 'property' },
-  { id: 'rename', label: 'Name', glyph: 'Aa', group: 'property' },
-  { id: 'color', label: 'Path color', glyph: '●', group: 'property' },
-  { id: 'details', label: 'Details', glyph: '≡', group: 'property' },
+  { id: 'next', label: 'Next point', glyph: '+' },
+  { id: 'remove', label: 'Delete', glyph: '×' },
+  { id: 'status', label: 'Status', glyph: '✓' },
+  { id: 'kind', label: 'Kind', glyph: '▲' },
+  { id: 'rename', label: 'Name', glyph: 'Aa' },
+  { id: 'color', label: 'Path color', glyph: '●' },
+  { id: 'details', label: 'Details', glyph: '≡' },
+  { id: 'turn', label: 'Turn', glyph: '↻' },
 ];

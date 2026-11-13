@@ -8,7 +8,6 @@ import {
   toDay,
   weekdayOf,
 } from 'world-of-evolving-paths';
-import type { CheckIn } from '../app-logic/types';
 import { type Fork, TOPICS, type Topic, WEEKS, WEEKS_BEFORE_TODAY } from './topics';
 
 const DAYS_PER_WEEK = 7;
@@ -63,21 +62,21 @@ function forkBranch(topic: Topic, fork: Fork, start: number, today: number): Bra
  * One check-in on the days a habit is practised, spread evenly over each week, from the first week until yesterday,
  * so every path can still be checked in today.
  */
-function checkInsFor(topic: Topic, start: number, today: number): CheckIn[] {
+function checkInsFor(topic: Topic, start: number, today: number): string[] {
   const isPractised = (i: number) =>
     Math.floor(((i + 1) * topic.perWeek) / DAYS_PER_WEEK) > Math.floor((i * topic.perWeek) / DAYS_PER_WEEK);
   return Array.from({ length: Math.max(0, today - start) }, (_, i) => i)
     .filter(isPractised)
-    .map((i) => ({ pathId: topic.id, date: fromDay(start + i) }));
+    .map((i) => fromDay(start + i));
 }
 
 /**
  * Four everyday topics over about half a year. In a real app this comes from your backend: paths with their
- * branches and points, and a separate list of check-ins. A check-in is just a day on a path. It makes the path
+ * branches, points and check-ins. A check-in is just a day on a path. It makes the path
  * stronger but is not a point on the map. The heights are not given: the library places every point itself, and
  * keeps the heights the user sets.
  */
-export function createHabits(todayIso: string): { store: Store; checkIns: CheckIn[] } {
+export function createHabits(todayIso: string): { store: Store } {
   const today = toDay(todayIso);
   const start = firstMonday(today);
   return {
@@ -87,12 +86,12 @@ export function createHabits(todayIso: string): { store: Store; checkIns: CheckI
         name: topic.name,
         color: topic.color,
         lane: topic.lane,
+        checkIns: checkInsFor(topic, start, today),
         branches: [
           { id: `${topic.id}-main`, points: mainPoints(topic, start, today) },
           ...(topic.forks ?? []).map((fork) => forkBranch(topic, fork, start, today)),
         ],
       })),
     ),
-    checkIns: TOPICS.flatMap((topic) => checkInsFor(topic, start, today)),
   };
 }

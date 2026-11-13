@@ -6,7 +6,7 @@ import { createHabits } from '../data/habits';
 
 function createInitialState(today: string) {
   const habits = createHabits(today);
-  return initialState(habits.store, habits.checkIns);
+  return initialState(habits.store);
 }
 
 /**

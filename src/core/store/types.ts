@@ -51,6 +51,8 @@ export type StorePath = {
   /** Paths are stacked by `lane`, lowest first. Defaults to the order in the list. */
   lane?: number;
   branches: Branch[];
+  /** Days (`YYYY-MM-DD`) on which the path was walked. They make the path stronger but are no points. Use `checkIn`. */
+  checkIns?: string[];
   /** What the user arranged. The map writes it when something is moved. */
   layout?: PathLayout;
 };

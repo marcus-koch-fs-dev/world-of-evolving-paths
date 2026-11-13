@@ -1,18 +1,7 @@
-import { type PointStatus, type Store, tierAt, toDay } from 'world-of-evolving-paths';
-import type { CheckIn } from './types';
+import { checkInDays, type PointStatus, type Store, tierAt, toDay } from 'world-of-evolving-paths';
 
 /** What the look of a point needs to know about it. */
 export type Timed = { id: string; pathId: string; date: string; status: PointStatus };
-
-/** The days of the check-ins of every path. */
-export function checkInDays(checkIns: readonly CheckIn[]): Map<string, number[]> {
-  return checkIns.reduce((groups, checkIn) => {
-    const days = groups.get(checkIn.pathId);
-    if (days) days.push(toDay(checkIn.date));
-    else groups.set(checkIn.pathId, [toDay(checkIn.date)]);
-    return groups;
-  }, new Map<string, number[]>());
-}
 
 /**
  * The status of every point as of a day, for moving through time: earlier points are done, the first one still
@@ -60,15 +49,15 @@ function keptIfSame<T>(items: readonly T[], changed: readonly T[]): readonly T[]
 
 /**
  * The store as the map should show it on a day: statuses moved to that day (time travel) and the strength of every
- * reached point counted from the check-ins. The heights and everything else stay as they are. A path whose points look
+ * reached point counted from the check-ins of its path. The heights and everything else stay as they are. A path whose points look
  * the same as before stays the same object, so the map does not work it out again.
  */
-export function withLook(store: Store, checkIns: readonly CheckIn[], asOf?: string): Store {
+export function withLook(store: Store, asOf?: string): Store {
   const timed = store.paths.flatMap((path) =>
     path.branches.flatMap((branch) => branch.points.map((point) => ({ ...point, pathId: path.id }))),
   );
   const statuses = asOf ? statusesAsOf(timed, asOf) : new Map(timed.map((point) => [point.id, point.status]));
-  const daysByPath = checkInDays(checkIns);
+  const daysByPath = new Map(store.paths.map((path) => [path.id, checkInDays(path)]));
   const lookOf = (point: Timed) => {
     const status = statuses.get(point.id) ?? point.status;
     return { status, strength: strengthOf(point, status, daysByPath, asOf) };

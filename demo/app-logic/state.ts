@@ -1,15 +1,12 @@
-import type { Level, Store, StorePath } from 'world-of-evolving-paths';
+import { checkIn, type Level, type Store, type StorePath, undoCheckIn } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
-import { hasCheckedIn } from './checkIn';
 import { pointActions } from './pointActions';
 import { storeActions } from './storeActions';
-import type { CheckIn } from './types';
 
 /** What the demo app keeps. The library keeps none of it. */
 export type DemoState = {
   /** The paths with their branches, points and layout (heights per level, free places). */
   store: Store;
-  checkIns: CheckIn[];
   nextId: number;
 };
 
@@ -24,28 +21,38 @@ export type DemoAction =
   | { type: 'delete'; id: string }
   // The heights the user set in a view are forgotten: points and arrows fall back to their defaults
   | { type: 'resetView'; level: Level; pointIds: readonly string[]; arrowKeys: readonly string[] }
-  | { type: 'checkIn'; pathId: string; date: string };
+  | { type: 'checkIn'; pathId: string; date: string }
+  // A tap by mistake: the check-in of that day is taken back
+  | { type: 'undoCheckIn'; pathId: string; date: string };
 
 /** The state the demo starts with. */
-export function initialState(store: Store, checkIns: CheckIn[] = []): DemoState {
-  return { store, checkIns, nextId: 1 };
+export function initialState(store: Store): DemoState {
+  return { store, nextId: 1 };
 }
 
 /** The message to show when a new point cannot be created, or null when the input is fine. */
 export { nextPointProblem } from './pointActions';
 
-/** A path is walked on a day. Checking in twice on one day does not count twice. */
-function checkIn(state: DemoState, { pathId, date }: Extract<DemoAction, { type: 'checkIn' }>): DemoState {
-  return hasCheckedIn(state.checkIns, pathId, date)
-    ? state
-    : { ...state, checkIns: [...state.checkIns, { pathId, date }] };
+/** A path is walked on a day. The library keeps the day in the path and ignores a second check-in on one day. */
+function checkInAction(state: DemoState, { pathId, date }: Extract<DemoAction, { type: 'checkIn' }>): DemoState {
+  const store = checkIn(state.store, pathId, date);
+  return store === state.store ? state : { ...state, store };
+}
+
+/** A check-in is taken back. A day without one changes nothing. */
+function undoCheckInAction(
+  state: DemoState,
+  { pathId, date }: Extract<DemoAction, { type: 'undoCheckIn' }>,
+): DemoState {
+  const store = undoCheckIn(state.store, pathId, date);
+  return store === state.store ? state : { ...state, store };
 }
 
 type Handlers = {
   [K in DemoAction['type']]: (state: DemoState, action: Extract<DemoAction, { type: K }>) => DemoState;
 };
 
-const HANDLERS: Handlers = { ...storeActions, ...pointActions, checkIn };
+const HANDLERS: Handlers = { ...storeActions, ...pointActions, checkIn: checkInAction, undoCheckIn: undoCheckInAction };
 
 /** The app's rules for how its data changes. Pure, so it is easy to test. */
 export function reduce(state: DemoState, action: DemoAction): DemoState {

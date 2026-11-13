@@ -1,19 +1,19 @@
 .pw-view-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--pw-gap);
   align-items: center;
 }
 
 .pw-view-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--pw-gap-s);
   align-items: center;
 }
 
 .pw-view-label {
-  min-width: 90px;
+  min-width: 5.625rem;
   text-align: center;
   color: var(--pw-muted);
 }
@@ -35,10 +35,10 @@
 }
 
 .pw-select {
-  height: 30px;
-  padding: 0 8px;
+  height: var(--pw-btn-h);
+  padding: 0 0.5rem;
   border: 1px solid var(--pw-line);
-  border-radius: 8px;
+  border-radius: var(--pw-btn-radius);
   background: var(--pw-field);
   color: inherit;
   font: inherit;

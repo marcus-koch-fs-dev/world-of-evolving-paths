@@ -55,7 +55,8 @@ export function LineMenu({ at, title, subtitle, tiles }: LineMenuProps) {
               key={tile.id}
               type="button"
               className={`pw-tile${tile.danger ? ' is-danger' : ''}`}
-              title={tile.title}
+              title={tile.title ?? tile.label}
+              aria-label={tile.label}
               disabled={tile.disabled}
               onClick={tile.onClick}
             >

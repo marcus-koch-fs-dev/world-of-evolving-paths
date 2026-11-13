@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.2.0 (2026-11-13)
+
+### Actions for your own UI
+
+- **New:** `checkIn`, `undoCheckIn`, `hasCheckedIn`, `checkInDays` and `checkInStatus`. Check-ins now live in the path as `path.checkIns` (`YYYY-MM-DD`). `checkInStatus` says what a check-in does: active days before and after, tier, days missing for the next tier.
+- **New:** `addNextPoint(store, pathId, { title, ... })` adds a point at the end of the main branch with defaults and an id made for you. `setStatus(store, pointId, status)` ticks a point off. `addNextPoint` changes nothing when the point would make the data invalid (a bad date, a prio outside 1 to 5, an id that is taken), so the map never goes blank.
+
+### Controls
+
+- **New:** the option `zoom`: the zoom a new view starts at. Keep the zoom of each level in your app and pass it, so every level comes back as the user left it. Without it nothing changes.
+- **Changed:** fitting the camera zooms in at most to the real size (1.0, before 1.25), so a few points are not blown up.
+- **New:** `Dialog`, a window in the middle of the page over a dimmed background, for settings and the like. It is the browser's modal dialog: Escape, focus and a click beside it work, and it fills the screen on a phone.
+- **New:** the class `pw-transparent` on the map makes all bars and panels see-through. The panel color and its blur are the variables `--pw-panel` and `--pw-panel-blur`.
+- **New:** `Icon` and `MoveLock`. The controls use Phosphor icons instead of Unicode symbols.
+- **New:** `TilePanel` has `variant` (`tiles` or `list`) and `closeOnSelect`. Tiles take an `icon`.
+- **New:** `PointMenu` has `onClose` and `closeAfterAction` (default true) to close after a change.
+- **New:** `ViewBar` has `navigation={false}` to keep only the period label.
+- **Changed:** `freeMove` works in "All" also when `editable` is false, so a viewer can arrange the overview.
+- **New:** the panel of a `PointMenu` tile (status, details ...) finds its place by itself: beside the tiles when the menu is under its point, up when it is over the point, under the tiles when the menu is beside it. `subPlacement` sets it by hand. With `onPlacementChange` the menu has a Turn tile that moves the whole menu around its point: above, right, below, left, and above again.
+- **Changed:** the tiles of the `PointMenu` are one keypad of four keys in two rows, without group titles: Next point, Delete, Status, Kind, Name, Path color, Details, Turn. Name, status and path stand on three lines and are not cut off. The notes field grows while you write and cannot be pulled wider.
+- **New:** `TilePanel` has a `badge`: a small count on its button, for example how many paths are not checked in yet. A `TilePanel` now also closes when you tap outside of it. New icon `check-circle`.
+- **New:** while a `ControlBar` is dragged, the six places it can be dropped at show on the map, and the one it would go to lights up.
+- **Changed:** the demo has a Check in button with a list of all paths. One tap on a path checks it in, another tap takes the check-in back (so a tap by mistake can be undone on a phone too). It replaces the Check in bar.
+- **Changed:** the dock has three zones per edge (left, middle, right). The bars of one zone sit together, and a bar in one zone no longer pushes the bars of another or spreads the free space between bars on the same side.
+- **Changed:** `PointMenu`, `LineMenu`, `Toast`, `BackgroundPanel` and `Dialog` follow the three sizes too. In Small the menu tiles show symbols only (their names are the hover text).
+- **New:** three fixed sizes as CSS variables: Regular (default), `pw-compact` (Small) and `pw-large`. `TilePanel` has `labels`, `tint`, `closesPanel` and `closeOnSelect`.
+- **New:** the accent color is `--pw-lit`, the class `pw-glow` makes what is switched on glow.
+- **Changed:** all CSS sizes are in `rem`, and touch targets are at least 2.75rem on touch screens.
+
 ## 0.1.0 (2026-11-12)
 
 ### Data model rework (breaking)

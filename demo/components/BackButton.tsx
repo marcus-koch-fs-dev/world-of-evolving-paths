@@ -1,3 +1,5 @@
+import { Icon } from 'world-of-evolving-paths/react';
+
 type Props = {
   canGoBack: boolean;
   onBack: () => void;
@@ -14,7 +16,7 @@ export function BackButton({ canGoBack, onBack }: Props) {
       disabled={!canGoBack}
       onClick={onBack}
     >
-      ⤴
+      <Icon name="back" />
     </button>
   );
 }

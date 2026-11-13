@@ -7,6 +7,13 @@ export const FREE_VIEW_MIN_PRIO = 1;
 export const minPrioOf = (period: { level: ViewLevel } | null): number =>
   period ? MIN_PRIO[period.level] : FREE_VIEW_MIN_PRIO;
 
+/** The views of the bar, in its order: the levels that are offered, and the shown one even when it is not offered. */
+export const viewsInBar = (
+  offered: readonly ViewLevel[],
+  shown: ViewLevel | null,
+): { level: ViewLevel; label: string }[] =>
+  VIEW_LEVELS.filter((option) => offered.includes(option.level) || option.level === shown);
+
 /** The widest offered level that shows a point of this prio, or null when none does. */
 export function widestLevelShowing(
   prio: number,

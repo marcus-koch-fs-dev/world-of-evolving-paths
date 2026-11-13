@@ -16,16 +16,16 @@ body,
 .demo-settings {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.625rem;
   color: #edefe6;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .demo-settings label {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .demo-hint {
@@ -35,9 +35,9 @@ body,
 
 .demo-settings .pw-background-panel {
   width: auto;
-  padding: 10px 0 0;
+  padding: 0.625rem 0 0;
   border: 0;
-  border-top: 1px solid #3a3e33;
+  border-top: 1px solid rgb(237 239 230 / 0.14);
   border-radius: 0;
   background: none;
 }
@@ -45,24 +45,24 @@ body,
 .demo-settings fieldset {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.375rem;
   margin: 0;
-  padding: 8px;
-  border: 1px solid #3a3e33;
-  border-radius: 8px;
+  padding: 0.5rem;
+  border: 1px solid rgb(237 239 230 / 0.14);
+  border-radius: 0.5rem;
 }
 
 .demo-settings legend {
-  padding: 0 4px;
+  padding: 0 0.25rem;
   color: #8a8f80;
 }
 
 .demo-settings select {
   min-width: 0;
   max-width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #3a3e33;
-  border-radius: 8px;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid rgb(237 239 230 / 0.14);
+  border-radius: 0.5rem;
   background: #1b1d17;
   color: inherit;
   font: inherit;
@@ -70,14 +70,14 @@ body,
 
 .demo-undo-redo {
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .demo-legend {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
+  gap: 0.25rem;
+  font-size: 0.75rem;
 }
 
 .demo-legend-title {
@@ -87,9 +87,9 @@ body,
 /* One row per importance: the circle in its real size, the number, and the widest view that shows it */
 .demo-legend-row {
   display: grid;
-  grid-template-columns: 26px 14px 1fr;
+  grid-template-columns: 1.625rem 0.875rem 1fr;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   color: #8a8f80;
   opacity: 0.4;
 }
@@ -101,8 +101,8 @@ body,
 
 .demo-legend-dot {
   justify-self: center;
-  min-width: 6px;
-  min-height: 6px;
+  min-width: 0.375rem;
+  min-height: 0.375rem;
   border: 1.5px solid currentColor;
   border-radius: 50%;
 }
@@ -118,44 +118,325 @@ body,
 
 .demo-period-menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 0.375rem);
   left: 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 260px;
-  padding: 10px;
-  border: 1px solid #3a3e33;
-  border-radius: 12px;
+  gap: 0.5rem;
+  min-width: 16.25rem;
+  padding: 0.625rem;
+  border: 1px solid rgb(237 239 230 / 0.14);
+  border-radius: 0.75rem;
   background: #1b1d17;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+  box-shadow: 0 0.375rem 1.5rem rgb(0 0 0 / 0.4);
 }
 
 .demo-period-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
 }
 
 .demo-period-row > span {
-  min-width: 40px;
+  min-width: 2.5rem;
   color: #8a8f80;
 }
 
 .demo-period-months {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .demo-years {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .demo-years-count {
-  min-width: 18px;
+  min-width: 1.125rem;
   text-align: center;
+}
+
+/* The phone preview: a dark backdrop with a frame of phone size in the middle */
+.demo-phone-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(8 9 7 / 0.82);
+}
+
+.demo-phone {
+  width: 23.4375rem;
+  max-width: 100%;
+  height: min(50.75rem, calc(100% - 1.5rem));
+  border: 0.5rem solid #1b1d17;
+  border-radius: 1.75rem;
+  background: #0e0f0c;
+}
+
+.demo-phone.is-landscape {
+  width: min(50.75rem, 100%);
+  height: min(23.4375rem, calc(100% - 1.5rem));
+}
+
+.demo-phone-buttons {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.375rem;
+}
+
+.demo-phone-button {
+  display: flex;
+  padding: 0.4375rem;
+  border: 1px solid rgb(237 239 230 / 0.14);
+  border-radius: 0.375rem;
+  background: rgb(20 22 18 / 0.9);
+  color: #edefe6;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.demo-phone-button.is-on {
+  border-color: var(--pw-lit, #d4f25a);
+  color: var(--pw-lit, #d4f25a);
+}
+
+.demo-order-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 0.375rem;
+}
+
+.demo-order-row.is-dragging {
+  opacity: 0.45;
+}
+
+.demo-order-row.is-target {
+  box-shadow: 0 -2px 0 var(--pw-lit);
+}
+
+.demo-grip,
+.demo-grip-space {
+  flex: none;
+  width: 1.25rem;
+}
+
+.demo-grip {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: #8a8f80;
+  font-size: 1rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.demo-grip:active {
+  cursor: grabbing;
+}
+
+.demo-bar-item {
+  display: contents;
+}
+
+/* The settings window: sections on the left, the chosen one beside them */
+.demo-window {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  min-height: 0;
+}
+
+.demo-window-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem;
+  border-right: 1px solid rgb(237 239 230 / 0.14);
+}
+
+.demo-window-nav button {
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: none;
+  color: #8a8f80;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.demo-window-nav button:hover {
+  background: rgb(237 239 230 / 0.06);
+}
+
+.demo-window-nav button.is-on {
+  background: color-mix(in srgb, var(--pw-lit) 10%, transparent);
+  color: var(--pw-lit);
+}
+
+.demo-window-pane {
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}
+
+.demo-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.demo-group + .demo-group {
+  padding-top: 1rem;
+  border-top: 1px solid rgb(237 239 230 / 0.14);
+}
+
+.demo-group h3 {
+  margin: 0;
+  color: #8a8f80;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+@media (pointer: coarse), (max-width: 37.5rem) {
+  .demo-window {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .demo-window-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgb(237 239 230 / 0.14);
+  }
+
+  .demo-window-nav button {
+    white-space: nowrap;
+  }
+}
+
+/* Shows a state without being a button, for example "Customized" */
+.demo-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.625rem;
+  border: 1px dashed rgb(237 239 230 / 0.14);
+  border-radius: 0.5rem;
+  color: #8a8f80;
+}
+
+.demo-state.is-on {
+  border-style: solid;
+  border-color: var(--pw-lit);
+  color: var(--pw-lit);
+}
+
+/* Accent color choices */
+.demo-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.demo-swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  outline: 1px solid rgb(237 239 230 / 0.14);
+  outline-offset: 2px;
+  cursor: pointer;
+}
+
+.demo-swatch.is-on {
+  border-color: #edefe6;
+  outline-color: var(--pw-lit);
+}
+
+.demo-own-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem 0.125rem 0.125rem;
+  border: 1px solid rgb(237 239 230 / 0.14);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.demo-own-color.is-on {
+  border-color: var(--pw-lit);
+}
+
+.demo-own-color input {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* The key overview in the legend */
+.demo-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(237 239 230 / 0.14);
+}
+
+.demo-key-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.demo-key-caps {
+  display: flex;
+  flex: none;
+  gap: 0.125rem;
+  min-width: 4.25rem;
+}
+
+.demo-key-caps kbd {
+  min-width: 1.25rem;
+  padding: 0 0.25rem;
+  border: 1px solid rgb(237 239 230 / 0.2);
+  border-radius: 0.25rem;
+  background: rgb(237 239 230 / 0.06);
+  font: inherit;
+  font-size: 0.6875rem;
+  text-align: center;
+}
+
+/* The colored dot of a path in the check-in list */
+.demo-path-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
 }

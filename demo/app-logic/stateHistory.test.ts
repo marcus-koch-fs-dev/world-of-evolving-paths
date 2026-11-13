@@ -62,6 +62,17 @@ describe('Demo history', () => {
     });
   });
 
+  describe('when a check-in is taken back', () => {
+    it('is a step of its own, and the check-in is gone', () => {
+      const checked = historyReduce(start(), { type: 'checkIn', pathId: 'a', date: '2026-11-05' });
+
+      const back = historyReduce(checked, { type: 'undoCheckIn', pathId: 'a', date: '2026-11-05' });
+
+      expect(back.present.store.paths.find((path) => path.id === 'a')?.checkIns ?? []).not.toContain('2026-11-05');
+      expect(back).not.toBe(checked);
+    });
+  });
+
   describe('when a new action follows an undo', () => {
     it('clears what could be redone', () => {
       const first = historyReduce(start(), { type: 'delete', id: 'a2' });

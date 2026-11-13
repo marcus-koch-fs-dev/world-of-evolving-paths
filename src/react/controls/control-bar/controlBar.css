@@ -1,22 +1,49 @@
-/* The two rows along the edges. Bars inside sit side by side and wrap. */
+/* The two rows along the edges. Each has a left, a middle and a right zone: the bars of one zone sit together, and
+   a bar in one zone never pushes the bars of another. */
 .pw-dock {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: var(--pw-inset);
+  right: var(--pw-inset);
   display: flex;
-  flex-wrap: wrap;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--pw-gap);
   pointer-events: none;
 }
 
 .pw-dock-top {
-  top: 12px;
+  top: var(--pw-inset);
 }
 
 .pw-dock-bottom {
-  bottom: 16px;
+  bottom: var(--pw-inset-bottom);
   align-items: flex-end;
+}
+
+.pw-dock-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--pw-gap);
+  min-width: 0;
+}
+
+.pw-dock-bottom .pw-dock-zone {
+  align-items: flex-end;
+  align-content: flex-end;
+}
+
+/* The outer zones take the free space as margin, so the middle one sits between them */
+.pw-zone-left {
+  margin-right: auto;
+}
+
+.pw-zone-center {
+  justify-content: center;
+}
+
+.pw-zone-right {
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .pw-control-bar {
@@ -25,34 +52,20 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: var(--pw-gap);
   max-width: 100%;
-  padding: 6px 8px;
+  padding: var(--pw-bar-pad);
   border: 1px solid var(--pw-line);
-  border-radius: 12px;
+  border-radius: var(--pw-bar-radius);
   background: var(--pw-panel);
-}
-
-.pw-align-left {
-  order: 1;
-  margin-right: auto;
-}
-
-.pw-align-center {
-  order: 2;
-  margin-inline: auto;
-}
-
-.pw-align-right {
-  order: 3;
-  margin-left: auto;
+  backdrop-filter: var(--pw-panel-blur);
 }
 
 .pw-control-bar.is-dragging {
   position: relative;
   z-index: 10;
   opacity: 0.85;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+  box-shadow: 0 0.375rem 1.5rem rgb(0 0 0 / 0.4);
 }
 
 .pw-grip {
@@ -60,7 +73,7 @@
   border: 0;
   background: none;
   color: var(--pw-muted);
-  font-size: 16px;
+  font-size: 0.875rem;
   line-height: 1;
   cursor: grab;
   touch-action: none;
@@ -71,10 +84,74 @@
 }
 
 .pw-bar-label {
+  display: flex;
+  align-items: center;
   color: var(--pw-muted);
 }
 
 .pw-collapse {
-  min-width: 26px;
-  padding: 0 6px;
+  min-width: 1.375rem;
+  padding: 0 0.25rem;
+}
+
+/* On a phone the collapse button of a bar can sit small in its top right corner, so it takes no row of its own */
+@media (pointer: coarse), (max-width: 37.5rem) {
+  .pw-control-bar.has-corner-collapse .pw-collapse {
+    position: absolute;
+    top: 0.125rem;
+    right: 0.125rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+  }
+}
+
+/* The places a bar can be dropped at, shown while a bar is dragged: a strip at each edge, split in three */
+.pw-drop-zones {
+  position: absolute;
+  top: var(--pw-inset);
+  right: var(--pw-inset);
+  bottom: var(--pw-inset-bottom);
+  left: var(--pw-inset);
+  display: grid;
+  grid-template: 4.5rem 1fr 4.5rem / repeat(3, 1fr);
+  gap: var(--pw-gap);
+  pointer-events: none;
+}
+
+.pw-controls > .pw-drop-zones {
+  pointer-events: none;
+}
+
+.pw-drop-zone {
+  border: 2px dashed var(--pw-line);
+  border-radius: 0.75rem;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
+}
+
+.pw-drop-zone.is-target {
+  border-style: solid;
+  border-color: var(--pw-lit);
+  background: color-mix(in srgb, var(--pw-lit) 22%, transparent);
+}
+
+.pw-drop-top-left {
+  grid-area: 1 / 1;
+}
+.pw-drop-top-center {
+  grid-area: 1 / 2;
+}
+.pw-drop-top-right {
+  grid-area: 1 / 3;
+}
+.pw-drop-bottom-left {
+  grid-area: 3 / 1;
+}
+.pw-drop-bottom-center {
+  grid-area: 3 / 2;
+}
+.pw-drop-bottom-right {
+  grid-area: 3 / 3;
 }

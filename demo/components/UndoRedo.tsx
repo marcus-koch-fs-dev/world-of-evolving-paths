@@ -1,3 +1,5 @@
+import { Icon } from 'world-of-evolving-paths/react';
+
 export type UndoRedoProps = {
   canUndo: boolean;
   canRedo: boolean;
@@ -17,7 +19,7 @@ export function UndoRedo({ canUndo, canRedo, onUndo, onRedo }: UndoRedoProps) {
         disabled={!canUndo}
         onClick={onUndo}
       >
-        ↶
+        <Icon name="undo" />
       </button>
       <button
         type="button"
@@ -27,7 +29,7 @@ export function UndoRedo({ canUndo, canRedo, onUndo, onRedo }: UndoRedoProps) {
         disabled={!canRedo}
         onClick={onRedo}
       >
-        ↷
+        <Icon name="redo" />
       </button>
     </div>
   );

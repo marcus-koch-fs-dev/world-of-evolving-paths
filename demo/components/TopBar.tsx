@@ -1,26 +1,12 @@
-import { fromDay, type Orientation, periodLabel, VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
-import { ControlBar, type DockSlot, ViewBar } from 'world-of-evolving-paths/react';
+import type { Orientation, ViewLevel } from 'world-of-evolving-paths';
+import { ControlBar, type DockSlot } from 'world-of-evolving-paths/react';
+import type { BarItem } from '../app-logic/controls';
 import type { DemoMode } from '../app-logic/menuGroups';
-import { yearOfDay } from '../app-logic/periodChoices';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
-import { BackButton } from './BackButton';
+import { BarContent } from './BarContent';
+import { CheckInButton, type CheckInProps } from './CheckInButton';
 import { MainMenu } from './MainMenu';
-import { PathsStepper } from './PathsStepper';
-import { PeriodPicker } from './PeriodPicker';
-import { UndoRedo, type UndoRedoProps } from './UndoRedo';
-import { YearsStepper } from './YearsStepper';
-
-const CHIP_LETTERS: Record<ViewLevel, string> = { week: 'W', month: 'M', year: 'Y' };
-
-/** The level buttons as short chips with the full name as tooltip. The shown level is always among them. */
-function chipsOf(levels: readonly { level: ViewLevel; label: string }[], shown: ViewLevel | null) {
-  const wanted = new Set([...levels.map((option) => option.level), ...(shown ? [shown] : [])]);
-  return VIEW_LEVELS.filter((option) => wanted.has(option.level)).map((option) => ({
-    level: option.level,
-    label: CHIP_LETTERS[option.level],
-    title: `${option.label} (${CHIP_LETTERS[option.level]})`,
-  }));
-}
+import type { UndoRedoProps } from './UndoRedo';
 
 type Props = {
   dock: DockSlot;
@@ -35,16 +21,19 @@ type Props = {
   locale: string;
   /** The levels the view bar offers. */
   levels: readonly { level: ViewLevel; label: string }[];
+  /** The controls that also sit in the bar. All of them are tiles in the menu. */
+  barItems: readonly BarItem[];
+  closeMenuOnSelect: boolean;
+  /** The overview is arranged by hand when this is false. */
+  locked: boolean;
+  onLockToggle: () => void;
   onReroll: () => void;
-  freeMove: boolean;
-  onFreeMoveToggle: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
-  onModeChange: (mode: DemoMode) => void;
-  settingsOpen: boolean;
-  onSettingsToggle: () => void;
-  /** The undo and redo buttons. Left out where nothing can be changed. */
-  undoRedo?: UndoRedoProps;
+  onOpenSettings: () => void;
+  tileLabels: boolean;
+  undoRedo: UndoRedoProps;
+  checkIn: CheckInProps;
 };
 
 /** The main bar: where in time the map is, and the menu with everything else. */
@@ -58,60 +47,50 @@ export function TopBar({
   onPathsPerPageChange,
   locale,
   levels,
+  barItems,
+  closeMenuOnSelect,
+  locked,
+  onLockToggle,
   onReroll,
-  freeMove,
-  onFreeMoveToggle,
   onOrientationChange,
   mode,
-  onModeChange,
-  settingsOpen,
-  onSettingsToggle,
+  onOpenSettings,
+  tileLabels,
   undoRedo,
+  checkIn,
 }: Props) {
   return (
     <ControlBar dock={dock} onDockChange={onDockChange}>
-      <ViewBar
-        periodOnly
-        levelChips
-        levels={chipsOf(levels, navigation.level)}
-        freeLabel="All"
-        freeLast
-        level={navigation.level}
-        onLevelChange={navigation.chooseLevel}
-        afterLevels={
-          navigation.level === 'year' && <YearsStepper years={navigation.years} onChange={navigation.setYears} />
-        }
-        periodSlot={
-          <PeriodPicker
-            label={periodLabel(navigation.period, locale)}
-            date={fromDay(navigation.period.start)}
-            year={yearOfDay(navigation.period.end)}
-            locale={locale}
-            onPick={navigation.pick}
-          />
-        }
-        onPrevious={() => navigation.move(-1)}
-        onNext={() => navigation.move(1)}
-        onToday={navigation.goToToday}
-        page={paging.page}
-        pages={paging.pages}
-        onPageChange={navigation.setPage}
+      <BarContent
+        navigation={navigation}
+        paging={paging}
+        pathsPerPage={pathsPerPage}
+        pathCount={pathCount}
+        onPathsPerPageChange={onPathsPerPageChange}
+        locale={locale}
+        levels={levels}
+        barItems={barItems}
+        locked={locked}
+        onLockToggle={onLockToggle}
+        mode={mode}
+        undoRedo={undoRedo}
       />
-      <PathsStepper count={pathsPerPage} max={pathCount} onChange={onPathsPerPageChange} />
-      <BackButton canGoBack={navigation.canGoBack} onBack={navigation.back} />
-      {undoRedo && <UndoRedo {...undoRedo} />}
+      <CheckInButton {...checkIn} />
       <MainMenu
         levels={levels}
-        level={navigation.level}
-        onLevelChange={navigation.chooseLevel}
+        navigation={navigation}
+        pathsPerPage={pathsPerPage}
+        pathCount={pathCount}
+        onPathsPerPageChange={onPathsPerPageChange}
+        undoRedo={undoRedo}
         onReroll={onReroll}
-        freeMove={freeMove}
-        onFreeMoveToggle={onFreeMoveToggle}
         onOrientationChange={onOrientationChange}
         mode={mode}
-        onModeChange={onModeChange}
-        settingsOpen={settingsOpen}
-        onSettingsToggle={onSettingsToggle}
+        onOpenSettings={onOpenSettings}
+        locked={locked}
+        onLockToggle={onLockToggle}
+        tileLabels={tileLabels}
+        closeOnSelect={closeMenuOnSelect}
       />
     </ControlBar>
   );

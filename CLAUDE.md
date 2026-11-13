@@ -50,6 +50,8 @@ The library never touches `localStorage` or stores data. A test enforces the lay
 - **One pattern, one helper.** When the same pattern shows up a second time (slot sync, easing, random numbers), it becomes a shared, tested function.
 - A component with many props takes one settings object and a single `onChange(patch)` instead of a prop and a callback per value.
 - **No n² work for simple tasks.** Before iterating inside an iteration, look for a better algorithm (Map lookup, grouping, sorting).
+- **CSS sizes are `rem`** (16px = 1rem), so controls grow with the user's font size. Icon sizes are `em`. Only hairlines (1 to 2px borders) stay `px`. Touch targets are at least `2.75rem` (`@media (pointer: coarse)`).
+- **Icons come from `src/react/icons`** (Phosphor, MIT, regular and fill), never from Unicode symbols: those look different on every system. Add an icon by adding its name to the generator list, not by drawing paths.
 - Relative imports in `src/` end in `.js` (`./geometry.js`, `./map/index.js`), so the published types resolve under `node16`. Check with `npx tsc -p tsconfig.build.json --noEmit --module node16 --moduleResolution node16`.
 - No `any`. Type data and state explicitly.
 - Guard clauses over nesting. Descriptive names, no abbreviations. Magic values become named constants.

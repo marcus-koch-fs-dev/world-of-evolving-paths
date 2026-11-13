@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alignOf, edgeOf, slotAt } from './dock.js';
+import { alignOf, DOCK_SLOTS, edgeOf, slotAt } from './dock.js';
 
 describe('Docking a bar', () => {
   it.each([
@@ -19,5 +19,17 @@ describe('Docking a bar', () => {
     expect(edgeOf('top-center')).toBe('top');
     expect(alignOf('top-center')).toBe('center');
     expect(alignOf('top-left')).toBe('left');
+  });
+});
+
+describe('The zones of the dock', () => {
+  it('has a left, a middle and a right zone at each edge', () => {
+    expect(DOCK_SLOTS).toEqual(['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']);
+  });
+
+  it('gives every zone back its own edge and place', () => {
+    const rebuilt = DOCK_SLOTS.map((slot) => `${edgeOf(slot)}-${alignOf(slot)}`);
+
+    expect(rebuilt).toEqual([...DOCK_SLOTS]);
   });
 });

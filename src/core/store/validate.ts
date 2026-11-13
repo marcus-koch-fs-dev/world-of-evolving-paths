@@ -40,6 +40,11 @@ export function validateStore(paths: readonly StorePath[]): string[] {
     ...points
       .filter((point) => !Number.isInteger(point.prio) || point.prio < 1 || point.prio > 5)
       .map((point) => `Point "${point.id}" needs a prio from 1 to 5, got ${point.prio}.`),
+    ...paths.flatMap((path) =>
+      (path.checkIns ?? [])
+        .filter((date) => !isIsoDate(date))
+        .map((date) => `Path "${path.id}" has a check-in with no valid date (YYYY-MM-DD): "${date}".`),
+    ),
     ...branches
       .filter((branch) => branch.splitsAt !== undefined && !infos.has(branch.splitsAt))
       .map((branch) => `Branch "${branch.id}" splits at "${branch.splitsAt}", which does not exist.`),

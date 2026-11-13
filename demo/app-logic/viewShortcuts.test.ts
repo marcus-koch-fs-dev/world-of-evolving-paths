@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { viewShortcutFor } from './viewShortcuts';
+import { viewAtPosition, viewShortcutFor } from './viewShortcuts';
 
 // Stands in for the DOM's `Element`, so `instanceof Element` works without a browser
 function FakeElement() {}
@@ -25,13 +25,16 @@ describe('View shortcuts', () => {
     vi.unstubAllGlobals();
   });
 
-  it('picks a level with W, M and Y', () => {
-    expect(press('m')).toEqual({ type: 'level', level: 'month' });
-    expect(press('Y')).toEqual({ type: 'level', level: 'year' });
+  it('picks a view with the digits, counted from 1', () => {
+    expect(press('1')).toEqual({ type: 'view', position: 1 });
+    expect(press('4')).toEqual({ type: 'view', position: 4 });
   });
 
-  it('shows everything with A', () => {
-    expect(press('a')).toEqual({ type: 'all' });
+  it('does not use the letters of the levels any more, so M stays free for the map', () => {
+    expect(press('w')).toBeNull();
+    expect(press('m')).toBeNull();
+    expect(press('y')).toBeNull();
+    expect(press('a')).toBeNull();
   });
 
   it('changes the years of the year view with + and −', () => {
@@ -48,12 +51,40 @@ describe('View shortcuts', () => {
     expect(press('t')).toEqual({ type: 'today' });
   });
 
-  it('leaves other keys and shortcuts with Ctrl alone', () => {
+  it('leaves other keys, 0 and shortcuts with Ctrl or Alt alone', () => {
     expect(press('x')).toBeNull();
+    expect(press('0')).toBeNull();
     expect(press('y', { ctrlKey: true })).toBeNull();
+    expect(press('2', { altKey: true })).toBeNull();
+  });
+
+  it('leaves keys in an open dialog to the dialog', () => {
+    // A target whose closest() only knows dialogs
+    const inDialog = Object.assign(Object.create(FakeElement.prototype), {
+      closest: (selector: string) => (selector.includes('dialog') ? {} : null),
+    });
+
+    expect(viewShortcutFor({ key: '2', ctrlKey: false, metaKey: false, altKey: false, target: inDialog })).toBeNull();
   });
 
   it('leaves keys in a text field to the field', () => {
-    expect(press('w', {}, true)).toBeNull();
+    expect(press('2', {}, true)).toBeNull();
+  });
+});
+
+describe('The view of a number', () => {
+  it('counts the levels in the order of the bar, and the overview comes last', () => {
+    expect(viewAtPosition(['week', 'month', 'year'], 1)).toBe('week');
+    expect(viewAtPosition(['week', 'month', 'year'], 3)).toBe('year');
+    expect(viewAtPosition(['week', 'month', 'year'], 4)).toBeNull();
+  });
+
+  it('follows the levels that are offered', () => {
+    expect(viewAtPosition(['week', 'year'], 2)).toBe('year');
+    expect(viewAtPosition(['week', 'year'], 3)).toBeNull();
+  });
+
+  it('has nothing beyond the overview', () => {
+    expect(viewAtPosition(['week'], 3)).toBeUndefined();
   });
 });

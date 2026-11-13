@@ -65,6 +65,11 @@ describe('Store edits', () => {
       expect(setup({}, null).edits.canMove()).toBe(false);
       expect(setup({ freeMove: true }, null).edits.canMove()).toBe(true);
     });
+
+    it('lets a viewer arrange the overview, but not move things in a period', () => {
+      expect(setup({ freeMove: true, editable: false }, null).edits.canMove()).toBe(true);
+      expect(setup({ editable: false }).edits.canMove()).toBe(false);
+    });
   });
 
   describe('when a point comes to rest in a period', () => {

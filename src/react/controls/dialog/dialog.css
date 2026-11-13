@@ -1,0 +1,57 @@
+/* In the middle of the page, a little see-through, so the map can still be felt behind it */
+.pw-dialog {
+  flex-direction: column;
+  width: min(var(--pw-dialog-w, 44rem), calc(100vw - 2rem));
+  height: min(var(--pw-dialog-h, 34rem), calc(100vh - 2rem));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--pw-line);
+  border-radius: 0.75rem;
+  background: rgb(20 22 18 / 0.82);
+  backdrop-filter: blur(10px);
+  color: var(--pw-ink);
+  font: inherit;
+  box-shadow: 0 0.75rem 3rem rgb(0 0 0 / 0.55);
+}
+
+.pw-dialog[open] {
+  display: flex;
+}
+
+.pw-dialog::backdrop {
+  background: rgb(8 9 7 / 0.5);
+}
+
+.pw-dialog-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border-bottom: 1px solid var(--pw-line);
+}
+
+.pw-dialog-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pw-dialog-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* On a phone the window fills the screen */
+@media (pointer: coarse), (max-width: 37.5rem) {
+  .pw-dialog {
+    width: 100vw;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+}
