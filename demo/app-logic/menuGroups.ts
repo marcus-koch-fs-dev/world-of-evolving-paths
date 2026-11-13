@@ -1,6 +1,5 @@
 import type { ViewLevel } from 'world-of-evolving-paths';
-import type { MenuPlacement, PanelGroup } from 'world-of-evolving-paths/react';
-import { menuPlaceLabel } from './menuPlace';
+import type { PanelGroup } from 'world-of-evolving-paths/react';
 
 export type DemoMode = 'edit' | 'map';
 
@@ -16,8 +15,6 @@ export type MenuState = {
   mode: DemoMode;
   /** In the overview points and paths cannot be moved while this is true. */
   locked: boolean;
-  /** Where the point menu sits next to its point. */
-  pointMenuPlace: MenuPlacement;
   /** The zoom of the map, 1 is 100 %. */
   zoom: number;
   canGoBack: boolean;
@@ -39,8 +36,6 @@ export type MenuActions = {
   reroll: () => void;
   openSettings: () => void;
   toggleLock: () => void;
-  /** Turns the point menu to the next place around its point. */
-  turnPointMenu: () => void;
   zoomBy: (factor: number) => void;
   fit: () => void;
   center: () => void;
@@ -143,7 +138,7 @@ const mapGroup = ({ zoom }: MenuState, actions: MenuActions): PanelGroup => ({
 });
 
 /** What only the editor does: undo and redo, and forgetting the heights of a view. */
-const editGroup = ({ mode, level, canUndo, canRedo, pointMenuPlace }: MenuState, actions: MenuActions): PanelGroup => ({
+const editGroup = ({ mode, level, canUndo, canRedo }: MenuState, actions: MenuActions): PanelGroup => ({
   id: 'edit',
   label: 'Edit',
   tiles:
@@ -172,13 +167,6 @@ const editGroup = ({ mode, level, canUndo, canRedo, pointMenuPlace }: MenuState,
             icon: 'reset',
             disabled: level === null,
             onClick: actions.reroll,
-          },
-          {
-            id: 'menu-place',
-            label: 'Place',
-            title: `Point menu: ${menuPlaceLabel(pointMenuPlace)}. Click to turn it around the point.`,
-            icon: 'compass',
-            onClick: actions.turnPointMenu,
           },
         ]
       : [],

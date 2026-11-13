@@ -9,4 +9,4 @@ export type NextPointInput = {
   newBranch: boolean;
 };
 
-export type TileId = 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove';
+export type TileId = 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove' | 'turn';

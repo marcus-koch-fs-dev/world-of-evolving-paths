@@ -1,5 +1,5 @@
 import { type Orientation, rotateDirection, type ViewLevel } from 'world-of-evolving-paths';
-import { type MenuPlacement, TilePanel, useCameraZoom, usePathWorldHandle } from 'world-of-evolving-paths/react';
+import { TilePanel, useCameraZoom, usePathWorldHandle } from 'world-of-evolving-paths/react';
 import { type DemoMode, menuGroups } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import type { UndoRedoProps } from './UndoRedo';
@@ -18,8 +18,6 @@ type Props = {
   /** The overview can be arranged by hand when this is false. */
   locked: boolean;
   onLockToggle: () => void;
-  pointMenuPlace: MenuPlacement;
-  onPointMenuTurn: () => void;
   /** The tiles show their names under the symbols. */
   tileLabels: boolean;
   closeOnSelect: boolean;
@@ -37,7 +35,6 @@ export function MainMenu(props: Props) {
       level: navigation.level,
       mode: props.mode,
       locked: props.locked,
-      pointMenuPlace: props.pointMenuPlace,
       zoom,
       canGoBack: navigation.canGoBack,
       canUndo: undoRedo.canUndo,
@@ -57,7 +54,6 @@ export function MainMenu(props: Props) {
       reroll: props.onReroll,
       openSettings: props.onOpenSettings,
       toggleLock: props.onLockToggle,
-      turnPointMenu: props.onPointMenuTurn,
       zoomBy: handle.zoomBy,
       fit: handle.fit,
       center: handle.center,

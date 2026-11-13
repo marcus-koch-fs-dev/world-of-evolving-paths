@@ -32,6 +32,7 @@ type Props = {
   closeAfterAction: boolean;
   /** Where the menu sits next to its point, and where the panel of a tile opens (by itself when not given). */
   placement: MenuPlacement;
+  onPlacementChange: (placement: MenuPlacement) => void;
   subPlacement?: SubPlacement;
 };
 
@@ -53,6 +54,7 @@ export function SelectedPointControls({
   onClose,
   closeAfterAction,
   placement,
+  onPlacementChange,
   subPlacement,
 }: Props) {
   return (
@@ -88,6 +90,7 @@ export function SelectedPointControls({
         onClose={onClose}
         closeAfterAction={closeAfterAction}
         placement={placement}
+        onPlacementChange={onPlacementChange}
         subPlacement={subPlacement}
         onPathColor={(color) => dispatch({ type: 'pathColor', pathId: path.id, color })}
         onDelete={() => {

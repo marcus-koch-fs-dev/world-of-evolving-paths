@@ -7,7 +7,6 @@ import { isEmbedded, phoneOrientation } from './app-logic/device';
 import { keymapFor } from './app-logic/keymap';
 import { minPrioOf, viewsInBar } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
-import { nextMenuPlace } from './app-logic/menuPlace';
 import type { SettingsSection } from './app-logic/settingsSections';
 import { showsTileLabels, sizeClass } from './app-logic/uiSize';
 import { zoomKeyOf } from './app-logic/zoomMemory';
@@ -156,8 +155,6 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           closeMenuOnSelect={closesMenu(values.menuClose, TOUCH_SCREEN)}
           locked={locked}
           onLockToggle={() => setLocked((on) => !on)}
-          pointMenuPlace={values.pointMenuPlace}
-          onPointMenuTurn={() => settings.change({ pointMenuPlace: nextMenuPlace(values.pointMenuPlace) })}
           onReroll={() => {
             if (level !== null) dispatch({ type: 'resetView', level, pointIds: [...visibleIds], arrowKeys });
           }}
@@ -241,6 +238,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
             onDeleted={() => selection.select(null)}
             closeAfterAction={values.pointMenuCloses}
             placement={values.pointMenuPlace}
+            onPlacementChange={(pointMenuPlace) => settings.change({ pointMenuPlace })}
             // On a phone there is no room beside the tiles, so the panel opens under them
             subPlacement={PHONE ? 'below' : undefined}
             onClose={() => selection.select(null)}
