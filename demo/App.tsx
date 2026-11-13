@@ -4,10 +4,12 @@ import { PathWorld, Toast } from 'world-of-evolving-paths/react';
 import { closesMenu } from './app-logic/controls';
 import { rememberColor } from './app-logic/customColors';
 import { isEmbedded, phoneOrientation } from './app-logic/device';
+import { keymapFor } from './app-logic/keymap';
 import { minPrioOf, steppedYears } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
 import type { SettingsSection } from './app-logic/settingsSections';
 import { showsTileLabels, sizeClass } from './app-logic/uiSize';
+import { viewAtPosition } from './app-logic/viewShortcuts';
 import { zoomKeyOf } from './app-logic/zoomMemory';
 import { DemoLineMenu } from './components/DemoLineMenu';
 import { Legend } from './components/Legend';
@@ -58,15 +60,19 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   // In the overview points and paths can be moved by hand, by anyone, once the lock is open
   const [locked, setLocked] = useState(true);
   const editing = mode === 'edit';
-  useUndoShortcuts({ enabled: editing, undo: undoRedo.onUndo, redo: undoRedo.onRedo });
+  useUndoShortcuts({ enabled: editing && values.keyboardShortcuts, undo: undoRedo.onUndo, redo: undoRedo.onRedo });
 
   useViewShortcuts((shortcut) => {
-    if (shortcut.type === 'level') navigation.chooseLevel(shortcut.level);
-    else if (shortcut.type === 'all') navigation.chooseLevel(null);
-    else if (shortcut.type === 'today') navigation.goToToday();
+    if (shortcut.type === 'view') {
+      const view = viewAtPosition(
+        VIEW_LEVELS.filter((option) => values.levels.includes(option.level)).map((option) => option.level),
+        shortcut.position,
+      );
+      if (view !== undefined) navigation.chooseLevel(view);
+    } else if (shortcut.type === 'today') navigation.goToToday();
     else if (shortcut.type === 'years') navigation.setYears(steppedYears(navigation.years, shortcut.step));
     else if (navigation.level !== null) navigation.move(shortcut.count);
-  });
+  }, values.keyboardShortcuts);
 
   const { period, level, view, tileKey, range, travel, store, pathIds, paging, visibleIds, arrowKeys } = useDemoView(
     state,
@@ -112,6 +118,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           .filter(Boolean)
           .join(' ')}
         style={{ '--pw-lit': values.accent } as CSSProperties}
+        shortcuts={values.keyboardShortcuts}
         zoom={values.rememberZoom ? settings.zooms[zoomKeyOf(navigation.level)] : undefined}
         store={store}
         view={view}
@@ -184,7 +191,20 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
         {values.rememberZoom && <ZoomMemory layer={zoomKeyOf(navigation.level)} onZoom={settings.rememberLayerZoom} />}
 
         {values.legend && (
-          <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrioOf(period)} startCollapsed />
+          <Legend
+            dock="bottom-right"
+            levels={offeredLevels}
+            minImportance={minPrioOf(period)}
+            keymap={
+              values.keyboardShortcuts && !PHONE
+                ? keymapFor(
+                    offeredLevels.map((option) => option.label),
+                    editing,
+                  )
+                : null
+            }
+            startCollapsed
+          />
         )}
 
         {values.timeBar && (

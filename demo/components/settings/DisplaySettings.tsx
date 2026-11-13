@@ -80,6 +80,17 @@ export function DisplaySettings({ values, onChange }: Props) {
         <Flag label="Transparent" checked={values.transparent} onChange={(transparent) => onChange({ transparent })} />
       </Group>
 
+      <Group
+        title="Keyboard"
+        hint="Single keys such as 1, 2, 3, T, M and E. Switch them off if they get in the way, for example with speech control."
+      >
+        <Flag
+          label="Keyboard shortcuts"
+          checked={values.keyboardShortcuts}
+          onChange={(keyboardShortcuts) => onChange({ keyboardShortcuts })}
+        />
+      </Group>
+
       <Group title="Zoom">
         <Flag
           label="Remember the zoom of each view"

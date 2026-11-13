@@ -50,6 +50,8 @@ export type SettingsValues = {
   uiSize: UiSize;
   /** Bars and menus are see-through. */
   transparent: boolean;
+  /** The keys of the page and the map (W, 1 to 4, T, arrows, +, −, M, E, Ctrl+Z) work. Single keys can be switched off. */
+  keyboardShortcuts: boolean;
   /** Each layer (week, month, year, all) comes back at the zoom it last had. */
   rememberZoom: boolean;
   /** The accent color of the controls (`#rrggbb`), and whether what is switched on glows. */
@@ -96,6 +98,7 @@ export function useDemoSettings() {
   const [docks, setDocks] = useStoredState<Docks>(key('docks'), DEFAULT_DOCKS);
   const [pathsPerPage, setPathsPerPage] = useStoredState<number>(key('paths-per-page'), 2);
   const [uiSize, setUiSize] = useStoredState<UiSize>(key('ui-size-v2'), 'small');
+  const [keyboardShortcuts, setKeyboardShortcuts] = useStoredState<boolean>(key('keyboard-shortcuts'), true);
   const [rememberZoom, setRememberZoom] = useStoredState<boolean>(key('remember-zoom'), true);
   const [zooms, setZooms] = useStoredState<ZoomMemory>(key('zoom-by-layer'), {}, memoryFrom);
   const [accent, setAccent] = useStoredState<string>(key('accent'), DEFAULT_ACCENT, accentFrom);
@@ -118,6 +121,7 @@ export function useDemoSettings() {
     pathsPerPage,
     uiSize,
     transparent,
+    keyboardShortcuts,
     rememberZoom,
     accent,
     glow,
@@ -140,6 +144,7 @@ export function useDemoSettings() {
     if (patch.pathsPerPage !== undefined) setPathsPerPage(patch.pathsPerPage);
     if (patch.uiSize !== undefined) setUiSize(patch.uiSize);
     if (patch.transparent !== undefined) setTransparent(patch.transparent);
+    if (patch.keyboardShortcuts !== undefined) setKeyboardShortcuts(patch.keyboardShortcuts);
     if (patch.rememberZoom !== undefined) setRememberZoom(patch.rememberZoom);
     if (patch.accent !== undefined) setAccent(patch.accent);
     if (patch.glow !== undefined) setGlow(patch.glow);

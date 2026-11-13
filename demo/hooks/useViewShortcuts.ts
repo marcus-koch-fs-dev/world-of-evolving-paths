@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { type ViewShortcut, viewShortcutFor } from '../app-logic/viewShortcuts';
 
-/** Runs a view change for the keys W M Y, A, T, + and − and the left and right arrow. Not in text fields. */
-export function useViewShortcuts(run: (shortcut: ViewShortcut) => void): void {
+/** Runs a view change for the digits, T, + and − and the left and right arrow. Not in text fields, and not when off. */
+export function useViewShortcuts(run: (shortcut: ViewShortcut) => void, enabled: boolean): void {
   // The newest `run` is kept in a ref, so the listener is set up once and not again on every render
   const latest = useRef(run);
   useEffect(() => {
@@ -10,6 +10,7 @@ export function useViewShortcuts(run: (shortcut: ViewShortcut) => void): void {
   });
 
   useEffect(() => {
+    if (!enabled) return;
     const onKey = (event: KeyboardEvent) => {
       const shortcut = viewShortcutFor(event);
       if (!shortcut) return;
@@ -18,5 +19,5 @@ export function useViewShortcuts(run: (shortcut: ViewShortcut) => void): void {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [enabled]);
 }
