@@ -16,6 +16,12 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
   const [note, setNote] = useState(point.note ?? '');
   // The date is sent the same way: a date field fires a change for each part of the date while it is typed
   const [date, setDate] = useState(point.date);
+  // The note field grows with the text, so it never has to be pulled by hand
+  const grow = (field: HTMLTextAreaElement | null) => {
+    if (!field) return;
+    field.style.height = 'auto';
+    field.style.height = `${field.scrollHeight + 2}px`;
+  };
   const values = Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i);
 
   return (
@@ -53,9 +59,13 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
       <label>
         Note
         <textarea
+          ref={grow}
           rows={3}
           value={note}
-          onChange={(event) => setNote(event.target.value)}
+          onChange={(event) => {
+            setNote(event.target.value);
+            grow(event.target);
+          }}
           onBlur={() => note !== (point.note ?? '') && onUpdate({ note: note || undefined })}
         />
       </label>

@@ -4,6 +4,12 @@ export type DockAlign = 'left' | 'center' | 'right';
 export type DockSlot = `${DockEdge}-${DockAlign}`;
 
 export const DOCK_EDGES: readonly DockEdge[] = ['top', 'bottom'];
+export const DOCK_ALIGNS: readonly DockAlign[] = ['left', 'center', 'right'];
+
+/** All six places: each edge has a left, a middle and a right zone. Bars in one zone sit together and do not push the others. */
+export const DOCK_SLOTS: readonly DockSlot[] = DOCK_EDGES.flatMap((edge) =>
+  DOCK_ALIGNS.map((align) => `${edge}-${align}` as const),
+);
 
 /** The edge a slot belongs to. */
 export function edgeOf(slot: DockSlot): DockEdge {

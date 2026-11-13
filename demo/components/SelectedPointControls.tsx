@@ -1,12 +1,6 @@
 import type { Dispatch } from 'react';
 import type { StorePath, StorePoint } from 'world-of-evolving-paths';
-import {
-  ControlBar,
-  type MenuPlacement,
-  PointMenu,
-  type PointPatch,
-  type SubPlacement,
-} from 'world-of-evolving-paths/react';
+import { type MenuPlacement, PointMenu, type PointPatch, type SubPlacement } from 'world-of-evolving-paths/react';
 import { checkInMessage } from '../app-logic/checkIn';
 import { canComplete } from '../app-logic/rules';
 import type { DemoAction, DemoState } from '../app-logic/state';
@@ -36,7 +30,7 @@ type Props = {
   subPlacement?: SubPlacement;
 };
 
-/** What the demo offers for the selected point: a check-in button for its path, and the point menu. */
+/** What the demo offers for the selected point: the point menu, with the check-in of its path as a key. */
 export function SelectedPointControls({
   point,
   path,
@@ -58,46 +52,34 @@ export function SelectedPointControls({
   subPlacement,
 }: Props) {
   return (
-    <>
-      <ControlBar dock="bottom-right">
-        <button
-          type="button"
-          className="pw-button"
-          disabled={checkedInToday}
-          title="Count today for this path. It gets stronger the more days you check in."
-          onClick={() => {
-            onNotice(checkInMessage(path, today));
-            dispatch({ type: 'checkIn', pathId: path.id, date: today });
-          }}
-        >
-          {checkedInToday ? `✓ Checked in today: ${path.name}` : `Check in: ${path.name}`}
-        </button>
-      </ControlBar>
-
-      <PointMenu
-        point={point}
-        path={path}
-        isFork={isFork}
-        canComplete={canComplete(state.store, point.id)}
-        checkInCount={path.checkIns?.length ?? 0}
-        customColors={customColors}
-        onCustomColor={onCustomColor}
-        onUpdate={(patch) => {
-          dispatch({ type: 'update', id: point.id, patch });
-          onChanged(patch);
-        }}
-        onAddNext={onAddNext}
-        onClose={onClose}
-        closeAfterAction={closeAfterAction}
-        placement={placement}
-        onPlacementChange={onPlacementChange}
-        subPlacement={subPlacement}
-        onPathColor={(color) => dispatch({ type: 'pathColor', pathId: path.id, color })}
-        onDelete={() => {
-          dispatch({ type: 'delete', id: point.id });
-          onDeleted();
-        }}
-      />
-    </>
+    <PointMenu
+      point={point}
+      path={path}
+      isFork={isFork}
+      canComplete={canComplete(state.store, point.id)}
+      checkInCount={path.checkIns?.length ?? 0}
+      onCheckIn={() => {
+        onNotice(checkInMessage(path, today));
+        dispatch({ type: 'checkIn', pathId: path.id, date: today });
+      }}
+      checkedIn={checkedInToday}
+      customColors={customColors}
+      onCustomColor={onCustomColor}
+      onUpdate={(patch) => {
+        dispatch({ type: 'update', id: point.id, patch });
+        onChanged(patch);
+      }}
+      onAddNext={onAddNext}
+      onClose={onClose}
+      closeAfterAction={closeAfterAction}
+      placement={placement}
+      onPlacementChange={onPlacementChange}
+      subPlacement={subPlacement}
+      onPathColor={(color) => dispatch({ type: 'pathColor', pathId: path.id, color })}
+      onDelete={() => {
+        dispatch({ type: 'delete', id: point.id });
+        onDeleted();
+      }}
+    />
   );
 }

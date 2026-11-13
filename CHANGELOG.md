@@ -19,7 +19,9 @@
 - **New:** `ViewBar` has `navigation={false}` to keep only the period label.
 - **Changed:** `freeMove` works in "All" also when `editable` is false, so a viewer can arrange the overview.
 - **New:** the panel of a `PointMenu` tile (status, details ...) finds its place by itself: beside the tiles when the menu is under its point, up when it is over the point, under the tiles when the menu is beside it. `subPlacement` sets it by hand. With `onPlacementChange` the menu has a Turn tile that moves the whole menu around its point: above, right, below, left, and above again.
-- **Changed:** the tiles of the `PointMenu` are one keypad of four keys in two rows, without the group titles. The order is Next point, Delete, Status, Kind, Name, Path color, Details, Turn.
+- **Changed:** the tiles of the `PointMenu` are one keypad of three keys in three rows, without group titles: Next point, Delete, Check in, Status, Kind, Name, Path color, Details, Turn. Name, status and path stand on three lines and are not cut off. The notes field grows while you write and cannot be pulled wider.
+- **New:** `PointMenu` has `onCheckIn` and `checkedIn`. With `onCheckIn` the menu has a Check in key; the key shows when the path is already checked in today.
+- **Changed:** the dock has three zones per edge (left, middle, right). The bars of one zone sit together, and a bar in one zone no longer pushes the bars of another or spreads the free space between bars on the same side.
 - **Changed:** `PointMenu`, `LineMenu`, `Toast`, `BackgroundPanel` and `Dialog` follow the three sizes too. In Small the menu tiles show symbols only (their names are the hover text).
 - **New:** three fixed sizes as CSS variables: Regular (default), `pw-compact` (Small) and `pw-large`. `TilePanel` has `labels`, `tint`, `closesPanel` and `closeOnSelect`.
 - **New:** the accent color is `--pw-lit`, the class `pw-glow` makes what is switched on glow.

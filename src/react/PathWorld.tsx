@@ -1,6 +1,6 @@
 import { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useRef } from 'react';
 import type { PathWorldHandle, PathWorldOptions } from '../map/index.js';
-import { DOCK_EDGES } from './controls/control-bar/dock.js';
+import { DOCK_ALIGNS, DOCK_EDGES } from './controls/control-bar/dock.js';
 import { DockContext } from './DockContext.js';
 import { useDockContainers } from './hooks/useDockContainers.js';
 import { usePathWorldMount } from './hooks/usePathWorldMount.js';
@@ -36,7 +36,11 @@ export const PathWorld = forwardRef<PathWorldHandle | null, PathWorldProps>(func
         <DockContext.Provider value={containers}>
           <div className="pw-controls">
             {DOCK_EDGES.map((edge) => (
-              <div key={edge} ref={refs[edge]} className={`pw-dock pw-dock-${edge}`} />
+              <div key={edge} className={`pw-dock pw-dock-${edge}`}>
+                {DOCK_ALIGNS.map((align) => (
+                  <div key={align} ref={refs[`${edge}-${align}`]} className={`pw-dock-zone pw-zone-${align}`} />
+                ))}
+              </div>
             ))}
             {/* Controls render once the map and the places for the bars exist */}
             {handle !== null && ready && children}

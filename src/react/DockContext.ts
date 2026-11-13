@@ -1,8 +1,8 @@
 import { createContext } from 'react';
-import type { DockEdge, DockSlot } from './controls/control-bar/dock.js';
+import type { DockSlot } from './controls/control-bar/dock.js';
 
-// The containers along the edges where bars are docked, set by `<PathWorld>`
-export type DockContainers = Partial<Record<DockEdge, HTMLElement>>;
+// The zones along the edges where bars are docked, set by `<PathWorld>`: a left, a middle and a right one per edge
+export type DockContainers = Partial<Record<DockSlot, HTMLElement>>;
 
 export const DockContext = createContext<DockContainers>({});
 

@@ -4,8 +4,9 @@ import { TILES, visibleTiles } from './tiles.js';
 const ids = (tiles: readonly { id: string }[]) => tiles.map((tile) => tile.id);
 
 describe('Tiles of the keypad', () => {
-  it('fill two rows of four keys, with the turn last', () => {
-    expect(TILES).toHaveLength(8);
+  it('fill three rows of three keys, with the check-in third and the turn last', () => {
+    expect(TILES).toHaveLength(9);
+    expect(ids(TILES)[2]).toBe('checkin');
     expect(ids(TILES).at(-1)).toBe('turn');
   });
 });

@@ -13,8 +13,8 @@ import { StatusPanel } from './StatusPanel.js';
 const DEFAULT_IMPORTANCE_RANGE: [number, number] = [1, 5];
 
 /** The tiles that open a panel. */
-// Every tile but Turn opens a panel. Turn acts at once.
-export type PanelId = Exclude<TileId, 'turn'>;
+// Every tile but Turn and Check in opens a panel. Those two act at once.
+export type PanelId = Exclude<TileId, 'turn' | 'checkin'>;
 
 type Context = {
   menu: PointMenuProps;

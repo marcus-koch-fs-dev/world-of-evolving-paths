@@ -28,7 +28,7 @@
   --pw-tile-label: 0.625rem;
   --pw-tile-radius: 0.625rem;
   /* The point menu: columns of tiles, the width of the sub panel, and the width of the grid that follows from them */
-  --pw-menu-cols: 4;
+  --pw-menu-cols: 3;
   --pw-sub-w: 15rem;
   --pw-menu-w: calc(
     var(--pw-menu-cols) *

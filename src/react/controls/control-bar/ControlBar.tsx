@@ -1,7 +1,7 @@
 import { type ReactNode, useContext, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BarSlotContext, DockContext } from '../../DockContext.js';
-import { alignOf, type DockSlot, edgeOf } from './dock.js';
+import type { DockSlot } from './dock.js';
 import { useBarDrag } from './useBarDrag.js';
 import { usePortalHost } from './usePortalHost.js';
 import './controlBar.css';
@@ -35,7 +35,7 @@ export function ControlBar({
   startCollapsed,
   children,
 }: ControlBarProps) {
-  const container = useContext(DockContext)[edgeOf(dock)];
+  const container = useContext(DockContext)[dock];
   const barRef = useRef<HTMLDivElement>(null);
   const host = usePortalHost(container);
   const [collapsed, setCollapsed] = useState(label !== undefined && startCollapsed === true);
@@ -44,7 +44,7 @@ export function ControlBar({
   const bar = (
     <div
       ref={barRef}
-      className={`pw-control-bar pw-align-${alignOf(dock)}${offset ? ' is-dragging' : ''}${cornerCollapse && !collapsed ? ' has-corner-collapse' : ''}`}
+      className={`pw-control-bar${offset ? ' is-dragging' : ''}${cornerCollapse && !collapsed ? ' has-corner-collapse' : ''}`}
       style={offset ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined}
     >
       {onDockChange && (

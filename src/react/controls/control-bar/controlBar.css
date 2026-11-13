@@ -1,10 +1,10 @@
-/* The two rows along the edges. Bars inside sit side by side and wrap. */
+/* The two rows along the edges. Each has a left, a middle and a right zone: the bars of one zone sit together, and
+   a bar in one zone never pushes the bars of another. */
 .pw-dock {
   position: absolute;
   left: var(--pw-inset);
   right: var(--pw-inset);
   display: flex;
-  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--pw-gap);
   pointer-events: none;
@@ -17,6 +17,33 @@
 .pw-dock-bottom {
   bottom: var(--pw-inset-bottom);
   align-items: flex-end;
+}
+
+.pw-dock-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--pw-gap);
+  min-width: 0;
+}
+
+.pw-dock-bottom .pw-dock-zone {
+  align-items: flex-end;
+  align-content: flex-end;
+}
+
+/* The outer zones take the free space as margin, so the middle one sits between them */
+.pw-zone-left {
+  margin-right: auto;
+}
+
+.pw-zone-center {
+  justify-content: center;
+}
+
+.pw-zone-right {
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .pw-control-bar {
@@ -32,21 +59,6 @@
   border-radius: var(--pw-bar-radius);
   background: var(--pw-panel);
   backdrop-filter: var(--pw-panel-blur);
-}
-
-.pw-align-left {
-  order: 1;
-  margin-right: auto;
-}
-
-.pw-align-center {
-  order: 2;
-  margin-inline: auto;
-}
-
-.pw-align-right {
-  order: 3;
-  margin-left: auto;
 }
 
 .pw-control-bar.is-dragging {
