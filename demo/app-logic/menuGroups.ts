@@ -110,14 +110,14 @@ const mapGroup = ({ zoom }: MenuState, actions: MenuActions): PanelGroup => ({
     },
     {
       id: 'rotate-left',
-      label: 'Turn left',
+      label: 'Left',
       title: 'Turn the direction of time a quarter to the left',
       icon: 'turnLeft',
       onClick: () => actions.rotate('left'),
     },
     {
       id: 'rotate-right',
-      label: 'Turn right',
+      label: 'Right',
       title: 'Turn the direction of time a quarter to the right',
       icon: 'turnRight',
       onClick: () => actions.rotate('right'),
