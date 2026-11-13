@@ -431,7 +431,7 @@ These are the defaults of `PointMenu`. It only calls your callbacks, you change 
   onClose={onClose} // the menu wants to close: deselect the point
   closeAfterAction // default true, only with onClose. The path color stays open.
   // subPlacement: 'right' | 'below' | 'left' | 'above', default: the panel of a tile finds its place by itself
-  // onPlacementChange: adds a Turn tile that goes around the point: above, right, below, left, auto; keep the place in `placement`
+  // onPlacementChange: adds a Turn tile that goes around the point: above, right, below, left; keep the place in `placement`
   placement="auto" // 'below' | 'above' | 'right' | 'left'
   hide={[]} // tiles to leave out: 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove'
   // colors={PATH_PALETTE}, checkInCount: no default

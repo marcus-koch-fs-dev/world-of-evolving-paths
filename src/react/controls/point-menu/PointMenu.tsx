@@ -48,7 +48,7 @@ export type PointMenuProps = {
    * menu is under the point, up when it is over the point, and under the tiles when the menu is beside the point.
    */
   subPlacement?: SubPlacement;
-  /** The user turned the menu to another place, with the Turn tile. With it the menu has that tile. Keep the place in your app and pass it back in `placement`. It goes around the point: above, right, below, left, automatic. */
+  /** The user turned the menu to another place, with the Turn tile. With it the menu has that tile. Keep the place in your app and pass it back in `placement`. It goes around the point: above, right, below, left. */
   onPlacementChange?: (placement: MenuPlacement) => void;
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
@@ -89,7 +89,7 @@ function PointMenuBody(props: PointMenuProps) {
 
   const sub = props.subPlacement ?? subPlacementFor(placement);
   const toggle = (id: TileId) => {
-    if (id === 'turn') props.onPlacementChange?.(nextPlacement(props.placement ?? 'auto'));
+    if (id === 'turn') props.onPlacementChange?.(nextPlacement(placement));
     else setOpen((current) => (current === id ? null : id));
   };
 

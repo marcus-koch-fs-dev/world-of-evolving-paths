@@ -31,12 +31,15 @@ const ANCHORS: Record<ResolvedPlacement, (point: Position) => { left: number; to
   left: (point) => ({ left: point.x - SIDE_OFFSET, top: point.y }),
 };
 
-const PLACES_AROUND: readonly MenuPlacement[] = ['auto', 'above', 'right', 'below', 'left'];
+const PLACES_AROUND: readonly ResolvedPlacement[] = ['above', 'right', 'below', 'left'];
 
-/** The next place of the menu going around its point clockwise: above, right, below, left, then automatic again. */
-export function nextPlacement(current: MenuPlacement): MenuPlacement {
+/**
+ * The next place of the menu going around its point clockwise: above, right, below, left, above again. Give it the
+ * place the menu has now (what `auto` came to), so the turn goes on from where the user sees the menu.
+ */
+export function nextPlacement(current: ResolvedPlacement): ResolvedPlacement {
   const index = PLACES_AROUND.indexOf(current);
-  return index < 0 ? 'auto' : PLACES_AROUND[(index + 1) % PLACES_AROUND.length];
+  return PLACES_AROUND[(index + 1) % PLACES_AROUND.length];
 }
 
 /** Where the menu goes. `auto` puts it below the point and moves it above when there is no room below. */

@@ -56,15 +56,15 @@ describe('Place of the panel of a tile', () => {
 });
 
 describe('Turning the menu around its point', () => {
-  it('goes clockwise: above, right, below, left, and then back to automatic', () => {
-    expect(nextPlacement('auto')).toBe('above');
+  it('goes clockwise: above, right, below, left, and above again', () => {
     expect(nextPlacement('above')).toBe('right');
     expect(nextPlacement('right')).toBe('below');
     expect(nextPlacement('below')).toBe('left');
-    expect(nextPlacement('left')).toBe('auto');
+    expect(nextPlacement('left')).toBe('above');
   });
 
-  it('starts at automatic for a value that is not a place', () => {
-    expect(nextPlacement('sideways' as never)).toBe('auto');
+  it('goes on from the place the menu has now, also when it was automatic', () => {
+    // Automatic had put the menu below the point: the next place is left, not a jump back to the start
+    expect(nextPlacement(resolvePlacement('auto', 0, 1000))).toBe('left');
   });
 });
