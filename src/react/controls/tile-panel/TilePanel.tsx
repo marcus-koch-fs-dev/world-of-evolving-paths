@@ -1,29 +1,47 @@
-import { type ReactNode, useContext, useEffect, useState } from 'react';
+import { type CSSProperties, type ReactNode, useContext, useEffect, useState } from 'react';
 import { BarSlotContext } from '../../DockContext.js';
+import { Icon } from '../../icons/Icon.js';
+import type { IconName } from '../../icons/iconData.js';
 import { alignOf, edgeOf } from '../control-bar/dock.js';
 import './tilePanel.css';
 
 export type PanelTile = {
   id: string;
   label: string;
-  /** What the tile shows large: a character or a small element. */
-  glyph: ReactNode;
+  /** An icon of the library. A tile that is switched on shows it solid. Wins over `glyph`. */
+  icon?: IconName;
+  /** What the tile shows large when there is no `icon`: a character or a small element. */
+  glyph?: ReactNode;
   title?: string;
   /** Shown as switched on. */
   active?: boolean;
   disabled?: boolean;
   danger?: boolean;
+  /** Closes the panel after this tile was clicked, whatever `closeOnSelect` says. For a tile that opens something else. */
+  closesPanel?: boolean;
   onClick: () => void;
 };
 
-export type PanelGroup = { id: string; label: string; tiles: readonly PanelTile[] };
+export type PanelGroup = {
+  id: string;
+  label: string;
+  tiles: readonly PanelTile[];
+  /** A color (any CSS color) that tints the background of the tiles of this group a little. */
+  tint?: string;
+};
 
 export type TilePanelProps = {
   groups: readonly PanelGroup[];
   /** Name of the button that opens the panel. Default `Menu`. */
   label?: string;
-  /** What the button shows. Default `▦`. */
+  /** What the button shows. Default: the menu icon. */
   glyph?: ReactNode;
+  /** `tiles` (default) is a grid of keys, `list` is one row per tile, easier on a narrow screen. */
+  variant?: 'tiles' | 'list';
+  /** Show the group names and the names under the tiles. Default true. Without them only icons show, with the name as hover text. */
+  labels?: boolean;
+  /** Close the panel after a tile was clicked. Default false: it stays open until the button or Escape closes it. */
+  closeOnSelect?: boolean;
 };
 
 /**
@@ -31,7 +49,14 @@ export type TilePanelProps = {
  * its `ControlBar` is docked at. It stays open until the button is clicked again or Escape is pressed.
  * The app decides which tiles there are and what they do.
  */
-export function TilePanel({ groups, label = 'Menu', glyph = '▦' }: TilePanelProps) {
+export function TilePanel({
+  groups,
+  label = 'Menu',
+  glyph = <Icon name="menu" />,
+  variant = 'tiles',
+  labels = true,
+  closeOnSelect = false,
+}: TilePanelProps) {
   const slot = useContext(BarSlotContext);
   const [open, setOpen] = useState(false);
 
@@ -58,23 +83,33 @@ export function TilePanel({ groups, label = 'Menu', glyph = '▦' }: TilePanelPr
       </button>
       {open && (
         <div
-          className={`pw-tile-panel pw-tp-${edgeOf(slot) === 'top' ? 'down' : 'up'} pw-tp-${alignOf(slot) === 'right' ? 'end' : 'start'}`}
+          className={`pw-tile-panel${variant === 'list' ? ' is-list' : ''}${labels ? '' : ' is-bare'} pw-tp-${edgeOf(slot) === 'top' ? 'down' : 'up'} pw-tp-${alignOf(slot) === 'right' ? 'end' : 'start'}`}
         >
           {groups.map((group) => (
-            <section key={group.id} className="pw-tp-group">
-              <h4>{group.label}</h4>
+            <section
+              key={group.id}
+              className="pw-tp-group"
+              style={group.tint ? ({ '--pw-tp-tint': group.tint } as CSSProperties) : undefined}
+            >
+              {labels && <h4>{group.label}</h4>}
               <div className="pw-tp-tiles">
                 {group.tiles.map((tile) => (
                   <button
                     key={tile.id}
                     type="button"
                     className={`pw-tp-tile${tile.active ? ' is-on' : ''}${tile.danger ? ' is-danger' : ''}`}
-                    title={tile.title}
+                    title={tile.title ?? tile.label}
+                    aria-label={tile.label}
                     disabled={tile.disabled}
-                    onClick={tile.onClick}
+                    onClick={() => {
+                      tile.onClick();
+                      if (closeOnSelect || tile.closesPanel) setOpen(false);
+                    }}
                   >
-                    <span className="pw-tp-glyph">{tile.glyph}</span>
-                    <span className="pw-tp-label">{tile.label}</span>
+                    <span className="pw-tp-glyph">
+                      {tile.icon ? <Icon name={tile.icon} weight={tile.active ? 'fill' : 'regular'} /> : tile.glyph}
+                    </span>
+                    {labels && <span className="pw-tp-label">{tile.label}</span>}
                   </button>
                 ))}
               </div>

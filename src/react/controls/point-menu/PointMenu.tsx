@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { PATH_PALETTE, type PathInfo, type StorePoint } from '../../../core/index.js';
 import { useWorldVersion } from '../../hooks/useWorldVersion.js';
 import { usePathWorldHandle } from '../../PathWorldContext.js';
+import { closingAfterActions } from './closingAfterActions.js';
 import { MenuTiles } from './MenuTiles.js';
 import { type PanelId, panelFor } from './panels/panelFor.js';
 import { STATUS_LABELS } from './panels/StatusPanel.js';
@@ -37,6 +38,13 @@ export type PointMenuProps = {
   placement?: MenuPlacement;
   /** How many check-ins the path has. Shown under the name when given. */
   checkInCount?: number;
+  /** The menu wants to close, after an action when `closeAfterAction` is on. Deselect the point to close it. */
+  onClose?: () => void;
+  /**
+   * Close the menu after the user changed something (status, kind, date, importance, note), added a point or deleted
+   * the point. Only has an effect with `onClose`. Default true. The path color stays open: people try several.
+   */
+  closeAfterAction?: boolean;
 };
 
 const checkInLabel = (count: number) => `${count} check-in${count === 1 ? '' : 's'}`;
@@ -82,7 +90,7 @@ function PointMenuBody(props: PointMenuProps) {
       </div>
       {open && (
         <div className="pw-menu-sub">
-          {panelFor(open, { menu: props, colors: props.colors ?? PATH_PALETTE, close })}
+          {panelFor(open, { menu: closingAfterActions(props), colors: props.colors ?? PATH_PALETTE, close })}
         </div>
       )}
     </div>,

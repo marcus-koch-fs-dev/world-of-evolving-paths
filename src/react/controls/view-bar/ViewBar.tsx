@@ -1,10 +1,18 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { VIEW_LEVELS, type ViewLevel } from '../../../core/index.js';
+import { Icon } from '../../icons/Icon.js';
 import { LevelSwitch } from './LevelSwitch.js';
 import { PeriodLabel } from './PeriodLabel.js';
 import './viewBar.css';
 
+/** The two parts of the bar: the level buttons, and the period with its arrows, Today and pages. */
+export type ViewBarPart = 'levels' | 'period';
+
+const DEFAULT_PARTS: readonly ViewBarPart[] = ['levels', 'period'];
+
 export type ViewBarProps = {
+  /** Which parts to show and in which order. Default: the levels, then the period. Use it to put other controls in between. */
+  parts?: readonly ViewBarPart[];
   /** Levels to offer. Default: day, week, month, half year, year. */
   levels?: readonly { level: ViewLevel; label: string; title?: string }[];
   /** The active level, or null for the free view. */
@@ -35,6 +43,8 @@ export type ViewBarProps = {
   periodOnly?: boolean;
   /** With `periodOnly`: still show the level buttons (or dropdown). */
   levelChips?: boolean;
+  /** Show the arrows and Today around the period label. Default true. Without them only the label stays. */
+  navigation?: boolean;
   /** Puts the two arrows in front of the levels instead of around the period: `◀ ▶  levels  period  Today`. */
   arrowsFirst?: boolean;
   /** Your own control in place of the period label, for example a picker for the period. */
@@ -50,12 +60,12 @@ export function ViewBar(props: ViewBarProps) {
   const page = props.page ?? 0;
   const previous = (
     <button type="button" className="pw-button" aria-label="Previous period" onClick={props.onPrevious}>
-      ◀
+      <Icon name="previous" />
     </button>
   );
   const next = (
     <button type="button" className="pw-button" aria-label="Next period" onClick={props.onNext}>
-      ▶
+      <Icon name="next" />
     </button>
   );
   const label = props.periodSlot ?? (
@@ -67,8 +77,19 @@ export function ViewBar(props: ViewBarProps) {
     </button>
   );
 
-  return (
-    <nav className="pw-view-bar" aria-label="View">
+  const levelsPart = (!props.periodOnly || props.levelChips) && (
+    <LevelSwitch
+      levels={levels}
+      level={level}
+      freeLabel={props.freeLabel}
+      freeLast={props.freeLast}
+      compact={props.compact}
+      onChange={onLevelChange}
+    />
+  );
+
+  const periodPart = (
+    <>
       {props.arrowsFirst && level !== null && (
         <div className="pw-view-group">
           {previous}
@@ -76,21 +97,10 @@ export function ViewBar(props: ViewBarProps) {
         </div>
       )}
 
-      {(!props.periodOnly || props.levelChips) && (
-        <LevelSwitch
-          levels={levels}
-          level={level}
-          freeLabel={props.freeLabel}
-          freeLast={props.freeLast}
-          compact={props.compact}
-          onChange={onLevelChange}
-        />
-      )}
-
-      {props.afterLevels}
-
       {level !== null &&
-        (props.arrowsFirst ? (
+        (props.navigation === false ? (
+          <div className="pw-view-group">{label}</div>
+        ) : props.arrowsFirst ? (
           <div className="pw-view-group">
             {label}
             {today}
@@ -130,6 +140,21 @@ export function ViewBar(props: ViewBarProps) {
             ▼
           </button>
         </div>
+      )}
+    </>
+  );
+
+  return (
+    <nav className="pw-view-bar" aria-label="View">
+      {(props.parts ?? DEFAULT_PARTS).map((part) =>
+        part === 'levels' ? (
+          <Fragment key="levels">
+            {levelsPart}
+            {props.afterLevels}
+          </Fragment>
+        ) : (
+          <Fragment key="period">{periodPart}</Fragment>
+        ),
       )}
 
       {!props.periodOnly && props.onReroll && level !== null && (

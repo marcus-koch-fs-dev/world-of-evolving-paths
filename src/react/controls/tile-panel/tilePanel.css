@@ -1,27 +1,28 @@
-/* The panel sits at the edge of the bar (which is positioned), not at the button, so it stays on screen */
+/* The panel sits at the edge of the bar (which is positioned), not at the button, so it stays on screen.
+   See-through: the map shows behind the panel and the keys. */
 .pw-tile-panel {
   position: absolute;
   z-index: 8;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: max-content;
-  max-width: calc(100vw - 24px);
-  max-height: calc(100vh - 110px);
+  gap: 0.25rem;
+  width: min(19rem, calc(100vw - 1.5rem));
+  max-height: calc(100vh - 6.875rem);
   overflow-y: auto;
-  padding: 10px;
+  padding: 0.25rem;
   border: 1px solid var(--pw-line);
-  border-radius: 12px;
-  background: var(--pw-panel);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+  border-radius: 0.75rem;
+  background: rgb(20 22 18 / 0.28);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0.375rem 1.5rem rgb(0 0 0 / 0.4);
 }
 
 .pw-tp-down {
-  top: calc(100% + 8px);
+  top: calc(100% + 0.5rem);
 }
 
 .pw-tp-up {
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 0.5rem);
 }
 
 .pw-tp-start {
@@ -32,10 +33,16 @@
   right: 0;
 }
 
+/* The groups are set apart by a thin line */
+.pw-tp-group + .pw-tp-group {
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--pw-line);
+}
+
 .pw-tp-group h4 {
-  margin: 0 0 4px;
+  margin: 0 0 0.25rem 0.25rem;
   color: var(--pw-muted);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -43,27 +50,36 @@
 
 .pw-tp-tiles {
   display: grid;
-  grid-template-columns: repeat(4, 62px);
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+  gap: 0.25rem;
 }
 
+.pw-tile-panel.is-list .pw-tp-tiles {
+  grid-template-columns: 1fr;
+  gap: 0.125rem;
+}
+
+/* No frame around the keys, only a hint of the color of their group. An active key keeps a thin ring. */
 .pw-tp-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 50px;
-  padding: 0 2px;
-  border: 1px solid var(--pw-line);
-  border-radius: 10px;
-  background: var(--pw-field);
+  gap: 0.25rem;
+  min-height: 3rem;
+  padding: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--pw-tp-tint, transparent) 8%, transparent);
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
 
-.pw-tp-tile:hover:not(:disabled),
+.pw-tp-tile:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--pw-tp-tint, white) 20%, transparent);
+}
+
 .pw-tp-tile.is-on {
   border-color: var(--pw-lit);
 }
@@ -74,8 +90,17 @@
 }
 
 .pw-tp-glyph {
-  font-size: 18px;
+  display: flex;
+  font-size: 1.125rem;
   line-height: 1;
+}
+
+.pw-tile-panel.is-list .pw-tp-tile {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  min-height: 2rem;
+  padding: 0 0.5rem;
 }
 
 .pw-tp-tile.is-danger .pw-tp-glyph {
@@ -90,7 +115,52 @@
   overflow: hidden;
   max-width: 100%;
   color: var(--pw-muted);
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pw-tile-panel.is-list .pw-tp-label {
+  color: inherit;
+  font-size: 0.8125rem;
+}
+
+/* Symbols only: small square keys in six columns, the names come as hover text */
+.pw-tile-panel.is-bare {
+  width: max-content;
+}
+
+.pw-tile-panel.is-bare .pw-tp-tiles {
+  grid-template-columns: repeat(6, 2rem);
+}
+
+.pw-tile-panel.is-bare .pw-tp-tile {
+  min-height: 2rem;
+  padding: 0;
+}
+
+.pw-tile-panel.is-bare .pw-tp-glyph {
+  font-size: 1rem;
+}
+
+/* On a phone or a touch screen: bigger keys, four per row, that fill the whole width, so a finger hits the right one */
+@media (pointer: coarse), (max-width: 37.5rem) {
+  /* Docked to the bar at the top (or bottom), over the whole width of the screen */
+  .pw-tile-panel,
+  .pw-tile-panel.is-bare {
+    width: calc(100vw - 1rem);
+    max-height: 70vh;
+  }
+
+  .pw-tile-panel.is-bare .pw-tp-tiles {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .pw-tile-panel.is-bare .pw-tp-tile {
+    min-height: 3rem;
+  }
+
+  .pw-tile-panel.is-bare .pw-tp-glyph {
+    font-size: 1.25rem;
+  }
 }

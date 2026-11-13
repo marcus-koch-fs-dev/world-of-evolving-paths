@@ -3,7 +3,7 @@
   --pw-lit: #d4f25a;
   --pw-ink: #edefe6;
   --pw-muted: #8a8f80;
-  --pw-line: #3a3e33;
+  --pw-line: rgb(237 239 230 / 0.14);
   --pw-panel: rgb(20 22 18 / 0.94);
   --pw-field: #1b1d17;
   --pw-danger: #f0a59c;
@@ -14,7 +14,7 @@
   background: var(--pw-bg);
   color: var(--pw-ink);
   font-family: system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color-scheme: dark;
 }
 
@@ -41,11 +41,15 @@
 }
 
 .pw-button {
-  min-width: 32px;
-  height: 30px;
-  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 1.625rem;
+  height: 1.625rem;
+  padding: 0 0.4375rem;
   border: 1px solid var(--pw-line);
-  border-radius: 8px;
+  border-radius: 0.375rem;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -64,4 +68,12 @@
 .pw-button.is-active {
   border-color: var(--pw-lit);
   color: var(--pw-lit);
+}
+
+/* Fingers need bigger targets than a mouse */
+@media (pointer: coarse) {
+  .pw-button {
+    min-width: 2.75rem;
+    height: 2.75rem;
+  }
 }

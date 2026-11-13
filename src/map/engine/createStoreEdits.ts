@@ -8,7 +8,7 @@ import type { WorldModel } from '../state/createWorldModel.js';
 type Dependencies = { options(): PathWorldOptions; model: WorldModel };
 
 export type StoreEdits = {
-  /** Can the user move points, arrows and whole paths now? In a period of a level, or in the overview when `freeMove` is on. */
+  /** Can the user move points, arrows and whole paths now? In a period of a level when `editable`, or in the overview when `freeMove` is on. */
   canMove(): boolean;
   /** A point came to rest at a position (in the layout, before it was turned for the screen). */
   movePoint(id: string, position: Position): void;
@@ -25,8 +25,9 @@ export type StoreEdits = {
 export function createStoreEdits({ options, model }: Dependencies): StoreEdits {
   const canMove = () => {
     const current = options();
-    const allowed = current.editable !== false && current.onStoreChange !== undefined && model.store() !== null;
-    return allowed && (model.level() !== null || current.freeMove === true);
+    if (current.onStoreChange === undefined || model.store() === null) return false;
+    // The free arrangement of the overview is the user's own and does not need `editable`
+    return model.level() === null ? current.freeMove === true : current.editable !== false;
   };
   const lanes = () => {
     const world = model.world();

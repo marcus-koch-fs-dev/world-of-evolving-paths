@@ -32,4 +32,37 @@ describe('ViewBar', () => {
       expect(html).not.toContain('type="date"');
     });
   });
+
+  describe('with parts', () => {
+    it('shows only the period when asked, without the level buttons', () => {
+      const html = render({ parts: ['period'], onToday: () => undefined });
+
+      expect(html).toContain('Today');
+      expect(html).not.toContain('Week');
+    });
+
+    it('shows the parts in the order given', () => {
+      const html = render({ parts: ['period', 'levels'] });
+
+      expect(html.indexOf('Today')).toBeLessThan(html.indexOf('Week'));
+    });
+  });
+
+  describe('without navigation', () => {
+    it('keeps the period label and leaves out the arrows and Today', () => {
+      const html = render({ navigation: false });
+
+      expect(html).toContain('CW 45');
+      expect(html).not.toContain('Previous period');
+      expect(html).not.toContain('Next period');
+      expect(html).not.toContain('Today');
+    });
+
+    it('shows them by default', () => {
+      const html = render();
+
+      expect(html).toContain('Previous period');
+      expect(html).toContain('Today');
+    });
+  });
 });

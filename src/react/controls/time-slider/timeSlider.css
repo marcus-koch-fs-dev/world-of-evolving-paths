@@ -2,31 +2,76 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   min-width: 0;
 }
 
 .pw-time-slider input[type="range"] {
-  width: 260px;
+  /* A calm blue, not the bright one the browser picks */
+  accent-color: var(--pw-slider, #2c4d80);
+  width: 16.25rem;
   max-width: 100%;
   min-width: 0;
 }
 
 .pw-time-label {
-  min-width: 84px;
+  min-width: 5.25rem;
   text-align: center;
   color: var(--pw-muted);
 }
 
 .pw-speeds {
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
 .pw-speeds .pw-button {
-  min-width: 36px;
-  padding: 0 6px;
+  min-width: 2.25rem;
+  padding: 0 0.375rem;
+}
+
+/* On a phone: two rows. The slider over the whole width, below it play, the date, the speeds and Now. */
+@media (pointer: coarse), (max-width: 37.5rem) {
+  .pw-time-slider {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: 1.5rem auto;
+    align-items: center;
+    gap: 0.375rem 0;
+    width: min(26rem, calc(100vw - 5.5rem));
+  }
+
+  .pw-time-slider > * {
+    grid-row: 2;
+  }
+
+  .pw-time-slider input[type="range"] {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0;
+  }
+
+  .pw-time-label {
+    min-width: 0;
+    margin: 0 0.375rem;
+    text-align: center;
+  }
+
+  .pw-speeds + .pw-button {
+    margin-left: 0.375rem;
+  }
+
+  /* Room for the collapse button of the bar in the top right corner */
+  .has-corner-collapse .pw-time-slider input[type="range"] {
+    width: calc(100% - 1.875rem);
+  }
+
+  .pw-speeds .pw-button {
+    min-width: 2rem;
+    padding: 0 0.25rem;
+  }
 }

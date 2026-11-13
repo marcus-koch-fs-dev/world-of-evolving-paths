@@ -1,21 +1,21 @@
 /* The two rows along the edges. Bars inside sit side by side and wrap. */
 .pw-dock {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: 0.5rem;
+  right: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 10px;
+  gap: 0.375rem;
   pointer-events: none;
 }
 
 .pw-dock-top {
-  top: 12px;
+  top: 0.5rem;
 }
 
 .pw-dock-bottom {
-  bottom: 16px;
+  bottom: 0.5rem;
   align-items: flex-end;
 }
 
@@ -25,11 +25,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 0.375rem;
   max-width: 100%;
-  padding: 6px 8px;
+  padding: 0.125rem;
   border: 1px solid var(--pw-line);
-  border-radius: 12px;
+  border-radius: 0.5rem;
   background: var(--pw-panel);
 }
 
@@ -52,7 +52,7 @@
   position: relative;
   z-index: 10;
   opacity: 0.85;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+  box-shadow: 0 0.375rem 1.5rem rgb(0 0 0 / 0.4);
 }
 
 .pw-grip {
@@ -60,7 +60,7 @@
   border: 0;
   background: none;
   color: var(--pw-muted);
-  font-size: 16px;
+  font-size: 0.875rem;
   line-height: 1;
   cursor: grab;
   touch-action: none;
@@ -71,10 +71,24 @@
 }
 
 .pw-bar-label {
+  display: flex;
+  align-items: center;
   color: var(--pw-muted);
 }
 
 .pw-collapse {
-  min-width: 26px;
-  padding: 0 6px;
+  min-width: 1.375rem;
+  padding: 0 0.25rem;
+}
+
+/* On a phone the collapse button of a bar can sit small in its top right corner, so it takes no row of its own */
+@media (pointer: coarse), (max-width: 37.5rem) {
+  .pw-control-bar.has-corner-collapse .pw-collapse {
+    position: absolute;
+    top: 0.125rem;
+    right: 0.125rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+  }
 }
