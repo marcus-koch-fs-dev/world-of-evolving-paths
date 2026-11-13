@@ -14,7 +14,8 @@ export function PhoneFrame({ onBack }: { onBack: () => void }) {
       <div className="demo-phone-buttons">
         <button
           type="button"
-          className="demo-phone-button"
+          className={`demo-phone-button${landscape ? ' is-on' : ''}`}
+          aria-pressed={landscape}
           aria-label="Turn the phone"
           title={landscape ? 'Turn to portrait' : 'Turn to landscape'}
           onClick={() => setLandscape((on) => !on)}
