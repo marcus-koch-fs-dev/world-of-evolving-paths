@@ -1,6 +1,6 @@
 {
   "name": "world-of-evolving-paths",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Evolving, date-based paths on a pannable, zoomable canvas.",
   "type": "module",
   "license": "MIT",
