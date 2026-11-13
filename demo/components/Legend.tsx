@@ -1,5 +1,5 @@
 import { symbolSize, type ViewLevel } from 'world-of-evolving-paths';
-import { ControlBar, type DockSlot } from 'world-of-evolving-paths/react';
+import { ControlBar, type DockSlot, Icon } from 'world-of-evolving-paths/react';
 import { widestLevelShowing } from '../app-logic/levels';
 
 // From the most to the least important, so the widest period is at the top and the finest at the bottom
@@ -19,7 +19,7 @@ type Props = {
 export function Legend({ dock, levels, minImportance, startCollapsed }: Props) {
   const offered = levels.map((option) => option.level);
   return (
-    <ControlBar dock={dock} label="Legend" startCollapsed={startCollapsed}>
+    <ControlBar dock={dock} label="Legend" collapsedIcon={<Icon name="info" />} startCollapsed={startCollapsed}>
       <div className="demo-legend">
         <div className="demo-legend-title">Importance · visible from period</div>
         {IMPORTANCES.map((importance) => {

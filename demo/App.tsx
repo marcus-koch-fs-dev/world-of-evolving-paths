@@ -1,15 +1,20 @@
 import { useMemo, useState } from 'react';
 import { todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import { BackgroundPanel, PathWorld, SidePanel, Toast } from 'world-of-evolving-paths/react';
+import { closesMenu } from './app-logic/controls';
 import { rememberColor } from './app-logic/customColors';
+import { isEmbedded, phoneOrientation } from './app-logic/device';
 import { minPrioOf, steppedYears } from './app-logic/levels';
-import type { DemoMode } from './app-logic/menuGroups';
+import type { DemoMode, SettingsPanelId } from './app-logic/menuGroups';
+import { scalePercent } from './app-logic/uiSize';
 import { DemoLineMenu } from './components/DemoLineMenu';
+import { EditorSettings } from './components/EditorSettings';
 import { Legend } from './components/Legend';
+import { type DeviceToggle, ModeToggle } from './components/ModeToggle';
 import { SelectedPointControls } from './components/SelectedPointControls';
-import { SettingsPanel } from './components/SettingsPanel';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
+import { ViewSettings } from './components/ViewSettings';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoState } from './hooks/useDemoState';
 import { useDemoView } from './hooks/useDemoView';
@@ -18,27 +23,39 @@ import { useMapEvents } from './hooks/useMapEvents';
 import { useNotice } from './hooks/useNotice';
 import { usePointMenuActions } from './hooks/usePointMenuActions';
 import { useSelection } from './hooks/useSelection';
+import { useUiScale } from './hooks/useUiScale';
 import { useUndoShortcuts } from './hooks/useUndoShortcuts';
 import { useViewNavigation } from './hooks/useViewNavigation';
 import { useViewShortcuts } from './hooks/useViewShortcuts';
+import { useWindowSize } from './hooks/useWindowSize';
 
 // The distance between the grid points that points snap to when "Snap to grid" is on, in world units
 const SNAP_STEP = 50;
 // On a phone the time bar starts collapsed, so it leaves room for the map
 const SMALL_SCREEN = window.matchMedia('(max-width: 600px)').matches;
+// The phone shows the finished map: building is done on the desktop
+const EMBEDDED = isEmbedded(window.location.search);
+const PHONE = SMALL_SCREEN || EMBEDDED;
+// A touch screen has no hover, so a menu that stays open gets in the way
+const TOUCH_SCREEN = window.matchMedia('(pointer: coarse)').matches;
 
 /** The demo app: holds all data and state and wires the map and its controls to it. */
-export function App() {
+export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   const today = useMemo(() => todayLocal(), []);
   const notice = useNotice();
+  const windowSize = useWindowSize();
   const { state, dispatch, undoRedo } = useDemoState(today, notice.clear);
   const navigation = useViewNavigation(today);
   const settings = useDemoSettings();
   const { values, docks } = settings;
-  const [mode, setMode] = useState<DemoMode>('edit');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [freeMove, setFreeMove] = useState(false);
+  useUiScale(scalePercent(values.uiSize, values.uiScale));
+  const [mode, setMode] = useState<DemoMode>(PHONE ? 'map' : 'edit');
+  const [openPanel, setOpenPanel] = useState<SettingsPanelId | null>(null);
+  // In the overview points and paths can be moved by hand, by anyone, once the lock is open
+  const [locked, setLocked] = useState(true);
   const editing = mode === 'edit';
+  // The editor settings belong to the editor: in map mode they are gone
+  const panel = openPanel === 'editor' && !editing ? null : openPanel;
   // The settings slide in from the side the menu bar is not on
   const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
   useUndoShortcuts({ enabled: editing, undo: undoRedo.onUndo, redo: undoRedo.onRedo });
@@ -98,13 +115,14 @@ export function App() {
         editable={editing}
         wavy={values.wavy}
         pointsLocked={values.pointsLocked}
-        freeMove={freeMove}
+        freeMove={!locked}
         onStoreChange={(_next, { changed }) => dispatch({ type: 'setLayout', changed })}
         snap={values.snap ? SNAP_STEP : undefined}
         animate={values.animate}
         locale={values.locale}
         background={settings.background}
-        orientation={values.orientation}
+        // The phone preview decides by itself, whatever was chosen for the desktop
+        orientation={EMBEDDED ? phoneOrientation(windowSize) : values.orientation}
         onSelect={(id) => {
           lineSelection.clear();
           selection.select(id);
@@ -129,24 +147,33 @@ export function App() {
           onPathsPerPageChange={(pathsPerPage) => settings.change({ pathsPerPage })}
           locale={values.locale}
           levels={offeredLevels}
+          barItems={values.barItems}
+          closeMenuOnSelect={closesMenu(values.menuClose, TOUCH_SCREEN)}
+          locked={locked}
+          onLockToggle={() => setLocked((on) => !on)}
           onReroll={() => {
             if (level !== null) dispatch({ type: 'resetView', level, pointIds: [...visibleIds], arrowKeys });
           }}
-          freeMove={freeMove}
-          onFreeMoveToggle={() => setFreeMove((on) => !on)}
           onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
-          onModeChange={setMode}
-          settingsOpen={settingsOpen}
-          onSettingsToggle={() => setSettingsOpen((open) => !open)}
-          undoRedo={editing ? undoRedo : undefined}
+          panel={panel}
+          onPanelToggle={(id) => setOpenPanel((open) => (open === id ? null : id))}
+          undoRedo={undoRedo}
         />
 
-        {editing && settingsOpen && (
-          <SidePanel side={settingsSide} title="Settings" onClose={() => setSettingsOpen(false)}>
-            <SettingsPanel values={values} onChange={changeSettings}>
+        {!PHONE && <ModeToggle mode={mode} onModeChange={setMode} deviceToggle={deviceToggle} />}
+
+        {panel === 'view' && (
+          <SidePanel side={settingsSide} title="View settings" onClose={() => setOpenPanel(null)}>
+            <ViewSettings values={values} onChange={changeSettings}>
               <BackgroundPanel value={settings.background} onChange={settings.setBackground} />
-            </SettingsPanel>
+            </ViewSettings>
+          </SidePanel>
+        )}
+
+        {panel === 'editor' && (
+          <SidePanel side={settingsSide} title="Editor settings" onClose={() => setOpenPanel(null)}>
+            <EditorSettings values={values} onChange={changeSettings} />
           </SidePanel>
         )}
 
@@ -187,6 +214,8 @@ export function App() {
             onChanged={pointActions.hintIfHidden}
             onAddNext={(input) => pointActions.addNext(selection.point?.id ?? '', input)}
             onDeleted={() => selection.select(null)}
+            closeAfterAction={values.pointMenuCloses}
+            onClose={() => selection.select(null)}
           />
         )}
       </PathWorld>

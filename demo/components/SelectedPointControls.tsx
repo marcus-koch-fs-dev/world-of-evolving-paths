@@ -21,6 +21,9 @@ type Props = {
   onChanged: (patch: PointPatch) => void;
   onAddNext: Parameters<typeof PointMenu>[0]['onAddNext'];
   onDeleted: () => void;
+  /** The point menu wants to close: deselect the point. */
+  onClose: () => void;
+  closeAfterAction: boolean;
 };
 
 /** What the demo offers for the selected point: a check-in button for its path, and the point menu. */
@@ -38,6 +41,8 @@ export function SelectedPointControls({
   onChanged,
   onAddNext,
   onDeleted,
+  onClose,
+  closeAfterAction,
 }: Props) {
   return (
     <>
@@ -48,7 +53,7 @@ export function SelectedPointControls({
           disabled={checkedInToday}
           title="Count today for this path. It gets stronger the more days you check in."
           onClick={() => {
-            onNotice(checkInMessage(state.checkIns, path, today));
+            onNotice(checkInMessage(path, today));
             dispatch({ type: 'checkIn', pathId: path.id, date: today });
           }}
         >
@@ -61,7 +66,7 @@ export function SelectedPointControls({
         path={path}
         isFork={isFork}
         canComplete={canComplete(state.store, point.id)}
-        checkInCount={state.checkIns.filter((checkIn) => checkIn.pathId === path.id).length}
+        checkInCount={path.checkIns?.length ?? 0}
         customColors={customColors}
         onCustomColor={onCustomColor}
         onUpdate={(patch) => {
@@ -69,6 +74,8 @@ export function SelectedPointControls({
           onChanged(patch);
         }}
         onAddNext={onAddNext}
+        onClose={onClose}
+        closeAfterAction={closeAfterAction}
         onPathColor={(color) => dispatch({ type: 'pathColor', pathId: path.id, color })}
         onDelete={() => {
           dispatch({ type: 'delete', id: point.id });

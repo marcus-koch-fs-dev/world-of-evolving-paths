@@ -40,7 +40,7 @@ export function useDemoView(state: DemoState, navigation: ViewNavigation, today:
   const travel = useTimeTravel({ view, today, range });
 
   const asOf = travel.day === null ? undefined : fromDay(travel.day);
-  const store = useMemo(() => withLook(state.store, state.checkIns, asOf), [state.store, state.checkIns, asOf]);
+  const store = useMemo(() => withLook(state.store, asOf), [state.store, asOf]);
 
   // The paths that have something in this view, a few of them on each page
   const pages = useMemo(

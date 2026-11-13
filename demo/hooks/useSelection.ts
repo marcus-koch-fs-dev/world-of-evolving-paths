@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { indexPoints } from 'world-of-evolving-paths';
-import { hasCheckedIn } from '../app-logic/checkIn';
+import { hasCheckedIn, indexPoints } from 'world-of-evolving-paths';
 import type { DemoState } from '../app-logic/state';
 
 /**
@@ -24,7 +23,7 @@ export function useSelection(state: DemoState, visibleIds: ReadonlySet<string>, 
     path,
     /** Does a branch of another line leave from the selected point? */
     isFork: info !== undefined && forkPoints.has(info.point.id),
-    checkedInToday: path !== undefined && hasCheckedIn(state.checkIns, path.id, today),
+    checkedInToday: path !== undefined && hasCheckedIn(path, today),
   };
 }
 

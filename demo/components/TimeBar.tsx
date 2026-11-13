@@ -1,4 +1,4 @@
-import { ControlBar, type DockSlot, TimeSlider } from 'world-of-evolving-paths/react';
+import { ControlBar, type DockSlot, Icon, TimeSlider } from 'world-of-evolving-paths/react';
 import { PLAY_SPEEDS, type TimeTravel } from '../hooks/useTimeTravel';
 
 type Props = {
@@ -15,7 +15,14 @@ type Props = {
 /** The bar with the time slider: move the map's "today" through the days of the view, or play through them. */
 export function TimeBar({ dock, onDockChange, range, travel, locale, startCollapsed }: Props) {
   return (
-    <ControlBar dock={dock} onDockChange={onDockChange} label="Time" startCollapsed={startCollapsed}>
+    <ControlBar
+      dock={dock}
+      onDockChange={onDockChange}
+      label="Time"
+      collapsedIcon={<Icon name="time" />}
+      cornerCollapse
+      startCollapsed={startCollapsed}
+    >
       <TimeSlider
         start={range.start}
         end={range.end}

@@ -7,7 +7,10 @@ import {
   type ViewLevel,
 } from 'world-of-evolving-paths';
 import type { DockSlot } from 'world-of-evolving-paths/react';
+import { BAR_PRESETS, type BarItem, barItemsFrom, type MenuClose } from '../app-logic/controls';
+import { isEmbedded, profileOf, settingKey } from '../app-logic/device';
 import { DEFAULT_LEVELS } from '../app-logic/levels';
+import type { UiSize } from '../app-logic/uiSize';
 import { useStoredState } from './useStoredState';
 
 /** Where the user docked the two bars. */
@@ -23,6 +26,10 @@ const DEFAULT_BACKGROUND: BackgroundOptions = {
   intensity: 0.5,
 };
 const FALLBACK_LOCALE = 'en-GB';
+// On a phone the bar starts with only the menu, there is no room for more
+const PROFILE = profileOf(isEmbedded(window.location.search), window.matchMedia('(max-width: 600px)').matches);
+const key = (name: string) => settingKey(PROFILE, name);
+const DEFAULT_BAR_ITEMS: readonly BarItem[] = PROFILE === 'mobile' ? BAR_PRESETS.tiles : BAR_PRESETS.bar;
 
 /** The settings the user can change in the settings panel. */
 export type SettingsValues = {
@@ -37,6 +44,15 @@ export type SettingsValues = {
   locale: string;
   /** How many paths one page shows, in every view. */
   pathsPerPage: number;
+  /** How big the controls are, and the number of percent when it is `custom`. */
+  uiSize: UiSize;
+  uiScale: number;
+  /** The controls that sit in the bar. All of them are also tiles in the menu. */
+  barItems: BarItem[];
+  /** Whether the menu closes after a tile was clicked. */
+  menuClose: MenuClose;
+  /** The point menu closes after the user changed something. */
+  pointMenuCloses: boolean;
 };
 
 // An older version of the demo could store an image in the background settings. It is dropped, it can be megabytes.
@@ -57,17 +73,22 @@ export function useDemoSettings() {
   const [pointsLocked, setPointsLocked] = useState(false);
   const [snap, setSnap] = useState(false);
   const [animate, setAnimate] = useState(true);
-  const [levels, setLevels] = useStoredState<ViewLevel[]>('wep-demo:levels-v2', DEFAULT_LEVELS, onlyKnownLevels);
-  const [orientation, setOrientation] = useStoredState<Orientation>('wep-demo:orientation', 'auto');
+  const [levels, setLevels] = useStoredState<ViewLevel[]>(key('levels-v2'), DEFAULT_LEVELS, onlyKnownLevels);
+  const [orientation, setOrientation] = useStoredState<Orientation>(key('orientation'), 'auto');
   const [storedLocale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || FALLBACK_LOCALE);
   const [background, setBackground] = useStoredState<BackgroundOptions>(
-    'wep-demo:background',
+    key('background'),
     DEFAULT_BACKGROUND,
     withoutImage,
   );
   const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
-  const [docks, setDocks] = useStoredState<Docks>('wep-demo:docks', DEFAULT_DOCKS);
-  const [pathsPerPage, setPathsPerPage] = useStoredState<number>('wep-demo:paths-per-page', 2);
+  const [docks, setDocks] = useStoredState<Docks>(key('docks'), DEFAULT_DOCKS);
+  const [pathsPerPage, setPathsPerPage] = useStoredState<number>(key('paths-per-page'), 2);
+  const [uiSize, setUiSize] = useStoredState<UiSize>(key('ui-size'), 'regular');
+  const [uiScale, setUiScale] = useStoredState<number>(key('ui-scale'), 100);
+  const [barItems, setBarItems] = useStoredState<BarItem[]>(key('bar-items'), [...DEFAULT_BAR_ITEMS], barItemsFrom);
+  const [menuClose, setMenuClose] = useStoredState<MenuClose>(key('menu-close'), 'auto');
+  const [pointMenuCloses, setPointMenuCloses] = useStoredState<boolean>(key('point-menu-closes'), true);
 
   const values: SettingsValues = {
     wavy,
@@ -78,6 +99,11 @@ export function useDemoSettings() {
     levels,
     locale: isValidLocale(storedLocale) ? storedLocale : FALLBACK_LOCALE,
     pathsPerPage,
+    uiSize,
+    uiScale,
+    barItems,
+    menuClose,
+    pointMenuCloses,
   };
 
   /** Applies the changed settings; each one goes to where it is kept. */
@@ -90,6 +116,11 @@ export function useDemoSettings() {
     if (patch.levels !== undefined) setLevels(patch.levels);
     if (patch.locale !== undefined) setLocale(patch.locale);
     if (patch.pathsPerPage !== undefined) setPathsPerPage(patch.pathsPerPage);
+    if (patch.uiSize !== undefined) setUiSize(patch.uiSize);
+    if (patch.uiScale !== undefined) setUiScale(patch.uiScale);
+    if (patch.barItems !== undefined) setBarItems(patch.barItems);
+    if (patch.menuClose !== undefined) setMenuClose(patch.menuClose);
+    if (patch.pointMenuCloses !== undefined) setPointMenuCloses(patch.pointMenuCloses);
   };
 
   return { values, change, background, setBackground, customColors, setCustomColors, docks, setDocks };
