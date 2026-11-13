@@ -109,7 +109,10 @@
 /* The places a bar can be dropped at, shown while a bar is dragged: a strip at each edge, split in three */
 .pw-drop-zones {
   position: absolute;
-  inset: var(--pw-inset);
+  top: var(--pw-inset);
+  right: var(--pw-inset);
+  bottom: var(--pw-inset-bottom);
+  left: var(--pw-inset);
   display: grid;
   grid-template: 4.5rem 1fr 4.5rem / repeat(3, 1fr);
   gap: var(--pw-gap);

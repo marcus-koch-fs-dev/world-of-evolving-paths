@@ -86,7 +86,7 @@ export function TilePanel({
       <button
         type="button"
         className={`pw-button pw-tile-panel-button${open ? ' is-active' : ''}`}
-        aria-label={badge ? `${label}, ${badge} open` : label}
+        aria-label={badge ? `${label}, ${badge}` : label}
         aria-expanded={open}
         title={label}
         onClick={() => setOpen((current) => !current)}

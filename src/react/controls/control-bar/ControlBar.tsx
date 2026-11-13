@@ -40,7 +40,7 @@ export function ControlBar({
   const barRef = useRef<HTMLDivElement>(null);
   const host = usePortalHost(container);
   const [collapsed, setCollapsed] = useState(label !== undefined && startCollapsed === true);
-  const { offset, target, handlers } = useBarDrag(barRef, dock, onDockChange);
+  const { offset, target, area, handlers } = useBarDrag(barRef, dock, onDockChange);
 
   const bar = (
     <div
@@ -77,7 +77,6 @@ export function ControlBar({
 
   const placed = <BarSlotContext.Provider value={dock}>{bar}</BarSlotContext.Provider>;
   // While the bar is dragged, the places it can go to show on the map
-  const area = target ? barRef.current?.closest('.pw-controls') : null;
   return (
     <>
       {container ? createPortal(placed, host) : placed}

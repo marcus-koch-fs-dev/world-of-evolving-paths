@@ -1,7 +1,7 @@
 import { type PointerEvent, type RefObject, useState } from 'react';
 import { type DockSlot, slotAt } from './dock.js';
 
-type Drag = { startX: number; startY: number; x: number; y: number; target: DockSlot };
+type Drag = { startX: number; startY: number; x: number; y: number; target: DockSlot; area: Element | null };
 
 type Handlers = {
   onPointerDown(event: PointerEvent<HTMLButtonElement>): void;
@@ -18,7 +18,13 @@ export function useBarDrag(
   barRef: RefObject<HTMLElement | null>,
   dock: DockSlot,
   onDockChange: ((dock: DockSlot) => void) | undefined,
-): { offset: { x: number; y: number } | null; target: DockSlot | null; handlers: Handlers } {
+): {
+  offset: { x: number; y: number } | null;
+  target: DockSlot | null;
+  /** The area the bars are docked in, while a bar is dragged. */
+  area: Element | null;
+  handlers: Handlers;
+} {
   const [drag, setDrag] = useState<Drag | null>(null);
 
   // The place nearest to the pointer, in the area the bars are docked in
@@ -31,7 +37,14 @@ export function useBarDrag(
     onPointerDown(event) {
       if (event.button !== 0) return;
       event.currentTarget.setPointerCapture(event.pointerId);
-      setDrag({ startX: event.clientX, startY: event.clientY, x: 0, y: 0, target: dock });
+      setDrag({
+        startX: event.clientX,
+        startY: event.clientY,
+        x: 0,
+        y: 0,
+        target: dock,
+        area: barRef.current?.closest('.pw-controls') ?? null,
+      });
     },
     onPointerMove(event) {
       setDrag((current) =>
@@ -53,5 +66,10 @@ export function useBarDrag(
     onPointerCancel: () => setDrag(null),
   };
 
-  return { offset: drag ? { x: drag.x, y: drag.y } : null, target: drag?.target ?? null, handlers };
+  return {
+    offset: drag ? { x: drag.x, y: drag.y } : null,
+    target: drag?.target ?? null,
+    area: drag?.area ?? null,
+    handlers,
+  };
 }

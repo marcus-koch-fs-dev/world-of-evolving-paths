@@ -19,10 +19,10 @@ describe('Tile panel', () => {
     expect(renderToStaticMarkup(<TilePanel groups={groups} label="Tools" glyph="+" />)).toContain('aria-label="Tools"');
   });
 
-  it('shows a count on the button, and says it in the name', () => {
+  it('shows a count on the button, and adds it to the name', () => {
     const html = renderToStaticMarkup(<TilePanel groups={groups} label="Check in" badge={2} />);
 
-    expect(html).toContain('aria-label="Check in, 2 open"');
+    expect(html).toContain('aria-label="Check in, 2"');
     expect(html).toContain('pw-tp-badge');
   });
 
