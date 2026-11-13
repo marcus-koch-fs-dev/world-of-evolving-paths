@@ -1,4 +1,4 @@
-import { checkIn, type Level, type Store, type StorePath } from 'world-of-evolving-paths';
+import { checkIn, type Level, type Store, type StorePath, undoCheckIn } from 'world-of-evolving-paths';
 import type { NextPointInput, PointPatch } from 'world-of-evolving-paths/react';
 import { pointActions } from './pointActions';
 import { storeActions } from './storeActions';
@@ -21,7 +21,9 @@ export type DemoAction =
   | { type: 'delete'; id: string }
   // The heights the user set in a view are forgotten: points and arrows fall back to their defaults
   | { type: 'resetView'; level: Level; pointIds: readonly string[]; arrowKeys: readonly string[] }
-  | { type: 'checkIn'; pathId: string; date: string };
+  | { type: 'checkIn'; pathId: string; date: string }
+  // A tap by mistake: the check-in of that day is taken back
+  | { type: 'undoCheckIn'; pathId: string; date: string };
 
 /** The state the demo starts with. */
 export function initialState(store: Store): DemoState {
@@ -37,11 +39,20 @@ function checkInAction(state: DemoState, { pathId, date }: Extract<DemoAction, {
   return store === state.store ? state : { ...state, store };
 }
 
+/** A check-in is taken back. A day without one changes nothing. */
+function undoCheckInAction(
+  state: DemoState,
+  { pathId, date }: Extract<DemoAction, { type: 'undoCheckIn' }>,
+): DemoState {
+  const store = undoCheckIn(state.store, pathId, date);
+  return store === state.store ? state : { ...state, store };
+}
+
 type Handlers = {
   [K in DemoAction['type']]: (state: DemoState, action: Extract<DemoAction, { type: K }>) => DemoState;
 };
 
-const HANDLERS: Handlers = { ...storeActions, ...pointActions, checkIn: checkInAction };
+const HANDLERS: Handlers = { ...storeActions, ...pointActions, checkIn: checkInAction, undoCheckIn: undoCheckInAction };
 
 /** The app's rules for how its data changes. Pure, so it is easy to test. */
 export function reduce(state: DemoState, action: DemoAction): DemoState {

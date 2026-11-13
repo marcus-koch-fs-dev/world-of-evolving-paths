@@ -7,7 +7,7 @@ export type CheckInProps = {
   onCheckIn: (pathId: string) => void;
 };
 
-/** A button with the paths as a list. One tap on a path checks it in today. The count shows how many are still open. */
+/** A button with the paths as a list. One tap on a path checks it in today, another takes it back. The count shows how many are still open. */
 export function CheckInButton({ paths, today, onCheckIn }: CheckInProps) {
   const rows = paths.map((path) => ({ path, done: hasCheckedIn(path, today) }));
   const open = rows.filter((row) => !row.done).length;
@@ -19,9 +19,8 @@ export function CheckInButton({ paths, today, onCheckIn }: CheckInProps) {
         id: path.id,
         label: done ? `${path.name} · done` : path.name,
         glyph: <span className="demo-path-dot" style={{ background: path.color }} />,
-        title: done ? `${path.name}: checked in today` : `Check in on ${path.name}`,
+        title: done ? `${path.name}: checked in today. Tap to take it back.` : `Check in on ${path.name}`,
         active: done,
-        disabled: done,
         onClick: () => onCheckIn(path.id),
       })),
     },

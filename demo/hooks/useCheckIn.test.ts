@@ -4,6 +4,7 @@ import { useCheckIn } from './useCheckIn';
 
 const TODAY = '2026-11-10';
 const gym: StorePath = { id: 'gym', name: 'Gym', color: '#3a86ff', branches: [], checkIns: [] };
+const gymToday: StorePath = { ...gym, checkIns: [TODAY] };
 
 describe('useCheckIn', () => {
   describe('when a path is tapped', () => {
@@ -16,6 +17,18 @@ describe('useCheckIn', () => {
       expect(dispatch).toHaveBeenCalledWith({ type: 'checkIn', pathId: 'gym', date: TODAY });
       expect(onNotice).toHaveBeenCalledTimes(1);
       expect(onNotice.mock.calls[0][0]).toContain('Gym');
+    });
+  });
+
+  describe('when the path is already checked in today', () => {
+    it('takes the check-in back', () => {
+      const dispatch = vi.fn();
+      const onNotice = vi.fn();
+
+      useCheckIn([gymToday], TODAY, dispatch, onNotice).onCheckIn('gym');
+
+      expect(dispatch).toHaveBeenCalledWith({ type: 'undoCheckIn', pathId: 'gym', date: TODAY });
+      expect(onNotice).toHaveBeenCalledWith('Gym: check-in taken back.');
     });
   });
 
