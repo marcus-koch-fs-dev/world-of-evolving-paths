@@ -1,8 +1,8 @@
 /* In the middle of the page, a little see-through, so the map can still be felt behind it */
 .pw-dialog {
   flex-direction: column;
-  width: min(46rem, calc(100vw - 2rem));
-  height: min(36rem, calc(100vh - 2rem));
+  width: min(var(--pw-dialog-w, 44rem), calc(100vw - 2rem));
+  height: min(var(--pw-dialog-h, 34rem), calc(100vh - 2rem));
   max-width: none;
   max-height: none;
   margin: auto;

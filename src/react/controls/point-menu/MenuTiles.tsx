@@ -30,6 +30,8 @@ export function MenuTiles({ tiles, open, pathColor, onToggle }: Props) {
                   key={tile.id}
                   type="button"
                   className={`pw-tile${open === tile.id ? ' is-open' : ''}${tile.id === 'remove' ? ' is-danger' : ''}`}
+                  title={tile.label}
+                  aria-label={tile.label}
                   onClick={() => onToggle(tile.id)}
                 >
                   <span className="pw-glyph" style={tile.id === 'color' ? { color: pathColor } : undefined}>

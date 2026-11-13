@@ -5,9 +5,9 @@
   transform-origin: 0 0;
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: var(--pw-gap);
   color: var(--pw-ink);
-  font-size: 0.75rem;
+  font-size: var(--pw-font);
   line-height: 1.3;
   cursor: default;
   white-space: nowrap;
@@ -15,12 +15,12 @@
 
 /* Scaled back to its normal size first, then moved so the grid sits under, over or beside the anchor. */
 .pw-menu-below {
-  transform: scale(var(--pw-inverse-zoom, 1)) translate(-7.25rem, 0);
+  transform: scale(var(--pw-inverse-zoom, 1)) translate(calc(var(--pw-menu-w) / -2), 0);
 }
 
 .pw-menu-above {
   align-items: flex-end;
-  transform: scale(var(--pw-inverse-zoom, 1)) translate(-7.25rem, -100%);
+  transform: scale(var(--pw-inverse-zoom, 1)) translate(calc(var(--pw-menu-w) / -2), -100%);
 }
 
 .pw-menu-right {
@@ -33,10 +33,10 @@
 }
 
 .pw-menu-grid {
-  width: 14.5rem;
-  padding: 0.5rem;
+  width: var(--pw-menu-w);
+  padding: var(--pw-panel-pad);
   border: 1px solid var(--pw-line);
-  border-radius: 0.75rem;
+  border-radius: var(--pw-bar-radius);
   background: var(--pw-panel);
   backdrop-filter: var(--pw-panel-blur);
 }
@@ -68,8 +68,8 @@
 
 .pw-menu-tiles {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.375rem;
+  grid-template-columns: repeat(var(--pw-menu-cols), var(--pw-tile-w));
+  gap: var(--pw-tile-gap);
 }
 
 .pw-tile {
@@ -77,10 +77,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 3.125rem;
+  gap: 0.1875rem;
+  height: var(--pw-tile-h);
   border: 1px solid var(--pw-line);
-  border-radius: 0.625rem;
+  border-radius: var(--pw-tile-radius);
   background: var(--pw-field);
   color: inherit;
   font: inherit;
@@ -93,7 +93,8 @@
 }
 
 .pw-glyph {
-  font-size: 1.125rem;
+  display: flex;
+  font-size: var(--pw-tile-icon);
   line-height: 1;
 }
 
@@ -103,19 +104,19 @@
 
 .pw-tile-label {
   color: var(--pw-muted);
-  font-size: 0.6875rem;
+  font-size: var(--pw-tile-label);
 }
 
 .pw-menu-sub {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  width: 15rem;
+  gap: var(--pw-gap);
+  width: var(--pw-sub-w);
   max-height: 22.5rem;
   overflow-y: auto;
-  padding: 0.625rem;
+  padding: var(--pw-panel-pad);
   border: 1px solid var(--pw-line);
-  border-radius: 0.75rem;
+  border-radius: var(--pw-bar-radius);
   background: var(--pw-panel);
   backdrop-filter: var(--pw-panel-blur);
   white-space: normal;
@@ -129,19 +130,19 @@
 .pw-menu-sub input,
 .pw-menu-sub select,
 .pw-menu-sub textarea {
-  padding: 0.375rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   border: 1px solid var(--pw-line);
-  border-radius: 0.5rem;
+  border-radius: var(--pw-btn-radius);
   background: var(--pw-field);
   color: var(--pw-ink);
   font: inherit;
 }
 
 .pw-menu-sub button {
-  height: 1.75rem;
-  padding: 0 0.625rem;
+  height: var(--pw-btn-h);
+  padding: 0 var(--pw-btn-px);
   border: 1px solid var(--pw-line);
-  border-radius: 0.5rem;
+  border-radius: var(--pw-btn-radius);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -273,4 +274,10 @@
 .pw-menu-sub .pw-warn {
   margin: 0;
   color: #f2c46d;
+}
+
+/* Small: symbols only, the names are the hover text. The group names go too, to keep the menu short. */
+.pw-root.pw-compact .pw-tile-label,
+.pw-root.pw-compact .pw-menu-group h4 {
+  display: none;
 }
