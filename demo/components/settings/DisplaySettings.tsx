@@ -80,6 +80,14 @@ export function DisplaySettings({ values, onChange }: Props) {
         <Flag label="Transparent" checked={values.transparent} onChange={(transparent) => onChange({ transparent })} />
       </Group>
 
+      <Group title="Zoom">
+        <Flag
+          label="Remember the zoom of each view"
+          checked={values.rememberZoom}
+          onChange={(rememberZoom) => onChange({ rememberZoom })}
+        />
+      </Group>
+
       <Group title="Motion">
         <Flag label="Animate" checked={values.animate} onChange={(animate) => onChange({ animate })} />
       </Group>

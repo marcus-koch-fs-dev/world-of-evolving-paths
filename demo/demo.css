@@ -205,8 +205,8 @@ body,
 }
 
 .demo-phone-button.is-on {
-  border-color: var(--pw-lit);
-  color: var(--pw-lit);
+  border-color: var(--pw-lit, #d4f25a);
+  color: var(--pw-lit, #d4f25a);
 }
 
 .demo-order-row {

@@ -344,6 +344,7 @@ const options: PathWorldOptions = {
   wavy: false, // true: a slight wave on the lines
   animate: true, // false: no moving parts (also the default for reduced motion)
   orientation: 'horizontal', // 'horizontal-inverted' | 'vertical' | 'vertical-inverted' | 'auto'
+  // zoom: 0.8, // the zoom a new view starts at; keep one per level in your app. Default: fit first, then keep the zoom
   locale: 'en-GB', // default: the language of the browser
   shortcuts: true, // keys M (center) and E (fit)
   background: {

@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
 import { PathWorld, Toast } from 'world-of-evolving-paths/react';
 import { closesMenu } from './app-logic/controls';
@@ -8,6 +8,7 @@ import { minPrioOf, steppedYears } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
 import type { SettingsSection } from './app-logic/settingsSections';
 import { showsTileLabels, sizeClass } from './app-logic/uiSize';
+import { zoomKeyOf } from './app-logic/zoomMemory';
 import { DemoLineMenu } from './components/DemoLineMenu';
 import { Legend } from './components/Legend';
 import { type DeviceToggle, ModeToggle } from './components/ModeToggle';
@@ -15,6 +16,7 @@ import { SelectedPointControls } from './components/SelectedPointControls';
 import { SettingsWindow } from './components/SettingsWindow';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
+import { ZoomMemory } from './components/ZoomMemory';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoState } from './hooks/useDemoState';
 import { useDemoView } from './hooks/useDemoView';
@@ -47,6 +49,10 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   const navigation = useViewNavigation(today);
   const settings = useDemoSettings();
   const { values, docks } = settings;
+  // The phone frame is not inside the map, so it takes the accent color from the page
+  useEffect(() => {
+    document.documentElement.style.setProperty('--pw-lit', values.accent);
+  }, [values.accent]);
   const [mode, setMode] = useState<DemoMode>(PHONE ? 'map' : 'edit');
   const [section, setSection] = useState<SettingsSection | null>(null);
   // In the overview points and paths can be moved by hand, by anyone, once the lock is open
@@ -106,6 +112,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           .filter(Boolean)
           .join(' ')}
         style={{ '--pw-lit': values.accent } as CSSProperties}
+        zoom={values.rememberZoom ? settings.zooms[zoomKeyOf(navigation.level)] : undefined}
         store={store}
         view={view}
         pathIds={pathIds}
@@ -173,6 +180,8 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
             onClose={() => setSection(null)}
           />
         )}
+
+        {values.rememberZoom && <ZoomMemory layer={zoomKeyOf(navigation.level)} onZoom={settings.rememberLayerZoom} />}
 
         {values.legend && (
           <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrioOf(period)} startCollapsed />

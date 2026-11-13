@@ -9,6 +9,8 @@
 
 ### Controls
 
+- **New:** the option `zoom`: the zoom a new view starts at. Keep the zoom of each level in your app and pass it, so every level comes back as the user left it. Without it nothing changes.
+- **Changed:** fitting the camera zooms in at most to the real size (1.0, before 1.25), so a few points are not blown up.
 - **New:** `Dialog`, a window in the middle of the page over a dimmed background, for settings and the like. It is the browser's modal dialog: Escape, focus and a click beside it work, and it fills the screen on a phone.
 - **New:** the class `pw-transparent` on the map makes all bars and panels see-through. The panel color and its blur are the variables `--pw-panel` and `--pw-panel-blur`.
 - **New:** `Icon` and `MoveLock`. The controls use Phosphor icons instead of Unicode symbols.

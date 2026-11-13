@@ -141,7 +141,7 @@ export function createPathWorld(container: HTMLElement, initialOptions: PathWorl
     renderer.setAnimate(next.animate ?? !prefersReducedMotion());
     const orientationChanged = syncOrientation();
     if (viewChanged) {
-      framing.requestForView();
+      framing.requestForView(next.zoom);
       interaction.clear();
       dragger.cancel();
       pointer.cancel();

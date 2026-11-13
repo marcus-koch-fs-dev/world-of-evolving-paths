@@ -36,6 +36,31 @@ describe('Framing', () => {
     });
   });
 
+  describe('when a zoom is given for the view', () => {
+    it('centers the content at that zoom, also for the first view', () => {
+      const camera = createCamera();
+      const framing = createFraming();
+
+      framing.requestForView(0.8);
+      framing.apply(content, size, asCamera(camera));
+
+      expect(camera.fit).not.toHaveBeenCalled();
+      expect(camera.center).toHaveBeenCalledWith(content, 0.8);
+    });
+
+    it('fits again when the direction changed at the same time', () => {
+      const camera = createCamera();
+      const framing = createFraming();
+
+      framing.requestForView(0.8);
+      framing.requestFit();
+      framing.apply(content, size, asCamera(camera));
+
+      expect(camera.fit).toHaveBeenCalledTimes(1);
+      expect(camera.center).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when there is no content or no room yet', () => {
     it('waits and frames as soon as it can', () => {
       const camera = createCamera();

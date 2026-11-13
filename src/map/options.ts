@@ -98,6 +98,12 @@ export type PathWorldOptions = PathWorldEvents & {
   freeMove?: boolean;
   /** Distance between the grid points that dragged and added points snap to, in world units. Default: no snapping. */
   snap?: number;
+  /**
+   * The zoom a new view starts at. When the view changes (another level, period or page) the content is centered at
+   * this zoom. Keep the zoom of each level in your app and pass it here. Default: the first view is fitted, later ones
+   * keep the zoom they had.
+   */
+  zoom?: number;
   /** Slight wave on the lines. Default false. */
   wavy?: boolean;
   /** Language of the dates under the points, such as `de` or `en-GB`. Default: the browser's language. */
