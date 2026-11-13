@@ -11,7 +11,7 @@
 
 [Live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/) · [StackBlitz](https://stackblitz.com/github/marcus-koch-fs-dev/world-of-evolving-paths?view=preview) · [Changelog](CHANGELOG.md)
 
-<img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-week.webp" alt="One week: the points of four paths, the marker for today and the lines to the next goals" width="340"> <img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-all.webp" alt="All points of four paths at once, with the marker for today" width="340">
+<img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-week.webp" alt="One week: four paths with the marker for today, the check-in list and the menu of a point" width="400"> <img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-all.webp" alt="All points of four paths at once, with the control bar and the menu of a point" width="400">
 
 </div>
 
@@ -156,13 +156,16 @@ The stylesheet is only needed for the React binding and its controls.
 
 What the user can do in the [live demo](https://marcus-koch-fs-dev.github.io/world-of-evolving-paths/). Built into the map: select, drag, zoom, **M** and **E**. The rest is the demo app, built from the [controls](#controls-react).
 
+- **Editor and map:** the button at the top right switches between them. Only the editor changes data: the menus of points and lines, adding points, undo. The map is for looking and checking in. The button beside it switches between the desktop page and a phone-sized preview. On a phone the demo is always the map.
+
 ### Points
 
 - **Select:** click. Click the empty area to deselect.
 - **Move:** drag up or down. It stays on its date.
 - **Add:** double-click the empty area.
 - **Add the next point:** point menu, **Next point**. **As a new branch** starts a fork, and is already on after a fork point.
-- **Change:** point menu, **Properties** (status, kind, name, color, date, prio, note).
+- **Change:** point menu, **Status**, **Kind**, **Name**, **Path color** and **Details** (date, prio, note).
+- **Turn the menu:** point menu, **Turn**. The menu goes around the point: above, right, below, left.
 - **Delete:** point menu, **Delete**. The line stays and joins its neighbours.
 - **Lower the prio:** the point may leave the view. A message says where it shows now.
 - **Go deeper:** double-click a point.
@@ -176,20 +179,23 @@ What the user can do in the [live demo](https://marcus-koch-fs-dev.github.io/wor
 
 ### Check-ins and time
 
-- **Check in:** select a point, then **Check in** at the bottom right. Once per day.
+- **Check in:** the **Check in** button in the top bar opens a list of all paths. Tap a path to check in today. A badge counts the paths not checked in yet. Tap a checked-in path again to take it back. Once per day.
 - **Done and open:** a reached point has a check mark. The next one pulses, later ones are dashed.
-- **Undo and redo:** the arrows in the top bar, or Ctrl+Z and Ctrl+Y.
+- **Undo and redo:** in the editor, the arrows in the top bar, or Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z also redoes).
 - **Time travel:** the slider at the bottom. **Play** runs through the days.
 
 ### Navigation
 
 - **Zoom and pan:** wheel or pinch, drag the empty area. **M** centers, **E** fits.
-- **Level:** **W**, **M**, **Y** or **All** in the top bar, or the keys W, M, Y and A.
+- **Level:** **W**, **M**, **Y** or **All** in the top bar, or the digit keys 1, 2, 3 ... in the order of the bar. The last one is **All**.
+- **Years:** **+** and **−** change how many years the year view shows.
 - **Period:** the arrows, or the arrow keys. **Today** (T) goes to today. A click on the period opens a list.
 - **Paths per page:** the counter in the top bar, in every view.
 - **Free arrangement:** in **All**, the **Move** tile lets you drag points and paths anywhere.
-- **Legend:** shows from which view on each prio appears.
-- **Menu:** the grid button opens view, map, layout and mode settings.
+- **Legend:** shows from which view on each prio appears, and all keys.
+- **Keys:** they can be switched off in the settings. A phone has none.
+- **Menu:** the grid button opens the groups View, Time, Paths per page, Map, Edit and Settings. **Back** goes to the view before your last double-click. **Reset all** forgets all heights (editor only). In the settings you choose the size (Small, Regular, Large) and which bars you see.
+- **Move a bar:** drag a bar by its handle. While you drag, the six places it can go to show on the map.
 
 ## 4. Views and levels
 
@@ -224,7 +230,7 @@ type Store = { paths: StorePath[] };
 
 | Object | Fields                                                      |
 | ------ | ----------------------------------------------------------- |
-| Path   | `{ id, name, color, lane?, branches, layout? }`             |
+| Path   | `{ id, name, color, lane?, branches, layout?, checkIns? }`  |
 | Branch | `{ id, splitsAt?, points }`                                 |
 | Point  | `{ id, date, title, kind, status, prio, note?, strength? }` |
 
@@ -283,10 +289,12 @@ All are pure. They return a new store and keep untouched paths as the same objec
 Actions you can offer to your users outside the editor, for example from a button in your own app:
 
 ```ts
-import { addNextPoint, checkIn, checkInStatus, setStatus, undoCheckIn } from 'world-of-evolving-paths';
+import { addNextPoint, checkIn, checkInStatus, hasCheckedIn, setStatus, undoCheckIn } from 'world-of-evolving-paths';
 
 // A new point at the end of the main branch. Only the title is needed.
 // Default: today, kind 'milestone', status 'open', prio 3, and an id made for you.
+// The main branch is the first branch that does not fork off (else the first branch). A 4th argument sets the date used as "today".
+// Nothing changes when the point would be invalid: a bad date, a prio that is not a whole number from 1 to 5, or an id that is taken. The same if the path does not exist.
 store = addNextPoint(store, 'gym', { title: 'Muscle-up' });
 store = addNextPoint(store, 'gym', { title: 'Planche', date: '2027-03-01', kind: 'goal', prio: 5 });
 
@@ -296,10 +304,12 @@ store = setStatus(store, pointId, 'done');
 // Check in today. A second check-in on the same day changes nothing.
 store = checkIn(store, 'gym', '2026-11-13');
 store = undoCheckIn(store, 'gym', '2026-11-13'); // after a tap by mistake
+hasCheckedIn(store.paths[0], '2026-11-13'); // true or false
 
 // Feedback for your own UI: "12 -> 13 active days in 12 weeks"
 const status = checkInStatus(store.paths[0], '2026-11-13');
-// { checkedIn, activeBefore, activeAfter, tierUp, tierName, next: { name, daysMissing }, weeks }
+// { checkedIn, activeBefore, activeAfter, tierBefore, tierAfter, tierUp, tierName, next: { name, daysMissing }, weeks }
+// `next` is missing at the strongest tier. Like `toDay`, it throws for a date that is not valid.
 ```
 
 A path with a new name or color: `addPath` and `updatePath`. A new branch from a point: `addBranch(store, pathId, { id, splitsAt: pointId, points })`.
@@ -394,26 +404,28 @@ TIERS[strength]; // { name: 'Highway', width: 13, glow: 0.7 }
 
 Import them from `world-of-evolving-paths/react`. They hold no map logic: they get values and callbacks, so you can restyle or replace them. Their props are typed.
 
-| Control           | What it does                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ZoomControls`    | Zoom out, zoom in, center, fit.                                                                                                                  |
-| `ViewBar`         | Level buttons, previous and next period, today, pages. With `onDateChange` a click on the period opens a date picker.                            |
-| `ControlBar`      | A bar fixed to an edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). With `onDockChange` the user can drag it to another place. |
-| `TilePanel`       | A button that opens a panel of tiles in groups, as keys (`variant="tiles"`) or rows (`"list"`). With `closeOnSelect` it closes after a tap.      |
-| `MoveLock`        | A lock to arrange the overview "All" by hand. Pair it with `freeMove={!locked}`. It works for viewers too, also without `editable`.              |
-| `Icon`            | A small icon (Phosphor, regular or fill) in the text color and size. Names: `lock`, `unlock`, `menu`, `zoomIn`, ... (`IconName`).                |
-| `SidePanel`       | A panel at the left or right side, for settings.                                                                                                 |
-| `Dialog`          | A window in the middle over a dimmed background, for settings. Escape and a click beside it call `onClose`. Full screen on a phone.              |
-| `BackgroundPanel` | Fill, pattern, brightness and size.                                                                                                              |
-| `PointMenu`       | The menu at a selected point: next point, delete, properties. It sits below the point, or above when there is no room.                           |
-| `LineMenu`        | A tile menu at a clicked line. Place it at `at` of `onLineSelect`.                                                                               |
-| `Toast`           | A short message at the top that goes away by itself (`durationMs`, default 6 s). With `action` it shows a button.                                |
-| `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today`. `useTimePlayback` moves it.                                       |
+| Control           | What it does                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ZoomControls`    | Zoom out, zoom in, center, fit.                                                                                                                                                                                                                                                                                                                               |
+| `ViewBar`         | Level buttons, previous and next period, today, pages. With `onDateChange` a click on the period opens a date picker. `navigation={false}` keeps only the period label.                                                                                                                                                                                       |
+| `ControlBar`      | A bar fixed to an edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). With `onDockChange` the user can drag it to another place; the six places show while dragging. With `label` the bar can be collapsed (`startCollapsed`, `collapsedIcon` for the button of a collapsed bar, `cornerCollapse` for a small collapse button in the corner). |
+| `TilePanel`       | A button that opens a panel of tiles in groups, as keys (`variant="tiles"`) or rows (`"list"`). With `closeOnSelect` it closes after a tap, `labels={false}` shows symbols only, `badge` shows a count on the button. A tap outside closes it.                                                                                                                |
+| `MoveLock`        | A lock to arrange the overview "All" by hand. Pair it with `freeMove={!locked}`. It works for viewers too, also without `editable`.                                                                                                                                                                                                                           |
+| `Icon`            | A small icon (Phosphor, regular or fill) in the text color and size. Names: `lock`, `unlock`, `menu`, `zoomIn`, ... (`IconName`).                                                                                                                                                                                                                             |
+| `SidePanel`       | A panel at the left or right side, for settings.                                                                                                                                                                                                                                                                                                              |
+| `Dialog`          | A window in the middle over a dimmed background, for settings. Escape and a click beside it call `onClose`. Full screen on a phone.                                                                                                                                                                                                                           |
+| `BackgroundPanel` | Fill, pattern, brightness and size.                                                                                                                                                                                                                                                                                                                           |
+| `PointMenu`       | The menu at a selected point: a keypad of four keys in two rows (next point, delete, status, kind, name, path color, details, turn). It sits below the point, or above when there is no room.                                                                                                                                                                 |
+| `LineMenu`        | A tile menu at a clicked line. Place it at `at` of `onLineSelect`.                                                                                                                                                                                                                                                                                            |
+| `Toast`           | A short message at the top that goes away by itself (`durationMs`, default 6 s). With `action` it shows a button.                                                                                                                                                                                                                                             |
+| `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today`. `useTimePlayback` moves it.                                                                                                                                                                                                                                                    |
 
 - **Where they go:** `ZoomControls`, `PointMenu`, `LineMenu` and `ControlBar` go inside `<PathWorld>`.
-- **Styles:** import `world-of-evolving-paths/style.css` once. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...). Give the map the class `pw-transparent` and every bar and panel becomes see-through, with the map blurred behind it.
+- **Styles:** import `world-of-evolving-paths/style.css` once. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...). Give the map the class `pw-transparent` and every bar and panel becomes see-through, with the map blurred behind it (the panel color and blur are `--pw-panel` and `--pw-panel-blur`).
 - **Sizes:** the controls have three fixed forms, all in rem and em so they follow the screen. No class is Regular (the names under the symbols of a `TilePanel`). `pw-compact` is Small (pass `labels={false}` to the `TilePanel` for symbols only), `pw-large` is Regular a little bigger. The measures are the variables `--pw-btn-h`, `--pw-gap`, `--pw-tile-w` and more on `.pw-root`.
 - **Accent color:** set `--pw-lit` on the map (`style={{ '--pw-lit': '#ff4fd8' }}`) for what is switched on or selected. The class `pw-glow` makes it glow a little.
+
+<img src="https://raw.githubusercontent.com/marcus-koch-fs-dev/world-of-evolving-paths/main/docs/demo-phone.webp" alt="The demo on a phone: the bars wrap and the menu fits the screen" width="180">
 
 These are the defaults of `PointMenu`. It only calls your callbacks, you change the data:
 
@@ -422,7 +434,7 @@ These are the defaults of `PointMenu`. It only calls your callbacks, you change 
   point={point} // a StorePoint
   path={path}
   onUpdate={onUpdate} // gets a patch such as { prio: 4 }
-  onAddNext={onAddNext} // gets { title, date, newBranch }
+  onAddNext={onAddNext} // gets { title, date, newBranch }, returns an error text to show, or null when it worked
   onPathColor={onPathColor}
   onDelete={onDelete}
   canComplete // false while earlier points are not done yet
@@ -432,8 +444,8 @@ These are the defaults of `PointMenu`. It only calls your callbacks, you change 
   closeAfterAction // default true, only with onClose. The path color stays open.
   // subPlacement: 'right' | 'below' | 'left' | 'above', default: the panel of a tile finds its place by itself
   // onPlacementChange: adds a Turn tile that goes around the point: above, right, below, left; keep the place in `placement`
-  placement="auto" // 'below' | 'above' | 'right' | 'left'
-  hide={[]} // tiles to leave out: 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove'
+  placement="auto" // 'auto' | 'below' | 'above' | 'right' | 'left'
+  hide={[]} // tiles to leave out: 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove' | 'turn' ('turn' only shows with onPlacementChange)
   // colors={PATH_PALETTE}, checkInCount: no default
   // customColors, onCustomColor: it reports a confirmed color, you pass the list back
 />;
@@ -441,7 +453,29 @@ These are the defaults of `PointMenu`. It only calls your callbacks, you change 
 
 ### More exports
 
-Helpers for your own controls: `usePathWorldHandle`, `useCameraZoom` and `useWorldVersion` for React, `positionOf`, `getCamera`, `subscribeCamera` and `getDirection` on the handle, `rotateDirection` for your own turn buttons, and constants and functions such as `VIEW_LEVELS`, `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `tierOf`, `activeDaysIn`, `fromDay`, `todayLocal` and `symbolSize`. All are typed.
+Everything below is exported and typed. The first group is for your own controls, the others are small helpers.
+
+**Handle** (from `usePathWorldHandle()` or the `ref` of `PathWorld`):
+
+| Member                                          | What it does                                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `update(options)`, `destroy()`                  | Apply all options, remove the map.                                                        |
+| `zoomBy(factor)`, `fit()`, `center()`           | Move the camera.                                                                          |
+| `getCamera()`, `subscribeCamera(listener)`      | The camera now, and every change of it.                                                   |
+| `positionOf(id)`                                | Where a point is on the screen now, or `null` when it is not in the view.                 |
+| `getDirection()`                                | The direction time runs now. With `orientation: 'auto'` this is the one that was chosen.  |
+| `subscribeWorld(listener)`, `getWorldVersion()` | Called when the world was made again or points were moved. The version goes up each time. |
+| `overlay`                                       | An element that follows the camera. Things placed in it move and scale with the map.      |
+
+**React:** `usePathWorldHandle`, `useCameraZoom` (the zoom now), `useWorldVersion` (re-render when the world changes), `useTimePlayback` and `playbackPlan(days, durationMs)` (how fast a playback steps), `Icon` and its `IconName`.
+
+**React types:** `PathWorldProps`, `ControlBarProps`, `DockSlot`, `TilePanelProps`, `PanelGroup`, `PanelTile`, `ViewBarProps`, `ViewBarPart`, `PointMenuProps`, `MenuPlacement`, `SubPlacement`, `TileId`, `PointPatch`, `NextPointInput` (what the point menu gives `onAddNext`: `{ title, date, newBranch }`), `LineMenuProps`, `LineMenuTile`, `MoveLockProps`, `SidePanelProps`, `DialogProps`, `BackgroundPanelProps`, `TimeSliderProps`, `ToastProps`, `IconProps`.
+
+**Store:** `createStore`, `validateStore`, `LEVELS`, `MIN_PRIO` (the least prio per level), `buildLevel(store, level, period, options)`, `createStoreCache()`, `indexPoints`, `indexBranches`, `sortedPoints` (time order), `arrowKey`, and for the free arrangement `createFreeReader`, `moveFreePoint`, `moveFreePath` and `dateAtFreeX`. Types: `Store`, `StorePath`, `StorePoint`, `Branch`, `Level`, `LevelHeights`, `PathLayout`, `StoreChanges`, `StorePointPatch`, `NewPointInput`, `CheckInStatus`, `PointInfo`, `LevelPath`, `LevelBranch`, `LevelElement`, `ItemElement`, `ArrowElement`, `LevelOptions`, `LevelReader`, `StoreCache`, `CacheView`, `PathSpan`.
+
+**Dates and language:** `toDay`, `fromDay` (ISO date and day number), `isIsoDate`, `todayLocal`, `weekdayOf` (Monday is 0), `formatDate`, `formatDayMonth` (takes a day number, not a date), `formatMonthYear`, `formatMonthYearLong`, `formatNumericDate`, `weekPrefix`, `isValidLocale`.
+
+**Map and camera:** `VIEW_LEVELS` (week, month, year), `placeLevel`, `pathsInView`, `lanesOf`, `rotateDirection`, `symbolSize`, `MIN_ZOOM` (0.2), `MAX_ZOOM` (3), `PATH_PALETTE`, `BACKGROUND_DEFAULTS`, `STRENGTH_RULE`, `TIERS`, `tierAt`, `tierOf`, `activeDaysIn`. Types: `Camera`, `Bounds`, `Direction`, `Period`, `ViewLevel`, `CalendarOptions`, `Position`, `PointKind`, `PointStatus`, `PathInfo`, `PlacedWorld`, `PlacedPoint`, `PlacedArrow`, `PlacedSpan`, `Lead`, `Tier`, `StrengthRule`, and all option and event types (`PathWorldOptions`, `PathWorldHandle`, `PathWorldEvents`, `BackgroundOptions`, `BackgroundPattern`, `Orientation`, `CameraListener`, `PointAddEvent`, `PointDoubleClickEvent`, `LeadDoubleClickEvent`, `LineSelectEvent`, `LineEnd`).
 
 ## 8. Migrating from 0.0.x
 
