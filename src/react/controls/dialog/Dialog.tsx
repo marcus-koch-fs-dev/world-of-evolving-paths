@@ -26,12 +26,20 @@ export function Dialog({ title, onClose, children }: DialogProps) {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
-    // A click on the dimmed background lands on the dialog element itself. The keyboard has Escape.
-    const closeOnBackground = (event: MouseEvent) => {
-      if (event.target === dialog) onCloseRef.current();
+    // A click on the dimmed background lands on the dialog element itself. So that a drag that began inside and ended
+    // on the background does not close it, the press has to begin on the background as well. The keyboard has Escape.
+    let pressedOnBackground = false;
+    const rememberPress = (event: PointerEvent) => {
+      pressedOnBackground = event.target === dialog;
     };
+    const closeOnBackground = (event: MouseEvent) => {
+      if (event.target === dialog && pressedOnBackground) onCloseRef.current();
+      pressedOnBackground = false;
+    };
+    dialog.addEventListener('pointerdown', rememberPress);
     dialog.addEventListener('click', closeOnBackground);
     return () => {
+      dialog.removeEventListener('pointerdown', rememberPress);
       dialog.removeEventListener('click', closeOnBackground);
       if (dialog.open) dialog.close();
     };

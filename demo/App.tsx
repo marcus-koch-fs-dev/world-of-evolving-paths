@@ -5,11 +5,10 @@ import { closesMenu } from './app-logic/controls';
 import { rememberColor } from './app-logic/customColors';
 import { isEmbedded, phoneOrientation } from './app-logic/device';
 import { keymapFor } from './app-logic/keymap';
-import { minPrioOf, steppedYears } from './app-logic/levels';
+import { minPrioOf, viewsInBar } from './app-logic/levels';
 import type { DemoMode } from './app-logic/menuGroups';
 import type { SettingsSection } from './app-logic/settingsSections';
 import { showsTileLabels, sizeClass } from './app-logic/uiSize';
-import { viewAtPosition } from './app-logic/viewShortcuts';
 import { zoomKeyOf } from './app-logic/zoomMemory';
 import { DemoLineMenu } from './components/DemoLineMenu';
 import { Legend } from './components/Legend';
@@ -19,6 +18,7 @@ import { SettingsWindow } from './components/SettingsWindow';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
 import { ZoomMemory } from './components/ZoomMemory';
+import { useAppShortcuts } from './hooks/useAppShortcuts';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoState } from './hooks/useDemoState';
 import { useDemoView } from './hooks/useDemoView';
@@ -27,9 +27,7 @@ import { useMapEvents } from './hooks/useMapEvents';
 import { useNotice } from './hooks/useNotice';
 import { usePointMenuActions } from './hooks/usePointMenuActions';
 import { useSelection } from './hooks/useSelection';
-import { useUndoShortcuts } from './hooks/useUndoShortcuts';
 import { useViewNavigation } from './hooks/useViewNavigation';
-import { useViewShortcuts } from './hooks/useViewShortcuts';
 import { useWindowSize } from './hooks/useWindowSize';
 
 // The distance between the grid points that points snap to when "Snap to grid" is on, in world units
@@ -60,19 +58,13 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   // In the overview points and paths can be moved by hand, by anyone, once the lock is open
   const [locked, setLocked] = useState(true);
   const editing = mode === 'edit';
-  useUndoShortcuts({ enabled: editing && values.keyboardShortcuts, undo: undoRedo.onUndo, redo: undoRedo.onRedo });
-
-  useViewShortcuts((shortcut) => {
-    if (shortcut.type === 'view') {
-      const view = viewAtPosition(
-        VIEW_LEVELS.filter((option) => values.levels.includes(option.level)).map((option) => option.level),
-        shortcut.position,
-      );
-      if (view !== undefined) navigation.chooseLevel(view);
-    } else if (shortcut.type === 'today') navigation.goToToday();
-    else if (shortcut.type === 'years') navigation.setYears(steppedYears(navigation.years, shortcut.step));
-    else if (navigation.level !== null) navigation.move(shortcut.count);
-  }, values.keyboardShortcuts);
+  useAppShortcuts({
+    enabled: values.keyboardShortcuts,
+    editing,
+    navigation,
+    undoRedo,
+    offeredLevels: values.levels,
+  });
 
   const { period, level, view, tileKey, range, travel, store, pathIds, paging, visibleIds, arrowKeys } = useDemoView(
     state,
@@ -198,7 +190,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
             keymap={
               values.keyboardShortcuts && !PHONE
                 ? keymapFor(
-                    offeredLevels.map((option) => option.label),
+                    viewsInBar(values.levels, navigation.level).map((option) => option.label),
                     editing,
                   )
                 : null

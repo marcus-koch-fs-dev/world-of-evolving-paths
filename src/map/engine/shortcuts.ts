@@ -1,4 +1,5 @@
-const TEXT_INPUT = 'input, textarea, select, [contenteditable]';
+// Keys in a text field or in an open dialog belong to it
+const TEXT_INPUT = 'input, textarea, select, [contenteditable], dialog';
 
 export type Shortcut = 'center' | 'fit';
 

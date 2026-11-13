@@ -1,4 +1,4 @@
-import { type PointerEvent, useRef, useState } from 'react';
+import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import { movedTo, slotAt } from '../app-logic/reorder';
 
 /**
@@ -8,6 +8,9 @@ import { movedTo, slotAt } from '../app-logic/reorder';
 export function useDragReorder<T extends string>(items: readonly T[], onReorder: (next: T[]) => void) {
   const rows = useRef(new Map<T, HTMLElement>());
   const [drag, setDrag] = useState<{ id: T; over: number } | null>(null);
+  // Takes the listeners of a running drag away. It is also called when the list goes away in the middle of a drag.
+  const stopDrag = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopDrag.current?.(), []);
 
   const register = (id: T) => (element: HTMLElement | null) => {
     if (element) rows.current.set(id, element);
@@ -25,16 +28,21 @@ export function useDragReorder<T extends string>(items: readonly T[], onReorder:
 
   const start = (id: T) => (event: PointerEvent) => {
     event.preventDefault();
+    stopDrag.current?.();
     const from = items.indexOf(id);
     setDrag({ id, over: from });
     const move = (moved: globalThis.PointerEvent) => setDrag({ id, over: slotUnder(moved.clientY) });
     const finish = (ended: globalThis.PointerEvent) => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', finish);
-      window.removeEventListener('pointercancel', finish);
+      stopDrag.current?.();
       const to = slotUnder(ended.clientY);
       setDrag(null);
       if (ended.type === 'pointerup' && to !== from) onReorder(movedTo(items, id, to));
+    };
+    stopDrag.current = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+      stopDrag.current = null;
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', finish);

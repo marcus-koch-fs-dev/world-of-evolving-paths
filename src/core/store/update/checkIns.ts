@@ -1,4 +1,4 @@
-import { toDay } from '../../dates.js';
+import { isIsoDate, toDay } from '../../dates.js';
 import { activeDaysIn, STRENGTH_RULE, type StrengthRule, TIERS, tierOf } from '../../strength.js';
 import type { Store, StorePath } from '../types.js';
 
@@ -11,13 +11,16 @@ const mapPath = (store: Store, pathId: string, change: (path: StorePath) => Stor
 /** Whether the path has a check-in on that day. */
 export const hasCheckedIn = (path: StorePath, date: string): boolean => path.checkIns?.includes(date) ?? false;
 
-/** The days of all check-ins of a path, as day numbers. Pass them to `tierAt`. */
-export const checkInDays = (path: StorePath): number[] => (path.checkIns ?? []).map(toDay);
+/** The days of all check-ins of a path, as day numbers. Pass them to `tierAt`. A date that is not valid is skipped. */
+export const checkInDays = (path: StorePath): number[] => (path.checkIns ?? []).filter(isIsoDate).map(toDay);
 
-/** A path is walked on a day (`YYYY-MM-DD`). Checking in twice on one day does not count twice and changes nothing. */
+/**
+ * A path is walked on a day (`YYYY-MM-DD`). Checking in twice on one day does not count twice and changes nothing,
+ * and neither does a date that is not valid.
+ */
 export function checkIn(store: Store, pathId: string, date: string): Store {
   const path = store.paths.find((candidate) => candidate.id === pathId);
-  return !path || hasCheckedIn(path, date)
+  return !path || !isIsoDate(date) || hasCheckedIn(path, date)
     ? store
     : mapPath(store, pathId, (found) => ({ ...found, checkIns: [...(found.checkIns ?? []), date].sort() }));
 }

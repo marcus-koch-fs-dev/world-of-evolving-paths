@@ -23,7 +23,8 @@ export function createFraming(): Framing {
 
   return {
     requestForView(zoom) {
-      if (zoom !== undefined) pending = { kind: 'center', zoom };
+      // A zoom that is not a positive number (NaN, 0) would break the camera, so it counts as none
+      if (zoom !== undefined && Number.isFinite(zoom) && zoom > 0) pending = { kind: 'center', zoom };
       else pending = framedOnce ? { kind: 'center' } : { kind: 'fit' };
     },
     requestFit() {

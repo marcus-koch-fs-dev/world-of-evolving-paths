@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { levelThatShows, minPrioOf, steppedYears, toggledLevels, widestLevelShowing } from './levels';
+import { levelThatShows, minPrioOf, steppedYears, toggledLevels, viewsInBar, widestLevelShowing } from './levels';
+
+describe('Views of the bar', () => {
+  it('are the offered levels in the order of the bar', () => {
+    expect(viewsInBar(['year', 'week'], null).map((view) => view.level)).toEqual(['week', 'year']);
+  });
+
+  it('include the shown level even when it is not offered, as the bar does', () => {
+    expect(viewsInBar(['week'], 'year').map((view) => view.level)).toEqual(['week', 'year']);
+  });
+});
 
 describe('Least prio of a view', () => {
   it('is higher the wider the view is', () => {

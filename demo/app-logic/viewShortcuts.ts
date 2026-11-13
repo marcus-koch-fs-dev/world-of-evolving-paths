@@ -1,6 +1,7 @@
 import type { ViewLevel } from 'world-of-evolving-paths';
 
-const TEXT_INPUT = 'input, textarea, select, [contenteditable]';
+// Keys in a text field or in an open dialog belong to it
+const TEXT_INPUT = 'input, textarea, select, [contenteditable], dialog';
 
 export type ViewShortcut =
   // The number of a view in the bar, counted from 1: the levels in the order of the bar, then everything

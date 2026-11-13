@@ -27,6 +27,7 @@ const path = (id: string, extra: Partial<StorePath> = {}): StorePath => ({
 });
 
 const twoPaths = (): Store => createStore([path('a'), path('b')]);
+const path0 = (): StorePath => path('a');
 
 /** The check-in dates of a path in a store. */
 const checkInsOf = (store: Store, id: string) => store.paths.find((p) => p.id === id)?.checkIns;
@@ -59,6 +60,13 @@ describe('Check-ins', () => {
 
       expect(checkIn(before, 'nope', '2026-11-13')).toBe(before);
     });
+
+    it('ignores a date that is not valid, so later reads cannot fail', () => {
+      const before = twoPaths();
+
+      expect(checkIn(before, 'a', '2026-02-30')).toBe(before);
+      expect(checkIn(before, 'a', 'tomorrow')).toBe(before);
+    });
   });
 
   describe('undoCheckIn', () => {
@@ -73,6 +81,13 @@ describe('Check-ins', () => {
 
       expect(undoCheckIn(before, 'a', '2026-11-13')).toBe(before);
     });
+  });
+
+  it('skips a stored date that is not valid when it lists the days', () => {
+    const path = { ...path0(), checkIns: ['2026-11-13', 'broken'] };
+
+    expect(checkInDays(path)).toEqual([toDay('2026-11-13')]);
+    expect(validateStore([path])).toEqual(['Path "a" has a check-in with no valid date (YYYY-MM-DD): "broken".']);
   });
 
   it('lists the days of a path as day numbers', () => {

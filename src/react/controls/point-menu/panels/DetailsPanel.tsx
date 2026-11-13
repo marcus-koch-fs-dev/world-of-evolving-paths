@@ -14,6 +14,8 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
   const [min, max] = importanceRange;
   // The note is sent when the field loses focus, not on every key, so the app is not asked to relayout while typing
   const [note, setNote] = useState(point.note ?? '');
+  // The date is sent the same way: a date field fires a change for each part of the date while it is typed
+  const [date, setDate] = useState(point.date);
   const values = Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i);
 
   return (
@@ -22,8 +24,9 @@ export function DetailsPanel({ point, importanceRange, onUpdate }: Props) {
         Date
         <input
           type="date"
-          value={point.date}
-          onChange={(event) => event.target.value && onUpdate({ date: event.target.value })}
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+          onBlur={() => date && date !== point.date && onUpdate({ date })}
         />
       </label>
       <div className="pw-field">

@@ -48,6 +48,17 @@ describe('Framing', () => {
       expect(camera.center).toHaveBeenCalledWith(content, 0.8);
     });
 
+    it('ignores a zoom that is not a positive number', () => {
+      const camera = createCamera();
+      const framing = createFraming();
+
+      framing.requestForView(Number.NaN);
+      framing.apply(content, size, asCamera(camera));
+
+      expect(camera.fit).toHaveBeenCalledTimes(1);
+      expect(camera.center).not.toHaveBeenCalled();
+    });
+
     it('fits again when the direction changed at the same time', () => {
       const camera = createCamera();
       const framing = createFraming();

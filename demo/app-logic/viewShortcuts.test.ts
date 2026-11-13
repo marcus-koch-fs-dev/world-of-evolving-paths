@@ -58,6 +58,15 @@ describe('View shortcuts', () => {
     expect(press('2', { altKey: true })).toBeNull();
   });
 
+  it('leaves keys in an open dialog to the dialog', () => {
+    // A target whose closest() only knows dialogs
+    const inDialog = Object.assign(Object.create(FakeElement.prototype), {
+      closest: (selector: string) => (selector.includes('dialog') ? {} : null),
+    });
+
+    expect(viewShortcutFor({ key: '2', ctrlKey: false, metaKey: false, altKey: false, target: inDialog })).toBeNull();
+  });
+
   it('leaves keys in a text field to the field', () => {
     expect(press('2', {}, true)).toBeNull();
   });

@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { fromDay, periodLabel, VIEW_LEVELS, type ViewLevel } from 'world-of-evolving-paths';
+import { fromDay, periodLabel, type ViewLevel } from 'world-of-evolving-paths';
 import { MoveLock, ViewBar } from 'world-of-evolving-paths/react';
 import type { BarItem } from '../app-logic/controls';
+import { viewsInBar } from '../app-logic/levels';
 import type { DemoMode } from '../app-logic/menuGroups';
 import { yearOfDay } from '../app-logic/periodChoices';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
@@ -15,8 +16,10 @@ const CHIP_LETTERS: Record<ViewLevel, string> = { week: 'W', month: 'M', year: '
 
 /** The level buttons as short chips with the full name as tooltip. The shown level is always among them. */
 function chipsOf(levels: readonly { level: ViewLevel; label: string }[], shown: ViewLevel | null) {
-  const wanted = new Set([...levels.map((option) => option.level), ...(shown ? [shown] : [])]);
-  return VIEW_LEVELS.filter((option) => wanted.has(option.level)).map((option) => ({
+  return viewsInBar(
+    levels.map((option) => option.level),
+    shown,
+  ).map((option) => ({
     level: option.level,
     label: CHIP_LETTERS[option.level],
     title: `${option.label} (${CHIP_LETTERS[option.level]})`,
