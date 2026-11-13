@@ -228,19 +228,6 @@
   background: none;
 }
 
-.pw-menu-group + .pw-menu-group {
-  margin-top: 0.5rem;
-}
-
-.pw-menu-group h4 {
-  margin: 0 0 0.25rem;
-  color: var(--pw-muted);
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .pw-menu-sub .pw-help {
   font-size: 0.6875rem;
   line-height: 1.4;
@@ -277,9 +264,8 @@
   color: #f2c46d;
 }
 
-/* Small: symbols only, the names are the hover text. The group names go too, to keep the menu short. */
-.pw-root.pw-compact .pw-tile-label,
-.pw-root.pw-compact .pw-menu-group h4 {
+/* Small: symbols only, the names are the hover text */
+.pw-root.pw-compact .pw-tile-label {
   display: none;
 }
 
