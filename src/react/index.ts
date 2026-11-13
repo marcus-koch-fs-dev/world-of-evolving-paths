@@ -3,6 +3,8 @@ export { BackgroundPanel } from './controls/background-panel/BackgroundPanel.js'
 export type { ControlBarProps } from './controls/control-bar/ControlBar.js';
 export { ControlBar } from './controls/control-bar/ControlBar.js';
 export type { DockSlot } from './controls/control-bar/dock.js';
+export type { DialogProps } from './controls/dialog/Dialog.js';
+export { Dialog } from './controls/dialog/Dialog.js';
 export type { LineMenuProps, LineMenuTile } from './controls/line-menu/LineMenu.js';
 export { LineMenu } from './controls/line-menu/LineMenu.js';
 export type { MoveLockProps } from './controls/move-lock/MoveLock.js';

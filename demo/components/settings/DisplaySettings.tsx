@@ -1,0 +1,60 @@
+import { UI_SIZES } from '../../app-logic/uiSize';
+import type { SettingsValues } from '../../hooks/useDemoSettings';
+import { Flag } from '../Flags';
+import { Group } from './Group';
+
+export const LOCALES = [
+  { locale: 'de', label: 'European · 2.11.' },
+  { locale: 'en-GB', label: 'British · 2/11' },
+  { locale: 'en-US', label: 'American · 11/2' },
+];
+
+type Props = { values: SettingsValues; onChange: (patch: Partial<SettingsValues>) => void };
+
+/** How big the controls are, how dates look, and whether things move. */
+export function DisplaySettings({ values, onChange }: Props) {
+  return (
+    <>
+      <Group
+        title="Size"
+        hint="Small is tiny and clean, Large has bigger icons and text. Changes show when you close this window."
+      >
+        <div className="demo-choice">
+          {UI_SIZES.map((choice) => (
+            <button
+              key={choice.value}
+              type="button"
+              className={`pw-button${values.uiSize === choice.value ? ' is-active' : ''}`}
+              onClick={() => onChange({ uiSize: choice.value })}
+            >
+              {choice.label}
+            </button>
+          ))}
+        </div>
+      </Group>
+
+      <Group title="Date format">
+        <div className="demo-choice">
+          {LOCALES.map((option) => (
+            <button
+              key={option.locale}
+              type="button"
+              className={`pw-button${values.locale === option.locale ? ' is-active' : ''}`}
+              onClick={() => onChange({ locale: option.locale })}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </Group>
+
+      <Group title="Bars and menus">
+        <Flag label="Transparent" checked={values.transparent} onChange={(transparent) => onChange({ transparent })} />
+      </Group>
+
+      <Group title="Motion">
+        <Flag label="Animate" checked={values.animate} onChange={(animate) => onChange({ animate })} />
+      </Group>
+    </>
+  );
+}

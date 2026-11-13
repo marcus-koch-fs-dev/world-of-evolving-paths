@@ -9,6 +9,8 @@
 
 ### Controls
 
+- **New:** `Dialog`, a window in the middle of the page over a dimmed background, for settings and the like. It is the browser's modal dialog: Escape, focus and a click beside it work, and it fills the screen on a phone.
+- **New:** the class `pw-transparent` on the map makes all bars and panels see-through. The panel color and its blur are the variables `--pw-panel` and `--pw-panel-blur`.
 - **New:** `Icon` and `MoveLock`. The controls use Phosphor icons instead of Unicode symbols.
 - **New:** `TilePanel` has `variant` (`tiles` or `list`) and `closeOnSelect`. Tiles take an `icon`.
 - **New:** `PointMenu` has `onClose` and `closeAfterAction` (default true) to close after a change.

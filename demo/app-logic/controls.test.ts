@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { BAR_PRESETS, barItemsFrom, closesMenu, movedBarItem, presetOf, toggledBarItems } from './controls';
+import {
+  BAR_PRESETS,
+  barItemsFor,
+  barItemsFrom,
+  closesMenu,
+  movedBarItem,
+  presetOf,
+  toggledBarItems,
+  withHiddenKept,
+} from './controls';
 
 describe('Controls in the bar', () => {
   describe('closesMenu', () => {
@@ -22,6 +31,17 @@ describe('Controls in the bar', () => {
     it('removes an item and ignores one that is not there', () => {
       expect(toggledBarItems(['levels', 'back'], 'back', false)).toEqual(['levels']);
       expect(toggledBarItems(['levels'], 'back', false)).toEqual(['levels']);
+    });
+  });
+
+  describe('what only the editor uses', () => {
+    it('is left out of the bar items in map mode and kept in the editor', () => {
+      expect(barItemsFor(['levels', 'history', 'back'], false)).toEqual(['levels', 'back']);
+      expect(barItemsFor(['levels', 'history', 'back'], true)).toEqual(['levels', 'history', 'back']);
+    });
+
+    it('stays behind the shown items when they are put in a new order', () => {
+      expect(withHiddenKept(['back', 'levels'], ['levels', 'history', 'back'])).toEqual(['back', 'levels', 'history']);
     });
   });
 

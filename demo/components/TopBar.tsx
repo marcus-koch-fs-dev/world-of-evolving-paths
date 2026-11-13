@@ -1,7 +1,7 @@
 import type { Orientation, ViewLevel } from 'world-of-evolving-paths';
 import { ControlBar, type DockSlot } from 'world-of-evolving-paths/react';
 import type { BarItem } from '../app-logic/controls';
-import type { DemoMode, SettingsPanelId } from '../app-logic/menuGroups';
+import type { DemoMode } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import { BarContent } from './BarContent';
 import { MainMenu } from './MainMenu';
@@ -29,8 +29,7 @@ type Props = {
   onReroll: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
-  panel: SettingsPanelId | null;
-  onPanelToggle: (panel: SettingsPanelId) => void;
+  onOpenSettings: () => void;
   undoRedo: UndoRedoProps;
 };
 
@@ -52,8 +51,7 @@ export function TopBar({
   onReroll,
   onOrientationChange,
   mode,
-  panel,
-  onPanelToggle,
+  onOpenSettings,
   undoRedo,
 }: Props) {
   return (
@@ -82,8 +80,7 @@ export function TopBar({
         onReroll={onReroll}
         onOrientationChange={onOrientationChange}
         mode={mode}
-        panel={panel}
-        onPanelToggle={onPanelToggle}
+        onOpenSettings={onOpenSettings}
         closeOnSelect={closeMenuOnSelect}
       />
     </ControlBar>

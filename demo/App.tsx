@@ -1,20 +1,20 @@
 import { useMemo, useState } from 'react';
 import { todayLocal, VIEW_LEVELS } from 'world-of-evolving-paths';
-import { BackgroundPanel, PathWorld, SidePanel, Toast } from 'world-of-evolving-paths/react';
+import { PathWorld, Toast } from 'world-of-evolving-paths/react';
 import { closesMenu } from './app-logic/controls';
 import { rememberColor } from './app-logic/customColors';
 import { isEmbedded, phoneOrientation } from './app-logic/device';
 import { minPrioOf, steppedYears } from './app-logic/levels';
-import type { DemoMode, SettingsPanelId } from './app-logic/menuGroups';
+import type { DemoMode } from './app-logic/menuGroups';
+import type { SettingsSection } from './app-logic/settingsSections';
 import { scalePercent } from './app-logic/uiSize';
 import { DemoLineMenu } from './components/DemoLineMenu';
-import { EditorSettings } from './components/EditorSettings';
 import { Legend } from './components/Legend';
 import { type DeviceToggle, ModeToggle } from './components/ModeToggle';
 import { SelectedPointControls } from './components/SelectedPointControls';
+import { SettingsWindow } from './components/SettingsWindow';
 import { TimeBar } from './components/TimeBar';
 import { TopBar } from './components/TopBar';
-import { ViewSettings } from './components/ViewSettings';
 import { type SettingsValues, useDemoSettings } from './hooks/useDemoSettings';
 import { useDemoState } from './hooks/useDemoState';
 import { useDemoView } from './hooks/useDemoView';
@@ -48,16 +48,12 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   const navigation = useViewNavigation(today);
   const settings = useDemoSettings();
   const { values, docks } = settings;
-  useUiScale(scalePercent(values.uiSize, values.uiScale));
+  useUiScale(scalePercent(values.uiSize));
   const [mode, setMode] = useState<DemoMode>(PHONE ? 'map' : 'edit');
-  const [openPanel, setOpenPanel] = useState<SettingsPanelId | null>(null);
+  const [section, setSection] = useState<SettingsSection | null>(null);
   // In the overview points and paths can be moved by hand, by anyone, once the lock is open
   const [locked, setLocked] = useState(true);
   const editing = mode === 'edit';
-  // The editor settings belong to the editor: in map mode they are gone
-  const panel = openPanel === 'editor' && !editing ? null : openPanel;
-  // The settings slide in from the side the menu bar is not on
-  const settingsSide = docks.main.endsWith('right') ? 'left' : 'right';
   useUndoShortcuts({ enabled: editing, undo: undoRedo.onUndo, redo: undoRedo.onRedo });
 
   useViewShortcuts((shortcut) => {
@@ -108,6 +104,7 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
   return (
     <div className="demo-stage">
       <PathWorld
+        className={values.transparent ? 'pw-transparent' : undefined}
         store={store}
         view={view}
         pathIds={pathIds}
@@ -156,25 +153,23 @@ export function App({ deviceToggle }: { deviceToggle?: DeviceToggle }) {
           }}
           onOrientationChange={(orientation) => settings.change({ orientation })}
           mode={mode}
-          panel={panel}
-          onPanelToggle={(id) => setOpenPanel((open) => (open === id ? null : id))}
+          onOpenSettings={() => setSection('display')}
           undoRedo={undoRedo}
         />
 
         {!PHONE && <ModeToggle mode={mode} onModeChange={setMode} deviceToggle={deviceToggle} />}
 
-        {panel === 'view' && (
-          <SidePanel side={settingsSide} title="View settings" onClose={() => setOpenPanel(null)}>
-            <ViewSettings values={values} onChange={changeSettings}>
-              <BackgroundPanel value={settings.background} onChange={settings.setBackground} />
-            </ViewSettings>
-          </SidePanel>
-        )}
-
-        {panel === 'editor' && (
-          <SidePanel side={settingsSide} title="Editor settings" onClose={() => setOpenPanel(null)}>
-            <EditorSettings values={values} onChange={changeSettings} />
-          </SidePanel>
+        {section !== null && (
+          <SettingsWindow
+            section={section}
+            onSectionChange={setSection}
+            editing={editing}
+            values={values}
+            onChange={changeSettings}
+            background={settings.background}
+            onBackgroundChange={settings.setBackground}
+            onClose={() => setSection(null)}
+          />
         )}
 
         <Legend dock="bottom-right" levels={offeredLevels} minImportance={minPrioOf(period)} startCollapsed />

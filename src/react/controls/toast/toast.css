@@ -11,6 +11,7 @@
   border: 1px solid var(--pw-lit);
   border-radius: 0.75rem;
   background: var(--pw-panel);
+  backdrop-filter: var(--pw-panel-blur);
   color: var(--pw-ink);
   box-shadow: 0 0.375rem 1.5rem rgb(0 0 0 / 0.4);
   transform: translateX(-50%);

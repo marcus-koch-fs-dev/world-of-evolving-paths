@@ -1,6 +1,6 @@
 import { type Orientation, rotateDirection, type ViewLevel } from 'world-of-evolving-paths';
 import { TilePanel, useCameraZoom, usePathWorldHandle } from 'world-of-evolving-paths/react';
-import { type DemoMode, menuGroups, type SettingsPanelId } from '../app-logic/menuGroups';
+import { type DemoMode, menuGroups } from '../app-logic/menuGroups';
 import type { ViewNavigation } from '../hooks/useViewNavigation';
 import type { UndoRedoProps } from './UndoRedo';
 
@@ -14,8 +14,7 @@ type Props = {
   onReroll: () => void;
   onOrientationChange: (orientation: Orientation) => void;
   mode: DemoMode;
-  panel: SettingsPanelId | null;
-  onPanelToggle: (panel: SettingsPanelId) => void;
+  onOpenSettings: () => void;
   closeOnSelect: boolean;
 };
 
@@ -30,7 +29,6 @@ export function MainMenu(props: Props) {
       levels: props.levels,
       level: navigation.level,
       mode: props.mode,
-      panel: props.panel,
       zoom,
       canGoBack: navigation.canGoBack,
       canUndo: undoRedo.canUndo,
@@ -48,7 +46,7 @@ export function MainMenu(props: Props) {
       redo: undoRedo.onRedo,
       changePathsPerPage: props.onPathsPerPageChange,
       reroll: props.onReroll,
-      togglePanel: props.onPanelToggle,
+      openSettings: props.onOpenSettings,
       zoomBy: handle.zoomBy,
       fit: handle.fit,
       center: handle.center,

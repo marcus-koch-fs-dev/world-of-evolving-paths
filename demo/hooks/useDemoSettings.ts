@@ -19,8 +19,8 @@ const DEFAULT_DOCKS: Docks = { main: 'top-left', time: 'bottom-left' };
 // A soft gradient from purple to blue with a few stars, so the map does not look dark and heavy
 const DEFAULT_BACKGROUND: BackgroundOptions = {
   fill: 'gradient',
-  base: '#3a1f6b',
-  color2: '#1f5a9e',
+  base: '#4e2c86',
+  color2: '#2a70be',
   angle: 150,
   pattern: 'stars',
   intensity: 0.5,
@@ -46,7 +46,8 @@ export type SettingsValues = {
   pathsPerPage: number;
   /** How big the controls are, and the number of percent when it is `custom`. */
   uiSize: UiSize;
-  uiScale: number;
+  /** Bars and menus are see-through. */
+  transparent: boolean;
   /** The controls that sit in the bar. All of them are also tiles in the menu. */
   barItems: BarItem[];
   /** Whether the menu closes after a tile was clicked. */
@@ -77,15 +78,15 @@ export function useDemoSettings() {
   const [orientation, setOrientation] = useStoredState<Orientation>(key('orientation'), 'auto');
   const [storedLocale, setLocale] = useStoredState<string>('wep-demo:locale', navigator.language || FALLBACK_LOCALE);
   const [background, setBackground] = useStoredState<BackgroundOptions>(
-    key('background'),
+    key('background-v2'),
     DEFAULT_BACKGROUND,
     withoutImage,
   );
   const [customColors, setCustomColors] = useStoredState<string[]>('wep-demo:custom-colors', []);
   const [docks, setDocks] = useStoredState<Docks>(key('docks'), DEFAULT_DOCKS);
   const [pathsPerPage, setPathsPerPage] = useStoredState<number>(key('paths-per-page'), 2);
-  const [uiSize, setUiSize] = useStoredState<UiSize>(key('ui-size'), 'regular');
-  const [uiScale, setUiScale] = useStoredState<number>(key('ui-scale'), 100);
+  const [uiSize, setUiSize] = useStoredState<UiSize>(key('ui-size-v2'), 'small');
+  const [transparent, setTransparent] = useStoredState<boolean>(key('transparent'), false);
   const [barItems, setBarItems] = useStoredState<BarItem[]>(key('bar-items'), [...DEFAULT_BAR_ITEMS], barItemsFrom);
   const [menuClose, setMenuClose] = useStoredState<MenuClose>(key('menu-close'), 'auto');
   const [pointMenuCloses, setPointMenuCloses] = useStoredState<boolean>(key('point-menu-closes'), true);
@@ -100,7 +101,7 @@ export function useDemoSettings() {
     locale: isValidLocale(storedLocale) ? storedLocale : FALLBACK_LOCALE,
     pathsPerPage,
     uiSize,
-    uiScale,
+    transparent,
     barItems,
     menuClose,
     pointMenuCloses,
@@ -117,7 +118,7 @@ export function useDemoSettings() {
     if (patch.locale !== undefined) setLocale(patch.locale);
     if (patch.pathsPerPage !== undefined) setPathsPerPage(patch.pathsPerPage);
     if (patch.uiSize !== undefined) setUiSize(patch.uiSize);
-    if (patch.uiScale !== undefined) setUiScale(patch.uiScale);
+    if (patch.transparent !== undefined) setTransparent(patch.transparent);
     if (patch.barItems !== undefined) setBarItems(patch.barItems);
     if (patch.menuClose !== undefined) setMenuClose(patch.menuClose);
     if (patch.pointMenuCloses !== undefined) setPointMenuCloses(patch.pointMenuCloses);

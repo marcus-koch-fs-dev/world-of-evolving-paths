@@ -402,6 +402,7 @@ Import them from `world-of-evolving-paths/react`. They hold no map logic: they g
 | `MoveLock`        | A lock to arrange the overview "All" by hand. Pair it with `freeMove={!locked}`. It works for viewers too, also without `editable`.             |
 | `Icon`            | A small icon (Phosphor, regular or fill) in the text color and size. Names: `lock`, `unlock`, `menu`, `zoomIn`, ... (`IconName`).               |
 | `SidePanel`       | A panel at the left or right side, for settings.                                                                                                 |
+| `Dialog`          | A window in the middle over a dimmed background, for settings. Escape and a click beside it call `onClose`. Full screen on a phone.             |
 | `BackgroundPanel` | Fill, pattern, brightness and size.                                                                                                              |
 | `PointMenu`       | The menu at a selected point: next point, delete, properties. It sits below the point, or above when there is no room.                           |
 | `LineMenu`        | A tile menu at a clicked line. Place it at `at` of `onLineSelect`.                                                                               |
@@ -409,7 +410,7 @@ Import them from `world-of-evolving-paths/react`. They hold no map logic: they g
 | `TimeSlider`      | A slider through time with play and pause. Pass its day to the map as `today`. `useTimePlayback` moves it.                                       |
 
 - **Where they go:** `ZoomControls`, `PointMenu`, `LineMenu` and `ControlBar` go inside `<PathWorld>`.
-- **Styles:** import `world-of-evolving-paths/style.css` once. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...).
+- **Styles:** import `world-of-evolving-paths/style.css` once. Colors are CSS variables on `.pw-root` (`--pw-bg`, `--pw-ink`, `--pw-lit`, ...). Give the map the class `pw-transparent` and every bar and panel becomes see-through, with the map blurred behind it.
 
 These are the defaults of `PointMenu`. It only calls your callbacks, you change the data:
 

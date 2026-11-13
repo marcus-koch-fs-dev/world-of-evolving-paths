@@ -8,7 +8,6 @@ const state: MenuState = {
   ],
   level: 'week',
   mode: 'edit',
-  panel: null,
   zoom: 0.5,
   canGoBack: false,
   canUndo: true,
@@ -27,7 +26,7 @@ const createActions = (): MenuActions => ({
   redo: vi.fn(),
   changePathsPerPage: vi.fn(),
   reroll: vi.fn(),
-  togglePanel: vi.fn(),
+  openSettings: vi.fn(),
   zoomBy: vi.fn(),
   fit: vi.fn(),
   center: vi.fn(),
@@ -41,18 +40,18 @@ const tileIds = (groupId: string, current: MenuState) => tilesOf(groupId, curren
 
 describe('Menu groups', () => {
   describe('when editing', () => {
-    it('offers undo, redo and reset, and both settings', () => {
+    it('offers undo, redo and reset, and the one settings tile', () => {
       expect(tileIds('edit', state)).toEqual(['undo', 'redo', 'reroll']);
-      expect(tileIds('settings', state)).toEqual(['view-settings', 'editor-settings']);
+      expect(tileIds('settings', state)).toEqual(['settings']);
     });
   });
 
   describe('when in map mode', () => {
-    it('leaves out the edit group and the editor settings, but keeps the view settings', () => {
+    it('leaves out the edit group, but keeps the settings tile', () => {
       const mapMode = { ...state, mode: 'map' as const };
 
       expect(tileIds('edit', mapMode)).toBeUndefined();
-      expect(tileIds('settings', mapMode)).toEqual(['view-settings']);
+      expect(tileIds('settings', mapMode)).toEqual(['settings']);
     });
   });
 
@@ -100,15 +99,12 @@ describe('Menu groups', () => {
       );
     });
 
-    it('opens the settings panel of its tile', () => {
+    it('opens the settings window from its one tile', () => {
       const actions = createActions();
-      const tiles = tilesOf('settings', state, actions) ?? [];
 
-      tiles.find((tile) => tile.id === 'view-settings')?.onClick();
-      tiles.find((tile) => tile.id === 'editor-settings')?.onClick();
+      tilesOf('settings', state, actions)?.[0].onClick();
 
-      expect(actions.togglePanel).toHaveBeenNthCalledWith(1, 'view');
-      expect(actions.togglePanel).toHaveBeenNthCalledWith(2, 'editor');
+      expect(actions.openSettings).toHaveBeenCalledTimes(1);
     });
   });
 });

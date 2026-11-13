@@ -7,6 +7,7 @@
   flex-direction: column;
   width: min(18.75rem, 100%);
   background: var(--pw-panel);
+  backdrop-filter: var(--pw-panel-blur);
   box-shadow: 0 0 1.5rem rgb(0 0 0 / 0.4);
   animation: pw-side-in 180ms ease-out;
 }

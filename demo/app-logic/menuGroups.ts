@@ -3,9 +3,6 @@ import type { PanelGroup } from 'world-of-evolving-paths/react';
 
 export type DemoMode = 'edit' | 'map';
 
-/** The two settings panels: what everyone may change about the view, and what only the editor needs. */
-export type SettingsPanelId = 'view' | 'editor';
-
 export const ZOOM_STEP = 1.25;
 // A short sign for each level on its tile
 const LEVEL_GLYPHS: Record<ViewLevel, string> = { week: 'W', month: 'M', year: 'Y' };
@@ -16,8 +13,6 @@ export type MenuState = {
   /** The level shown, or null for the free view. */
   level: ViewLevel | null;
   mode: DemoMode;
-  /** The settings panel that is open, if any. */
-  panel: SettingsPanelId | null;
   /** The zoom of the map, 1 is 100 %. */
   zoom: number;
   canGoBack: boolean;
@@ -37,7 +32,7 @@ export type MenuActions = {
   redo: () => void;
   changePathsPerPage: (count: number) => void;
   reroll: () => void;
-  togglePanel: (panel: SettingsPanelId) => void;
+  openSettings: () => void;
   zoomBy: (factor: number) => void;
   fit: () => void;
   center: () => void;
@@ -165,32 +160,19 @@ const editGroup = ({ mode, level, canUndo, canRedo }: MenuState, actions: MenuAc
       : [],
 });
 
-const modeGroup = ({ mode, panel }: MenuState, actions: MenuActions): PanelGroup => ({
+/** One tile opens the settings window. What belongs to the editor is a section in that window. */
+const settingsGroup = (_state: MenuState, actions: MenuActions): PanelGroup => ({
   id: 'settings',
   label: 'Settings',
   tiles: [
     {
-      id: 'view-settings',
-      label: 'Display',
-      title: 'Display settings: bar, menu, language, background',
-      icon: 'view',
-      active: panel === 'view',
+      id: 'settings',
+      label: 'Settings',
+      title: 'Settings: size, bar, map, background',
+      icon: 'settings',
       closesPanel: true,
-      onClick: () => actions.togglePanel('view'),
+      onClick: actions.openSettings,
     },
-    ...(mode === 'edit'
-      ? [
-          {
-            id: 'editor-settings',
-            label: 'Tools',
-            title: 'Editor tools: lock points, grid, waves',
-            icon: 'settings' as const,
-            active: panel === 'editor',
-            closesPanel: true,
-            onClick: () => actions.togglePanel('editor'),
-          },
-        ]
-      : []),
   ],
 });
 
@@ -206,7 +188,7 @@ const GROUP_TINTS: Record<string, string> = {
 
 /** The groups of tiles in the demo's menu. Groups without tiles are left out. */
 export function menuGroups(state: MenuState, actions: MenuActions): PanelGroup[] {
-  return [viewGroup, timeGroup, pathsGroup, mapGroup, editGroup, modeGroup]
+  return [viewGroup, timeGroup, pathsGroup, mapGroup, editGroup, settingsGroup]
     .map((build) => build(state, actions))
     .filter((group) => group.tiles.length > 0)
     .map((group) => ({ ...group, tint: GROUP_TINTS[group.id] }));

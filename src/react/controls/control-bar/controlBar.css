@@ -31,6 +31,7 @@
   border: 1px solid var(--pw-line);
   border-radius: 0.5rem;
   background: var(--pw-panel);
+  backdrop-filter: var(--pw-panel-blur);
 }
 
 .pw-align-left {

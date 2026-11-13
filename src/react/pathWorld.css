@@ -5,6 +5,7 @@
   --pw-muted: #8a8f80;
   --pw-line: rgb(237 239 230 / 0.14);
   --pw-panel: rgb(20 22 18 / 0.94);
+  --pw-panel-blur: none;
   --pw-field: #1b1d17;
   --pw-danger: #f0a59c;
   position: relative;
@@ -16,6 +17,12 @@
   font-family: system-ui, sans-serif;
   font-size: 0.8125rem;
   color-scheme: dark;
+}
+
+/* Add this class to the map to make every bar and panel see-through, with the map blurred behind it */
+.pw-root.pw-transparent {
+  --pw-panel: rgb(20 22 18 / 0.3);
+  --pw-panel-blur: blur(8px);
 }
 
 .pw-root *,

@@ -249,3 +249,89 @@ body,
 .demo-bar-item {
   display: contents;
 }
+
+/* The settings window: sections on the left, the chosen one beside them */
+.demo-window {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  min-height: 0;
+}
+
+.demo-window-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem;
+  border-right: 1px solid rgb(237 239 230 / 0.14);
+}
+
+.demo-window-nav button {
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: none;
+  color: #8a8f80;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.demo-window-nav button:hover {
+  background: rgb(237 239 230 / 0.06);
+}
+
+.demo-window-nav button.is-on {
+  background: rgb(212 242 90 / 0.1);
+  color: #d4f25a;
+}
+
+.demo-window-pane {
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}
+
+.demo-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.demo-group + .demo-group {
+  padding-top: 1rem;
+  border-top: 1px solid rgb(237 239 230 / 0.14);
+}
+
+.demo-group h3 {
+  margin: 0;
+  color: #8a8f80;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+@media (pointer: coarse), (max-width: 37.5rem) {
+  .demo-window {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .demo-window-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgb(237 239 230 / 0.14);
+  }
+
+  .demo-window-nav button {
+    white-space: nowrap;
+  }
+}

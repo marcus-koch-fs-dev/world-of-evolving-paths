@@ -1,20 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { clampScale, MAX_SCALE, MIN_SCALE, scalePercent } from './uiSize';
+import { scalePercent, UI_SIZES } from './uiSize';
 
 describe('Size of the controls', () => {
-  it('has a size for each preset', () => {
-    expect(scalePercent('small', 100)).toBe(87.5);
-    expect(scalePercent('regular', 80)).toBe(100);
-    expect(scalePercent('large', 100)).toBe(125);
+  it('has three fixed forms, each bigger than the one before', () => {
+    expect(UI_SIZES.map((entry) => entry.value)).toEqual(['small', 'regular', 'large']);
+    expect(scalePercent('small')).toBeLessThan(scalePercent('regular'));
+    expect(scalePercent('regular')).toBeLessThan(scalePercent('large'));
   });
 
-  it('uses the own number for custom, kept within the limits', () => {
-    expect(scalePercent('custom', 110)).toBe(110);
-    expect(scalePercent('custom', 10)).toBe(MIN_SCALE);
-    expect(scalePercent('custom', 999)).toBe(MAX_SCALE);
+  it('draws small in the sizes of the stylesheets', () => {
+    expect(scalePercent('small')).toBe(100);
   });
 
-  it('falls back to 100 percent for a number that is not one', () => {
-    expect(clampScale(Number.NaN)).toBe(100);
+  it('falls back to small for a value that is not a form', () => {
+    expect(scalePercent('huge' as never)).toBe(100);
   });
 });
