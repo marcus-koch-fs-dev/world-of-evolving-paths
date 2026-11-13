@@ -280,6 +280,30 @@ type Store = { paths: StorePath[] };
 
 All are pure. They return a new store and keep untouched paths as the same objects: `movePoint`, `moveArrow`, `movePath`, `addPoint`, `updatePoint`, `removePoint`, `addBranch`, `addPath`, `updatePath` and `forgetHeights`.
 
+Actions you can offer to your users outside the editor, for example from a button in your own app:
+
+```ts
+import { addNextPoint, checkIn, checkInStatus, setStatus, undoCheckIn } from 'world-of-evolving-paths';
+
+// A new point at the end of the main branch. Only the title is needed.
+// Default: today, kind 'milestone', status 'open', prio 3, and an id made for you.
+store = addNextPoint(store, 'gym', { title: 'Muscle-up' });
+store = addNextPoint(store, 'gym', { title: 'Planche', date: '2027-03-01', kind: 'goal', prio: 5 });
+
+// Tick a point off
+store = setStatus(store, pointId, 'done');
+
+// Check in today. A second check-in on the same day changes nothing.
+store = checkIn(store, 'gym', '2026-11-13');
+store = undoCheckIn(store, 'gym', '2026-11-13'); // after a tap by mistake
+
+// Feedback for your own UI: "12 -> 13 active days in 12 weeks"
+const status = checkInStatus(store.paths[0], '2026-11-13');
+// { checkedIn, activeBefore, activeAfter, tierUp, tierName, next: { name, daysMissing }, weeks }
+```
+
+A path with a new name or color: `addPath` and `updatePath`. A new branch from a point: `addBranch(store, pathId, { id, splitsAt: pointId, points })`.
+
 ### Events
 
 All events are options of `PathWorld` and `createPathWorld`.
@@ -344,12 +368,12 @@ Keep `background` and other object options stable between renders. They are comp
 
 ### Strength in code
 
-The library draws the tier you pass in `strength` (0 to 4) and has the rule that turns check-ins into a tier. Check-ins are not points, so a daily habit does not fill the map. Keep them in your app:
+The library draws the tier you pass in `strength` (0 to 4) and has the rule that turns check-ins into a tier. Check-ins are not points, so a daily habit does not fill the map. They live in the path as `path.checkIns` (a list of `YYYY-MM-DD`). Add them with `checkIn(store, pathId, date)`. To work with the days yourself:
 
 ```ts
-import { tierAt, toDay, TIERS } from 'world-of-evolving-paths';
+import { checkInDays, tierAt, toDay, TIERS } from 'world-of-evolving-paths';
 
-const activityDays = checkInDates.map(toDay); // ['2026-11-02', '2026-11-04', ...]
+const activityDays = checkInDays(path); // day numbers of path.checkIns
 const strength = tierAt(activityDays, toDay(point.date));
 TIERS[strength]; // { name: 'Highway', width: 13, glow: 0.7 }
 ```
@@ -374,7 +398,9 @@ Import them from `world-of-evolving-paths/react`. They hold no map logic: they g
 | `ZoomControls`    | Zoom out, zoom in, center, fit.                                                                                                                  |
 | `ViewBar`         | Level buttons, previous and next period, today, pages. With `onDateChange` a click on the period opens a date picker.                            |
 | `ControlBar`      | A bar fixed to an edge (`dock`: `top-left`, `top-center`, `top-right`, `bottom-...`). With `onDockChange` the user can drag it to another place. |
-| `TilePanel`       | A button that opens a small panel of tiles in groups.                                                                                            |
+| `TilePanel`       | A button that opens a panel of tiles in groups, as keys (`variant="tiles"`) or rows (`"list"`). With `closeOnSelect` it closes after a tap.        |
+| `MoveLock`        | A lock to arrange the overview "All" by hand. Pair it with `freeMove={!locked}`. It works for viewers too, also without `editable`.             |
+| `Icon`            | A small icon (Phosphor, regular or fill) in the text color and size. Names: `lock`, `unlock`, `menu`, `zoomIn`, ... (`IconName`).               |
 | `SidePanel`       | A panel at the left or right side, for settings.                                                                                                 |
 | `BackgroundPanel` | Fill, pattern, brightness and size.                                                                                                              |
 | `PointMenu`       | The menu at a selected point: next point, delete, properties. It sits below the point, or above when there is no room.                           |
@@ -398,6 +424,8 @@ These are the defaults of `PointMenu`. It only calls your callbacks, you change 
   canComplete // false while earlier points are not done yet
   isFork={false} // true: a branch forks off from this point
   importanceRange={[1, 5]}
+  onClose={onClose} // the menu wants to close: deselect the point
+  closeAfterAction // default true, only with onClose. The path color stays open.
   placement="auto" // 'below' | 'above' | 'right' | 'left'
   hide={[]} // tiles to leave out: 'status' | 'next' | 'kind' | 'color' | 'rename' | 'details' | 'remove'
   // colors={PATH_PALETTE}, checkInCount: no default

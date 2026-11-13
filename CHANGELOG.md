@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Actions for your own UI
+
+- **New:** `checkIn`, `undoCheckIn`, `hasCheckedIn`, `checkInDays` and `checkInStatus`. Check-ins now live in the path as `path.checkIns` (`YYYY-MM-DD`). `checkInStatus` says what a check-in does: active days before and after, tier, days missing for the next tier.
+- **New:** `addNextPoint(store, pathId, { title, ... })` adds a point at the end of the main branch with defaults and an id made for you. `setStatus(store, pointId, status)` ticks a point off.
+
+### Controls
+
+- **New:** `Icon` and `MoveLock`. The controls use Phosphor icons instead of Unicode symbols.
+- **New:** `TilePanel` has `variant` (`tiles` or `list`) and `closeOnSelect`. Tiles take an `icon`.
+- **New:** `PointMenu` has `onClose` and `closeAfterAction` (default true) to close after a change.
+- **New:** `ViewBar` has `navigation={false}` to keep only the period label.
+- **Changed:** `freeMove` works in "All" also when `editable` is false, so a viewer can arrange the overview.
+- **Changed:** all CSS sizes are in `rem`, touch targets are at least 2.75rem on touch screens, and tiles are bigger.
+
 ## 0.1.0 (2026-11-12)
 
 ### Data model rework (breaking)
